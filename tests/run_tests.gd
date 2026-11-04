@@ -2,7 +2,29 @@
 extends SceneTree
 
 
+## Counts engine/script errors so a test that crashes is a failure, not a pass.
+class ErrorCounter:
+	extends Logger
+	var errors: Array[String] = []
+	var _mutex := Mutex.new()
+
+	func _log_error(function: String, file: String, line: int, code: String, rationale: String,
+			_editor_notify: bool, _error_type: int, _script_backtrace: Array[ScriptBacktrace]) -> void:
+		_mutex.lock()
+		errors.append("%s (%s:%d %s)" % [rationale if rationale != "" else code, file, line, function])
+		_mutex.unlock()
+
+	func take() -> Array[String]:
+		_mutex.lock()
+		var out := errors.duplicate()
+		errors.clear()
+		_mutex.unlock()
+		return out
+
+
 func _init() -> void:
+	var counter := ErrorCounter.new()
+	OS.add_logger(counter)
 	var files: Array[String] = []
 	_collect("res://tests", files)
 	files.sort()
@@ -18,8 +40,11 @@ func _init() -> void:
 			var name: String = m["name"]
 			if not name.begins_with("test_"):
 				continue
+			counter.take()
 			var t: TestCase = script.new()
 			t.call(name)
+			for e in counter.take():
+				t.failures.append("engine error: " + e)
 			if t.failures.is_empty():
 				passed += 1
 			else:
