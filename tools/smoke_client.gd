@@ -1,5 +1,5 @@
 ## Headless test client for tools/smoke.sh. Exits 0 when its expectation holds, 1 otherwise.
-## Args (after --): --url U --name N [--move x,y [--hold S]] | --expect-rejected | --expect-absent NAME | --expect-welcome x,y
+## Args (after --): --url U --name N [--move x,y [--hold S]] | --expect-rejected | --expect-absent NAME | --expect-present NAME | --expect-welcome x,y
 extends SceneTree
 
 const TIMEOUT_S := 8.0
@@ -64,6 +64,10 @@ func _on_snapshot(players: Array) -> void:
 					_finish(true, "reached")
 				else:
 					_done = true
+	elif _args.has("expect-present"):
+		for p in players:
+			if p["name"] == _args["expect-present"]:
+				_finish(true, "present at %s" % Protocol.cell_of(p["pos"]))
 	elif _args.has("expect-absent") and _elapsed > 0.5:
 		var names := players.map(func(p): return p["name"])
 		if not names.has(_args["expect-absent"]):
