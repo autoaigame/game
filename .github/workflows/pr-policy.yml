@@ -28,12 +28,16 @@ jobs:
             const { owner, repo } = context.repo;
 
             // Admin = repo role maintain or admin (org owners and the admins team).
-            const { data: perm } = await github.rest.repos.getCollaboratorPermissionLevel({
-              owner, repo, username: pr.user.login,
-            });
-            const role = perm.role_name;
-            if (['admin', 'maintain'].includes(role)) {
-              core.info(`${pr.user.login} is an admin (${role}); admin-only paths allowed (CODEOWNERS review still applies).`);
+            // Both the PR author and whoever triggered this event (e.g. pushed new
+            // commits) must be admins for the exemption to apply.
+            const isAdmin = async username => {
+              const { data } = await github.rest.repos.getCollaboratorPermissionLevel({ owner, repo, username });
+              return ['admin', 'maintain'].includes(data.role_name);
+            };
+            const actors = [...new Set([pr.user.login, context.payload.sender.login])];
+            const admins = await Promise.all(actors.map(isAdmin));
+            if (admins.every(Boolean)) {
+              core.info(`${actors.join(', ')}: admin; admin-only paths allowed (CODEOWNERS review still applies).`);
               return;
             }
 
@@ -50,13 +54,17 @@ jobs:
               .replace(/\*/g, '[^/]*')
               .replace(/\?/g, '[^/]')
               .replace(/\u0000/g, '(?:.*/)?')
-              .replace(/\u0001/g, '.*') + '$');
+              .replace(/\u0001/g, '.*') + '$', 'i');
             const rules = globs.map(g => [g, toRegex(g)]);
 
             const files = await github.paginate(github.rest.pulls.listFiles, {
               owner, repo, pull_number: pr.number, per_page: 100,
             });
             const hits = [];
+            // The files API returns at most 3000 files: fail closed if the list may be truncated.
+            if (files.length < pr.changed_files || pr.changed_files >= 3000) {
+              hits.push(`file list truncated (${files.length} of ${pr.changed_files} files listed); too large to verify`);
+            }
             for (const f of files) {
               for (const p of [f.filename, f.previous_filename].filter(Boolean)) {
                 const rule = rules.find(([, re]) => re.test(p));

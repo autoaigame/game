@@ -2,24 +2,37 @@
 # A PR from someone who is not an org admin (repo role maintain/admin) that adds,
 # changes, deletes or renames a file matching one of these globs is closed by CI.
 # `*` matches within one path segment, `**` matches any number of segments.
+# Matching is case-insensitive.
 # Keep in sync with .github/CODEOWNERS.
 
-AGENTS.md
-CLAUDE.md
 GOVERNANCE.md
 SECURITY.md
 Makefile
+GNUmakefile
 ai-tools.toml
 docs/assisted-by.md
 .mcp.json
-.agents/**
-.claude/**
-.cursor/**
-.gemini/**
+
+# Agent instruction files and folders, at any depth (agents read nested ones too)
+**/AGENTS.md
+**/AGENTS.override.md
+**/CLAUDE.md
+**/CLAUDE.local.md
+**/GEMINI.md
+**/.cursorrules
+**/.windsurfrules
+**/.clinerules
+**/.clinerules/**
+**/.agents/**
+**/.claude/**
+**/.cursor/**
+**/.gemini/**
+**/.windsurf/**
+**/.continue/**
+**/.github/**
 .vscode/**
 .devcontainer/**
 .husky/**
-.github/**
 tools/**
 
 # Dependency manifests and lockfiles (refine once the stack is chosen)
@@ -54,5 +67,6 @@ tools/**
 **/.prettierrc*
 **/biome.json
 **/Dockerfile
+**/Containerfile
 **/docker-compose*.yml
 **/compose*.yml
