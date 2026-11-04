@@ -70,7 +70,7 @@ jobs:
                 const magic = Buffer.from(blob.content, 'base64').subarray(0, 8).toString('hex');
                 if (!magic.startsWith(rules.magic_bytes[e])) problems.push(`\`${f.filename}\` is not a real .${e} file`);
               }
-              if (f.patch && rules.code_extensions.includes(e) && !rules.allowed_denied_pattern_paths.includes(f.filename)) {
+              if (f.patch && rules.code_extensions.includes(e)) {
                 const added = f.patch.split('\n').filter(l => l.startsWith('+') && !l.startsWith('+++')).join('\n');
                 for (const pat of rules.denied_code_patterns) {
                   const m = added.match(new RegExp(pat));

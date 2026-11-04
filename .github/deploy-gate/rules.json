@@ -51,19 +51,24 @@
     "tscn",
     "tres",
     "godot",
-    "cfg"
+    "cfg",
+    "sh"
   ],
   "denied_code_patterns": [
     "OS\\.(execute|execute_with_pipe|create_process|create_instance|shell_open|shell_show_in_file_manager|kill|get_environment|set_environment)",
     "\\b(HTTPRequest|HTTPClient|StreamPeerTCP|TCPServer|PacketPeerUDP|UDPServer|PacketPeerDTLS|DTLSServer|StreamPeerTLS|ENetConnection|WebRTCPeerConnection)\\b",
-    "JavaScriptBridge\\.(eval|get_interface|create_callback|create_object)\\((?![\"']location\\.(host|protocol)[\"']\\))",
     "\\b(bytes_to_var|bytes_to_var_with_objects|str_to_var|dict_to_inst)\\b",
     "\\bExpression\\b",
     "\\bload_resource_pack\\b",
-    "https?://"
-  ],
-  "allowed_denied_pattern_paths": [
-    "client/client.gd"
+    "https?://",
+    "JavaScriptBridge(?!\\.eval\\([\"']location\\.(host|protocol)[\"']\\))",
+    "\\bEngine\\.(get_singleton|register_singleton)",
+    "\\bClassDB\\b",
+    "\\b(GDScript|CSharpScript)\\.new\\b",
+    "\\b(source_code|set_script|reload)\\b",
+    "\\.(call|callv|call_deferred|callv_deferred|rpc_config)\\(",
+    "\\bCallable\\(",
+    "\\b(DirAccess|FileAccess)\\.open\\([^)]*(\"(/|[A-Za-z]:)|OS\\.)"
   ],
   "magic_bytes": {
     "png": "89504e470d0a1a0a",
