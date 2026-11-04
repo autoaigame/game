@@ -1,0 +1,111 @@
+# Deploy gate: decides whether a PR may be deployed to its public preview.
+# Runs on pull_request_target so that the workflow definition, rules and prompt
+# always come from the base branch. It NEVER checks out or executes PR code:
+# it reads the PR's file list and patches through the API, as data.
+# The OpenRouter key is only exposed to the single step that calls the model,
+# and the model never sees it (it is sent as an HTTP header, not in the prompt).
+name: deploy-gate
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: deploy-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-gate:
+    name: deploy-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const { owner, repo } = context.repo;
+            const base = pr.base.sha, head = pr.head.sha;
+            const refuse = async (reasons, flags = []) => {
+              await core.summary.addHeading('deploy-gate: refused').addList(reasons)
+                .addRaw(flags.length ? `Flags: ${flags.join(', ')}` : '').write();
+              core.setFailed(`deploy refused: ${reasons.join(' | ')}`);
+            };
+            const fromBase = async path => {
+              const { data } = await github.rest.repos.getContent({ owner, repo, path, ref: base });
+              return Buffer.from(data.content, 'base64').toString('utf8');
+            };
+            const rules = JSON.parse(await fromBase('.github/deploy-gate/rules.json'));
+            const prompt = await fromBase('.github/deploy-gate/prompt.md');
+
+            // 1. Deterministic checks on the file list.
+            const files = await github.paginate(github.rest.pulls.listFiles, { owner, repo, pull_number: pr.number, per_page: 100 });
+            if (files.length < pr.changed_files || pr.changed_files >= 3000)
+              return refuse([`file list truncated (${files.length}/${pr.changed_files}); too large to verify`]);
+            if (files.length > rules.max_files)
+              return refuse([`${files.length} files changed (max ${rules.max_files}); needs admin \`deploy\` label`]);
+            const ext = p => { const b = p.split('/').pop(); const i = b.lastIndexOf('.'); return i > 0 ? b.slice(i + 1).toLowerCase() : (b.startsWith('.') ? b.slice(1).toLowerCase() : ''); };
+            const problems = [];
+            let totalAdded = 0;
+            for (const f of files) {
+              const e = ext(f.filename);
+              if (rules.forbidden_extensions.includes(e)) problems.push(`forbidden file type: \`${f.filename}\``);
+              else if (f.status !== 'removed' && !rules.allowed_extensions.includes(e)) problems.push(`file type not allowed: \`${f.filename}\``);
+              if (f.status === 'removed') continue;
+              const { data: meta } = await github.rest.repos.getContent({ owner, repo, path: f.filename, ref: head });
+              if (Array.isArray(meta) || meta.type !== 'file') { problems.push(`not a regular file: \`${f.filename}\``); continue; }
+              if (meta.size > rules.max_file_bytes) problems.push(`\`${f.filename}\` is ${meta.size} bytes (max ${rules.max_file_bytes})`);
+              totalAdded += meta.size;
+              if (!f.patch && !rules.binary_extensions.includes(e)) problems.push(`no reviewable diff for \`${f.filename}\` (too large or binary)`);
+            }
+            if (totalAdded > rules.max_total_added_bytes) problems.push(`total size ${totalAdded} bytes (max ${rules.max_total_added_bytes})`);
+            if (problems.length) return refuse(problems);
+
+            // 2. AI review of the diff, as data. Fail closed on anything unexpected.
+            let diff = '';
+            for (const f of files) {
+              diff += `\n### ${f.status}: ${f.filename}\n`;
+              diff += f.patch ? f.patch + '\n' : `(binary file, ${rules.binary_extensions.includes(ext(f.filename)) ? 'asset' : 'unknown'})\n`;
+            }
+            if (diff.length > rules.ai_diff_budget_chars)
+              return refuse([`diff is ${diff.length} chars (max ${rules.ai_diff_budget_chars}): too large for review, needs admin \`deploy\` label`]);
+            if (!process.env.OPENROUTER_API_KEY) return refuse(['reviewer not configured']);
+
+            const body = {
+              model: rules.model,
+              provider: { only: rules.provider_only, allow_fallbacks: false },
+              temperature: 0,
+              messages: [
+                { role: 'system', content: prompt },
+                { role: 'user', content: `PR title (untrusted): ${JSON.stringify(pr.title)}\n\n<untrusted_diff>\n${diff}\n</untrusted_diff>` },
+              ],
+              // DeepSeek supports json_object (not json_schema): the shape is validated strictly below.
+              response_format: { type: 'json_object' },
+            };
+            let verdict;
+            try {
+              const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+              });
+              if (!res.ok) return refuse([`reviewer HTTP ${res.status}`]);
+              const data = await res.json();
+              verdict = JSON.parse(data.choices[0].message.content);
+            } catch (e) {
+              return refuse([`reviewer error: ${e.name}`]);
+            }
+            if (typeof verdict !== 'object' || verdict === null || !Array.isArray(verdict.reasons) || !Array.isArray(verdict.flags))
+              return refuse(['reviewer returned an invalid verdict']);
+            const reasons = verdict.reasons.map(r => String(r).slice(0, 300)).slice(0, 10);
+            const flags = verdict.flags.map(f => String(f).slice(0, 40)).slice(0, 10);
+            if (verdict.deploy !== true || flags.length > 0) return refuse(reasons.length ? reasons : ['reviewer refused'], flags);
+            await core.summary.addHeading('deploy-gate: approved').addList(reasons.length ? reasons : ['no issue found'])
+              .addRaw(`Reviewed ${files.length} file(s) at ${head}.`).write();
+            core.info(`deploy approved for ${head}`);

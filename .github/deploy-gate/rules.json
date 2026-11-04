@@ -1,0 +1,11 @@
+{
+  "max_files": 200,
+  "max_file_bytes": 2000000,
+  "max_total_added_bytes": 10000000,
+  "allowed_extensions": ["gd", "tscn", "tres", "godot", "cfg", "md", "txt", "toml", "json", "png", "wav", "ogg", "ttf", "uid", "sh", "yml", "yaml", "gitignore"],
+  "forbidden_extensions": ["so", "dll", "dylib", "exe", "wasm", "gdextension", "zip", "tpz", "pck", "jar", "bin"],
+  "binary_extensions": ["png", "wav", "ogg", "ttf"],
+  "ai_diff_budget_chars": 150000,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "provider_only": ["deepseek"]
+}
