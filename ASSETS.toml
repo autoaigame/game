@@ -1,0 +1,19 @@
+# Provenance of every asset file (see the add-content skill).
+
+[[asset]]
+path = "assets/tiles.png"
+author = "vitteloil"
+origin = "generated"
+tool = "tools/gen_art.gd (Godot 4.7.2)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/player.png"
+author = "vitteloil"
+origin = "generated"
+tool = "tools/gen_art.gd (Godot 4.7.2)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
