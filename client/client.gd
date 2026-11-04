@@ -31,6 +31,17 @@ func _ready() -> void:
 	multiplayer.connected_to_server.connect(_on_connected)
 	multiplayer.server_disconnected.connect(func(): connection_lost.emit())
 	multiplayer.connection_failed.connect(func(): connection_lost.emit())
+	if DisplayServer.get_name() != "headless":
+		_add_views()
+
+
+func _add_views() -> void:
+	var view: Node2D = load("res://client/world_view.gd").new()
+	view.client = self
+	add_child(view)
+	var ui: CanvasLayer = load("res://client/login_ui.gd").new()
+	ui.client = self
+	add_child(ui)
 
 
 func join_with(new_name: String) -> void:
