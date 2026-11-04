@@ -1,0 +1,49 @@
+# CI: unit tests + headless smoke test (real server and clients) on every PR.
+# Runs PR code, so it has NO secrets and a read-only token (pull_request event).
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: 4.7.2-stable
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/godot
+          key: godot-${{ env.GODOT_VERSION }}
+      - name: Install Godot (SHA512-verified)
+        run: |
+          set -euo pipefail
+          mkdir -p ~/godot && cd ~/godot
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}"
+          for f in "Godot_v${GODOT_VERSION}_linux.x86_64.zip" "Godot_v${GODOT_VERSION}_export_templates.tpz" SHA512-SUMS.txt; do
+            [ -f "$f" ] || curl -fsSLO "$base/$f"
+          done
+          grep -E "Godot_v${GODOT_VERSION}_(linux.x86_64.zip|export_templates.tpz)$" SHA512-SUMS.txt | sha512sum -c
+          unzip -oq "Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          tpl="$HOME/.local/share/godot/export_templates/${GODOT_VERSION/-/.}"
+          mkdir -p "$tpl" && unzip -oqj "Godot_v${GODOT_VERSION}_export_templates.tpz" 'templates/web_nothreads_*' 'templates/version.txt' -d "$tpl"
+          echo "GODOT=$HOME/godot/Godot_v${GODOT_VERSION}_linux.x86_64" >> "$GITHUB_ENV"
+      - name: make check
+        run: make check GODOT="$GODOT"
+      - name: make export-web
+        run: make export-web GODOT="$GODOT"
