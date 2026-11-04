@@ -1,0 +1,72 @@
+# Admin-only paths (see AGENTS.md "Never").
+# A PR from someone who is not an org admin (repo role maintain/admin) that adds,
+# changes, deletes or renames a file matching one of these globs is closed by CI.
+# `*` matches within one path segment, `**` matches any number of segments.
+# Matching is case-insensitive.
+# Keep in sync with .github/CODEOWNERS.
+
+GOVERNANCE.md
+SECURITY.md
+Makefile
+GNUmakefile
+ai-tools.toml
+docs/assisted-by.md
+.mcp.json
+
+# Agent instruction files and folders, at any depth (agents read nested ones too)
+**/AGENTS.md
+**/AGENTS.override.md
+**/CLAUDE.md
+**/CLAUDE.local.md
+**/GEMINI.md
+**/.cursorrules
+**/.windsurfrules
+**/.clinerules
+**/.clinerules/**
+**/.agents/**
+**/.claude/**
+**/.cursor/**
+**/.gemini/**
+**/.windsurf/**
+**/.continue/**
+**/.github/**
+.vscode/**
+.devcontainer/**
+.husky/**
+tools/**
+
+# Dependency manifests and lockfiles (refine once the stack is chosen)
+**/package.json
+**/package-lock.json
+**/pnpm-lock.yaml
+**/pnpm-workspace.yaml
+**/yarn.lock
+**/bun.lock
+**/bun.lockb
+**/.npmrc
+**/Cargo.toml
+**/Cargo.lock
+**/go.mod
+**/go.sum
+**/pyproject.toml
+**/uv.lock
+**/poetry.lock
+**/requirements*.txt
+**/*.csproj
+**/*.sln
+**/Directory.Packages.props
+
+# Build and test configuration (refine once the stack is chosen)
+**/tsconfig*.json
+**/vite.config.*
+**/vitest.config.*
+**/jest.config.*
+**/playwright.config.*
+**/eslint.config.*
+**/.eslintrc*
+**/.prettierrc*
+**/biome.json
+**/Dockerfile
+**/Containerfile
+**/docker-compose*.yml
+**/compose*.yml

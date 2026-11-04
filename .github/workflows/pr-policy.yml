@@ -1,0 +1,134 @@
+# PR policy checks. Runs on pull_request_target so it also works for forks,
+# which is safe here because it NEVER checks out or runs PR code: it only reads
+# the PR through the API and reads policy files from the base commit.
+name: pr-policy
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: pr-policy-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  admin-paths:
+    name: admin-only paths
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const { owner, repo } = context.repo;
+
+            // Admin = repo role maintain or admin (org owners and the admins team).
+            // Both the PR author and whoever triggered this event (e.g. pushed new
+            // commits) must be admins for the exemption to apply.
+            const isAdmin = async username => {
+              const { data } = await github.rest.repos.getCollaboratorPermissionLevel({ owner, repo, username });
+              return ['admin', 'maintain'].includes(data.role_name);
+            };
+            const actors = [...new Set([pr.user.login, context.payload.sender.login])];
+            const admins = await Promise.all(actors.map(isAdmin));
+            if (admins.every(Boolean)) {
+              core.info(`${actors.join(', ')}: admin; admin-only paths allowed (CODEOWNERS review still applies).`);
+              return;
+            }
+
+            // Policy file is read from the BASE commit, never from the PR.
+            const { data: file } = await github.rest.repos.getContent({
+              owner, repo, path: '.github/admin-paths.txt', ref: pr.base.sha,
+            });
+            const globs = Buffer.from(file.content, 'base64').toString('utf8')
+              .split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+            const toRegex = g => new RegExp('^' + g
+              .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+              .replace(/\*\*\//g, '\u0000')
+              .replace(/\*\*/g, '\u0001')
+              .replace(/\*/g, '[^/]*')
+              .replace(/\?/g, '[^/]')
+              .replace(/\u0000/g, '(?:.*/)?')
+              .replace(/\u0001/g, '.*') + '$', 'i');
+            const rules = globs.map(g => [g, toRegex(g)]);
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner, repo, pull_number: pr.number, per_page: 100,
+            });
+            const hits = [];
+            // The files API returns at most 3000 files: fail closed if the list may be truncated.
+            if (files.length < pr.changed_files || pr.changed_files >= 3000) {
+              hits.push(`file list truncated (${files.length} of ${pr.changed_files} files listed); too large to verify`);
+            }
+            for (const f of files) {
+              for (const p of [f.filename, f.previous_filename].filter(Boolean)) {
+                const rule = rules.find(([, re]) => re.test(p));
+                if (rule) hits.push(`\`${p}\` (matches \`${rule[0]}\`)`);
+              }
+            }
+            if (hits.length === 0) {
+              core.info(`No admin-only path touched in ${files.length} file(s).`);
+              return;
+            }
+
+            const body = [
+              'This PR changes admin-only paths, so it is closed automatically:',
+              '',
+              ...hits.map(h => `- ${h}`),
+              '',
+              'Only organization admins can change these files (see `AGENTS.md`, section "Never").',
+              'If one of them is wrong or you need a new dependency, please open an issue describing the problem instead.',
+              'Do not reopen this PR.',
+            ].join('\n');
+            await github.rest.issues.createComment({ owner, repo, issue_number: pr.number, body });
+            await github.rest.pulls.update({ owner, repo, pull_number: pr.number, state: 'closed' });
+            core.setFailed(`Admin-only paths touched by non-admin ${pr.user.login}: ${hits.length}`);
+
+  title:
+    name: conventional title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const title = context.payload.pull_request.title;
+            const re = /^(feat|fix|balance|docs|test|refactor|chore)(\([a-z0-9][a-z0-9-]*\))?!?: \S.*$/;
+            if (!re.test(title)) {
+              core.setFailed(
+                `PR title "${title}" is not a Conventional Commit.\n` +
+                'Expected `type(scope): description` (scope optional, `!` for breaking), in English, imperative.\n' +
+                'Types: feat, fix, balance, docs, test, refactor, chore. Example: `feat(combat): add critical hits`.');
+            } else {
+              core.info(`Title OK: ${title}`);
+            }
+
+  assisted-by:
+    name: assisted-by
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            // Format: docs/assisted-by.md (Assisted-by 0.1)
+            const body = context.payload.pull_request.body || '';
+            const lines = body.split(/\r?\n/)
+              .map(l => l.trim())
+              .filter(l => /^assisted-by\s*:/i.test(l))
+              .map(l => l.replace(/^assisted-by\s*:\s*/i, ''));
+            const re = /^(none|(?!none[ /])[a-z0-9][a-z0-9._-]*(\/[A-Za-z0-9._-]+)? \(([a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._-]*|unknown)\))$/;
+            const errors = [];
+            if (lines.length === 0) errors.push('No `Assisted-by:` line found in the PR body.');
+            for (const v of lines) if (!re.test(v)) errors.push(`Malformed: \`Assisted-by: ${v}\``);
+            if (lines.includes('none') && lines.length > 1) errors.push('`Assisted-by: none` must be the only Assisted-by line.');
+            if (errors.length) {
+              core.setFailed(errors.join('\n') +
+                '\nExpected e.g. `Assisted-by: claude-code/2.1.316 (anthropic/claude-opus-4-8)`, ' +
+                '`Assisted-by: aider (unknown)` or `Assisted-by: none`. See docs/assisted-by.md.');
+            } else {
+              core.info(`Assisted-by OK: ${lines.join(' | ')}`);
+            }

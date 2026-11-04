@@ -1,0 +1,54 @@
+# Admin-only paths: changes need a review from another org admin.
+# Keep in sync with .github/admin-paths.txt.
+
+/GOVERNANCE.md      @autoaigame/admins
+/SECURITY.md        @autoaigame/admins
+/Makefile           @autoaigame/admins
+/GNUmakefile        @autoaigame/admins
+/ai-tools.toml      @autoaigame/admins
+/.mcp.json          @autoaigame/admins
+/.vscode/           @autoaigame/admins
+/.devcontainer/     @autoaigame/admins
+/.husky/            @autoaigame/admins
+/tools/             @autoaigame/admins
+/docs/assisted-by.md @autoaigame/admins
+
+# Agent instruction files and folders, at any depth
+AGENTS.md           @autoaigame/admins
+AGENTS.override.md  @autoaigame/admins
+CLAUDE.md           @autoaigame/admins
+CLAUDE.local.md     @autoaigame/admins
+GEMINI.md           @autoaigame/admins
+.cursorrules        @autoaigame/admins
+.windsurfrules      @autoaigame/admins
+.clinerules         @autoaigame/admins
+.agents/            @autoaigame/admins
+.claude/            @autoaigame/admins
+.cursor/            @autoaigame/admins
+.gemini/            @autoaigame/admins
+.windsurf/          @autoaigame/admins
+.continue/          @autoaigame/admins
+.github/            @autoaigame/admins
+
+package.json        @autoaigame/admins
+package-lock.json   @autoaigame/admins
+pnpm-lock.yaml      @autoaigame/admins
+yarn.lock           @autoaigame/admins
+bun.lock            @autoaigame/admins
+bun.lockb           @autoaigame/admins
+.npmrc              @autoaigame/admins
+Cargo.toml          @autoaigame/admins
+Cargo.lock          @autoaigame/admins
+go.mod              @autoaigame/admins
+go.sum              @autoaigame/admins
+pyproject.toml      @autoaigame/admins
+uv.lock             @autoaigame/admins
+poetry.lock         @autoaigame/admins
+requirements*.txt   @autoaigame/admins
+*.csproj            @autoaigame/admins
+tsconfig*.json      @autoaigame/admins
+vite.config.*       @autoaigame/admins
+vitest.config.*     @autoaigame/admins
+eslint.config.*     @autoaigame/admins
+Dockerfile          @autoaigame/admins
+Containerfile       @autoaigame/admins
