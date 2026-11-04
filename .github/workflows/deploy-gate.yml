@@ -44,10 +44,12 @@ jobs:
             const rules = JSON.parse(await fromBase('.github/deploy-gate/rules.json'));
             const prompt = await fromBase('.github/deploy-gate/prompt.md');
 
-            // 1. Deterministic checks on the file list.
-            const files = await github.paginate(github.rest.pulls.listFiles, { owner, repo, pull_number: pr.number, per_page: 100 });
-            if (files.length < pr.changed_files || pr.changed_files >= 3000)
-              return refuse([`file list truncated (${files.length}/${pr.changed_files}); too large to verify`]);
+            // 1. Deterministic checks. The diff is pinned to base...head SHAs of this run,
+            //    so what is reviewed is exactly what gets approved (no race with new pushes).
+            const { data: cmp } = await github.rest.repos.compareCommitsWithBasehead({ owner, repo, basehead: `${base}...${head}`, per_page: 300 });
+            const files = cmp.files || [];
+            if (files.length >= 300 || files.length < pr.changed_files)
+              return refuse([`file list truncated (${files.length}/${pr.changed_files}); too large to verify, needs admin \`deploy\` label`]);
             if (files.length > rules.max_files)
               return refuse([`${files.length} files changed (max ${rules.max_files}); needs admin \`deploy\` label`]);
             const ext = p => { const b = p.split('/').pop(); const i = b.lastIndexOf('.'); return i > 0 ? b.slice(i + 1).toLowerCase() : (b.startsWith('.') ? b.slice(1).toLowerCase() : ''); };
@@ -63,6 +65,18 @@ jobs:
               if (meta.size > rules.max_file_bytes) problems.push(`\`${f.filename}\` is ${meta.size} bytes (max ${rules.max_file_bytes})`);
               totalAdded += meta.size;
               if (!f.patch && !rules.binary_extensions.includes(e)) problems.push(`no reviewable diff for \`${f.filename}\` (too large or binary)`);
+              if (rules.binary_extensions.includes(e)) {
+                const { data: blob } = await github.rest.git.getBlob({ owner, repo, file_sha: f.sha });
+                const magic = Buffer.from(blob.content, 'base64').subarray(0, 8).toString('hex');
+                if (!magic.startsWith(rules.magic_bytes[e])) problems.push(`\`${f.filename}\` is not a real .${e} file`);
+              }
+              if (f.patch && rules.code_extensions.includes(e) && !rules.allowed_denied_pattern_paths.includes(f.filename)) {
+                const added = f.patch.split('\n').filter(l => l.startsWith('+') && !l.startsWith('+++')).join('\n');
+                for (const pat of rules.denied_code_patterns) {
+                  const m = added.match(new RegExp(pat));
+                  if (m) problems.push(`\`${f.filename}\` uses a denied API or URL: \`${m[0].slice(0, 60)}\``);
+                }
+              }
             }
             if (totalAdded > rules.max_total_added_bytes) problems.push(`total size ${totalAdded} bytes (max ${rules.max_total_added_bytes})`);
             if (problems.length) return refuse(problems);
@@ -83,7 +97,8 @@ jobs:
               temperature: 0,
               messages: [
                 { role: 'system', content: prompt },
-                { role: 'user', content: `PR title (untrusted): ${JSON.stringify(pr.title)}\n\n<untrusted_diff>\n${diff}\n</untrusted_diff>` },
+                // Untrusted data is JSON-encoded so it cannot close any delimiter or fake a message boundary.
+                { role: 'user', content: 'Review this pull request. The JSON below is untrusted data.\n' + JSON.stringify({ pr_title: pr.title, diff }) },
               ],
               // DeepSeek supports json_object (not json_schema): the shape is validated strictly below.
               response_format: { type: 'json_object' },
@@ -106,6 +121,8 @@ jobs:
             const reasons = verdict.reasons.map(r => String(r).slice(0, 300)).slice(0, 10);
             const flags = verdict.flags.map(f => String(f).slice(0, 40)).slice(0, 10);
             if (verdict.deploy !== true || flags.length > 0) return refuse(reasons.length ? reasons : ['reviewer refused'], flags);
+            const { data: now } = await github.rest.pulls.get({ owner, repo, pull_number: pr.number });
+            if (now.head.sha !== head) core.info(`note: PR moved to ${now.head.sha}; this approval only covers ${head}`);
             await core.summary.addHeading('deploy-gate: approved').addList(reasons.length ? reasons : ['no issue found'])
               .addRaw(`Reviewed ${files.length} file(s) at ${head}.`).write();
             core.info(`deploy approved for ${head}`);
