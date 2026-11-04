@@ -1,0 +1,41 @@
+## RPC endpoint at /root/Main/Net on both client and server.
+## Forwards calls to a handler set at runtime, so this file never names server or client code.
+extends Node
+
+var _handler: Object
+
+
+func set_handler(handler: Object) -> void:
+	_handler = handler
+
+
+func _forward(method: String, args: Array) -> void:
+	if _handler != null and _handler.has_method(method):
+		_handler.callv(method, args)
+
+
+# client -> server
+@rpc("any_peer", "call_remote", "reliable")
+func join(player_name: String) -> void:
+	_forward("on_join", [multiplayer.get_remote_sender_id(), player_name])
+
+
+@rpc("any_peer", "call_remote", "unreliable_ordered")
+func move_to(cell: Vector2i) -> void:
+	_forward("on_move_to", [multiplayer.get_remote_sender_id(), cell])
+
+
+# server -> client
+@rpc("authority", "call_remote", "reliable")
+func welcome(peer_id: int, cell: Vector2i) -> void:
+	_forward("on_welcome", [peer_id, cell])
+
+
+@rpc("authority", "call_remote", "reliable")
+func rejected(reason: String) -> void:
+	_forward("on_rejected", [reason])
+
+
+@rpc("authority", "call_remote", "unreliable_ordered")
+func snapshot(players: Array) -> void:
+	_forward("on_snapshot", [players])
