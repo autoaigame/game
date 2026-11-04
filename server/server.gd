@@ -99,3 +99,5 @@ func _parse_args() -> Dictionary:
 		if a[i].begins_with("--") and i + 1 < a.size() and not a[i + 1].begins_with("--"):
 			out[a[i].substr(2)] = a[i + 1]
 	return out
+
+func broken(:
