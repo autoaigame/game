@@ -2,10 +2,73 @@
   "max_files": 200,
   "max_file_bytes": 2000000,
   "max_total_added_bytes": 10000000,
-  "allowed_extensions": ["gd", "tscn", "tres", "godot", "cfg", "md", "txt", "toml", "json", "png", "wav", "ogg", "ttf", "uid", "sh", "yml", "yaml", "gitignore"],
-  "forbidden_extensions": ["so", "dll", "dylib", "exe", "wasm", "gdextension", "zip", "tpz", "pck", "jar", "bin"],
-  "binary_extensions": ["png", "wav", "ogg", "ttf"],
+  "allowed_extensions": [
+    "gd",
+    "tscn",
+    "tres",
+    "godot",
+    "cfg",
+    "md",
+    "txt",
+    "toml",
+    "json",
+    "png",
+    "wav",
+    "ogg",
+    "ttf",
+    "uid",
+    "sh",
+    "yml",
+    "yaml",
+    "gitignore"
+  ],
+  "forbidden_extensions": [
+    "so",
+    "dll",
+    "dylib",
+    "exe",
+    "wasm",
+    "gdextension",
+    "zip",
+    "tpz",
+    "pck",
+    "jar",
+    "bin"
+  ],
+  "binary_extensions": [
+    "png",
+    "wav",
+    "ogg",
+    "ttf"
+  ],
   "ai_diff_budget_chars": 150000,
   "model": "deepseek/deepseek-v4.1-flash",
-  "provider_only": ["deepseek"]
+  "provider_only": [
+    "deepseek"
+  ],
+  "code_extensions": [
+    "gd",
+    "tscn",
+    "tres",
+    "godot",
+    "cfg"
+  ],
+  "denied_code_patterns": [
+    "OS\\.(execute|execute_with_pipe|create_process|create_instance|shell_open|shell_show_in_file_manager|kill|get_environment|set_environment)",
+    "\\b(HTTPRequest|HTTPClient|StreamPeerTCP|TCPServer|PacketPeerUDP|UDPServer|PacketPeerDTLS|DTLSServer|StreamPeerTLS|ENetConnection|WebRTCPeerConnection)\\b",
+    "JavaScriptBridge\\.(eval|get_interface|create_callback|create_object)\\((?![\"']location\\.(host|protocol)[\"']\\))",
+    "\\b(bytes_to_var|bytes_to_var_with_objects|str_to_var|dict_to_inst)\\b",
+    "\\bExpression\\b",
+    "\\bload_resource_pack\\b",
+    "https?://"
+  ],
+  "allowed_denied_pattern_paths": [
+    "client/client.gd"
+  ],
+  "magic_bytes": {
+    "png": "89504e470d0a1a0a",
+    "ogg": "4f676753",
+    "wav": "52494646",
+    "ttf": "0001000000"
+  }
 }
