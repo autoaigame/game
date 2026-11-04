@@ -17,9 +17,6 @@
     "ogg",
     "ttf",
     "uid",
-    "sh",
-    "yml",
-    "yaml",
     "gitignore"
   ],
   "forbidden_extensions": [
@@ -51,8 +48,7 @@
     "tscn",
     "tres",
     "godot",
-    "cfg",
-    "sh"
+    "cfg"
   ],
   "denied_code_patterns": [
     "OS\\.(execute|execute_with_pipe|create_process|create_instance|shell_open|shell_show_in_file_manager|kill|get_environment|set_environment)",
@@ -75,5 +71,14 @@
     "ogg": "4f676753",
     "wav": "52494646",
     "ttf": "0001000000"
-  }
+  },
+  "review_required_extensions": [
+    "sh",
+    "bash",
+    "py",
+    "js",
+    "yml",
+    "yaml",
+    "mk"
+  ]
 }
