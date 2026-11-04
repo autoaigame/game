@@ -10,6 +10,6 @@ test: setup ## unit and state tests
 	@$(RUN) -s res://tests/run_tests.gd
 
 smoke: setup ## headless server + clients: join, move, disconnect, reconnect
-	@echo "smoke: not implemented yet" && exit 1
+	@GODOT="$(GODOT)" tools/smoke.sh
 
-check: test ## everything CI requires
+check: test smoke ## everything CI requires

@@ -13,6 +13,9 @@ func _ready() -> void:
 		push_error("Missing %s" % path)
 		get_tree().quit(1)
 		return
+	var net: Node = load("res://shared/net.gd").new()
+	net.name = "Net"
+	add_child(net)
 	var role: Node = load(path).new()
 	role.name = "Role"
 	add_child(role)

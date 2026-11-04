@@ -1,2 +1,74 @@
-## Client role. Implemented in the multiplayer task.
+## Client role: connects to the server, joins with a name, exposes state through signals.
+## Rendering and input live in separate nodes (client/world_view.gd).
 extends Node
+
+signal welcomed(cell: Vector2i)
+signal join_rejected(reason: String)
+signal snapshot_received(players: Array)
+signal connection_lost
+
+## ws(s):// URL of the server. On the web it defaults to the page's own host + /ws.
+var server_url := ""
+## Join automatically with this name once connected ("" = wait for join_with()).
+var player_name := ""
+var my_peer_id := 0
+
+var _net: Node
+
+
+func _ready() -> void:
+	_net = get_parent().get_node("Net")
+	_net.set_handler(self)
+	if server_url == "":
+		server_url = _default_url()
+	var peer := WebSocketMultiplayerPeer.new()
+	var err := peer.create_client(server_url)
+	if err != OK:
+		push_error("client: cannot connect to %s (%s)" % [server_url, error_string(err)])
+		connection_lost.emit()
+		return
+	multiplayer.multiplayer_peer = peer
+	multiplayer.connected_to_server.connect(_on_connected)
+	multiplayer.server_disconnected.connect(func(): connection_lost.emit())
+	multiplayer.connection_failed.connect(func(): connection_lost.emit())
+
+
+func join_with(new_name: String) -> void:
+	player_name = new_name
+	if multiplayer.multiplayer_peer != null \
+			and multiplayer.multiplayer_peer.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED:
+		_net.join.rpc_id(1, player_name)
+
+
+func request_move(cell: Vector2i) -> void:
+	_net.move_to.rpc_id(1, cell)
+
+
+func on_welcome(peer_id: int, cell: Vector2i) -> void:
+	my_peer_id = peer_id
+	welcomed.emit(cell)
+
+
+func on_rejected(reason: String) -> void:
+	join_rejected.emit(reason)
+
+
+func on_snapshot(players: Array) -> void:
+	snapshot_received.emit(players)
+
+
+func _on_connected() -> void:
+	if player_name != "":
+		_net.join.rpc_id(1, player_name)
+
+
+func _default_url() -> String:
+	var args := OS.get_cmdline_user_args()
+	var i := args.find("--connect")
+	if i >= 0 and i + 1 < args.size():
+		return args[i + 1]
+	if OS.has_feature("web"):
+		var proto: String = JavaScriptBridge.eval("location.protocol")
+		var host: String = JavaScriptBridge.eval("location.host")
+		return ("wss://" if proto == "https:" else "ws://") + host + "/ws"
+	return "ws://127.0.0.1:%d" % Protocol.DEFAULT_PORT
