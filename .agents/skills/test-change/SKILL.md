@@ -19,6 +19,7 @@ A test only counts if it can fail. Agent-written tests often restate the fix, so
 
 - Prefer checking game state at a given tick over checking the code's internal calls.
 - For a rule that needs a situation, inject the state directly and run the fewest ticks that show the result. Do not rely on an agent playing freely.
+- Server logic: call `Protocol`/`MapData` functions directly with a fixed `dt`; see `tests/test_movement.gd`.
 - Fix the seed and the time step. Do not use the wall clock or the network in a test.
 - Test the edge the rule creates: zero, the maximum, two entities on the same tick, a save loaded afterwards.
 
@@ -28,8 +29,7 @@ A test only counts if it can fail. Agent-written tests often restate the fix, so
 |---|---|---|
 | Unit and state | `make test` | Every change |
 | Smoke | `make smoke` | Every change |
-| Scenario | TBD | The change affects a whole play sequence |
-| Balance bots | TBD | The change is `balance` or touches numbers. Report only, it does not block |
+| Scenario | add a step to `tools/smoke.sh` (admin-only: propose it in the PR description) | The change affects a whole play sequence |
 
 Run what you can. List in "Not verified" any tier you skipped, and why. Do not write "tested" without a command and its result.
 

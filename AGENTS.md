@@ -4,10 +4,23 @@ A game built by contributors and their AI agents. Pull requests are merged by co
 
 ## Commands
 
-- `make setup`: install the project. Duration: TBD.
-- `make check`: everything CI requires. Duration: TBD. Run it before every push.
-- `make test`: tests only.
-- `make smoke`: start the game without rendering and play a fixed seed.
+The game uses Godot 4.7 (GDScript only). Install Godot 4.7.2 and put `godot` on your PATH, or pass `GODOT=/path/to/godot` to `make`.
+
+- `make setup`: import the project. Duration: about 5 s.
+- `make check`: everything CI requires (`test` + `smoke`). Duration: about 5 s. Run it before every push.
+- `make test`: unit tests (`tests/`).
+- `make smoke`: a real headless server and headless clients play join, move, disconnect and reconnect.
+- `make run-server`: a local server on port 9000. Run the client with `godot --path . -- --connect ws://127.0.0.1:9000`.
+- `make export-web`: the browser build in `build/web/`.
+- `make art`: regenerate the pixel art from `tools/gen_art.gd`.
+
+## Layout
+
+- `shared/`: code used by both sides (map, protocol, RPC endpoint). Deterministic.
+- `server/`: the authoritative server and its SQLite storage. Never in the web build.
+- `client/`: connection, rendering and input.
+- `tests/`: one `test_*.gd` file per topic, extending `TestCase`.
+- Rules every change must keep: `docs/invariants.md`.
 
 ## Done means
 

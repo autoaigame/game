@@ -15,9 +15,9 @@ Content is data with a schema. It needs no engine code, which makes it the easie
 
 ## Data
 
-1. Copy the closest existing entry and change it. Paths and schemas: TBD with the stack.
+1. Copy the closest existing entry and change it. For now the only content is the map in `shared/map_data.gd` (tile types are the `TILE_*` constants). Data files with schemas will come with the first content type that needs them.
 2. Use a new, unique id. Never reuse or rename an existing id, since saves refer to it.
-3. Run `make check`, which validates the schema.
+3. Run `make check`.
 4. Say in the PR what the player will see, and when.
 
 ## Assets
@@ -36,7 +36,7 @@ license = "license of this file"
 source = "URL, if third-party"
 ```
 
-3. Run `tools/check-assets`, which checks the format, size and provenance.
+3. CI does not check assets automatically yet: check the format and size yourself against `docs/art-guide.md`, and that every new file has its `ASSETS.toml` entry.
 4. Do not imitate a living artist or a known game, and do not submit anything you cannot license.
 
 The declaration is on your honor, and CI cannot check it. If you do not know where a file came from, do not submit it.
