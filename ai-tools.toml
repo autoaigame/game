@@ -1,0 +1,5 @@
+# Maps variants found in Assisted-by lines to one name for statistics.
+
+[aliases]
+"claude-code" = ["claudecode", "claude_code"]
+"anthropic/claude-opus-4-8" = ["anthropic/opus-4.8", "anthropic/claude-opus-4.8"]
