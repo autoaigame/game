@@ -12,6 +12,8 @@
 /.husky/            @autoaigame/admins
 /tools/             @autoaigame/admins
 /docs/assisted-by.md @autoaigame/admins
+/export_presets.cfg  @autoaigame/admins
+/addons/            @autoaigame/admins
 
 # Agent instruction files and folders, at any depth
 AGENTS.md           @autoaigame/admins
