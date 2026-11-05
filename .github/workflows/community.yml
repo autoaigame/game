@@ -66,11 +66,12 @@ jobs:
         env:
           URL: ${{ steps.wait.outputs.url }}
         run: |
-          mkdir -p "$RUNNER_TEMP/shot" && cd "$RUNNER_TEMP/shot"
-          npm init -y > /dev/null
-          npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 > /dev/null
-          # Google Chrome of the runner. Its sandbox may be off: this VM is thrown away and holds no secret.
-          cat > shoot.mjs <<'EOF'
+          # The PR's page runs in Chrome with its sandbox on, as a user without sudo, so even a browser
+          # exploit can't reach this job's runner (its cache scope is main's, pull_request_target).
+          sudo sysctl -qw kernel.apparmor_restrict_unprivileged_userns=0 # lets Chrome's sandbox start
+          sudo useradd --create-home --shell /usr/sbin/nologin shooter
+          sudo install -d -o shooter -g shooter -m 755 /tmp/shot
+          sudo -u shooter tee /tmp/shot/shoot.mjs > /dev/null <<'EOF'
           // Screenshot of a PR preview after logging in: node shoot.mjs <https url> <out.png>
           import { chromium } from 'playwright-core';
           const [url, out] = process.argv.slice(2);
@@ -79,6 +80,8 @@ jobs:
           setTimeout(() => fail('total', 'over 120 s'), 120_000).unref();
           const browser = await chromium.launch({
             channel: process.env.CHROME_CHANNEL || undefined,
+            // Playwright adds --no-sandbox unless told otherwise. The sandbox must start, or the shot fails.
+            chromiumSandbox: true,
             args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
           }).catch(e => fail('launch', e));
           try {
@@ -96,7 +99,11 @@ jobs:
             await browser.close();
           }
           EOF
-          CHROME_CHANNEL=chrome node shoot.mjs "$URL" shot.png
+          cd /tmp/shot
+          sudo -u shooter -H npm init -y > /dev/null
+          sudo -u shooter -H npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 > /dev/null
+          sudo -u shooter -H env CHROME_CHANNEL=chrome node shoot.mjs "$URL" shot.png
+          install -d "$RUNNER_TEMP/shot" && cp /tmp/shot/shot.png "$RUNNER_TEMP/shot/shot.png"
 
       - name: Keep the screenshot for the upload job
         if: steps.wait.outputs.ready == 'true'
