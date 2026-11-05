@@ -19,12 +19,6 @@ static func held_target(pos: Vector2, dir: Vector2i) -> Vector2i:
 	return _walk(Protocol.cell_of(pos), dir, LOOKAHEAD)
 
 
-## Target when the keys are released: the next cell, so the player stops on a cell
-## close to where the key was let go.
-static func release_target(pos: Vector2, dir: Vector2i) -> Vector2i:
-	return _walk(Protocol.cell_of(pos), dir, 1)
-
-
 static func _walk(cell: Vector2i, dir: Vector2i, steps: int) -> Vector2i:
 	for i in steps:
 		if not MapData.is_walkable(cell + dir):

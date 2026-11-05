@@ -97,7 +97,7 @@ func _process(_delta: float) -> void:
 			Input.is_physical_key_pressed(KEY_A), Input.is_physical_key_pressed(KEY_D))
 	if dir == Vector2i.ZERO:
 		if _key_dir != Vector2i.ZERO:
-			client.request_move(KeyMove.release_target(_my_pos, _key_dir))
+			client.request_stop()
 		_key_dir = dir
 		return
 	var target := KeyMove.held_target(_my_pos, dir)

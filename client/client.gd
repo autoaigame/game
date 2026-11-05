@@ -55,6 +55,10 @@ func request_move(cell: Vector2i) -> void:
 	_net.move_to.rpc_id(1, cell)
 
 
+func request_stop() -> void:
+	_net.stop.rpc_id(1)
+
+
 func on_welcome(peer_id: int, cell: Vector2i) -> void:
 	my_peer_id = peer_id
 	welcomed.emit(cell)

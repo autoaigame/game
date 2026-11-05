@@ -32,11 +32,6 @@ func test_held_target_stops_at_water() -> void:
 	assert_eq(KeyMove.held_target(Vector2(29, 16), Vector2i(1, 0)), Vector2i(30, 16))
 
 
-func test_release_target_is_the_next_cell() -> void:
-	assert_eq(KeyMove.release_target(Vector2(16.3, 16), Vector2i(1, 0)), Vector2i(17, 16))
-	assert_eq(KeyMove.release_target(Vector2(30, 16), Vector2i(1, 0)), Vector2i(30, 16))
-
-
 func test_diagonal_moves_both_axes() -> void:
 	var start := Vector2(20, 20)
 	var p := Protocol.step_towards(start, KeyMove.held_target(start, Vector2i(-1, -1)), 0.25)
