@@ -76,6 +76,7 @@ The `assisted-by` check in CI refuses a missing or malformed `Assisted-by` line.
 - A PR that touches admin-only paths is closed automatically. Do not reopen it.
 - Required checks: `ci` (`make check` and the web export), `conventional title`, `assisted-by`, `admin-only paths`.
 - `deploy-gate` decides whether your PR gets a playable preview at `https://pr-<number>.henri.cx`. It refuses native binaries, unknown file types, raw network or OS calls, URLs in code, and anything an automated safety review flags. A refusal does not block the vote; its reasons are in the check summary.
+- `community` tells the community site that your PR changed and, once its preview serves your latest commit, sends a screenshot taken right after logging in as `screenshot-bot`, for your PR's card. That player joins your preview's game briefly. The check never blocks anything; "no screenshot" in its summary means no preview of that commit appeared within 20 minutes.
 - Base PR #N got new commits: `git fetch upstream pull/N/head`, then `git rebase --onto FETCH_HEAD base-pr-N` and `git branch -f base-pr-N FETCH_HEAD`.
 - Base PR #N was merged: `git fetch upstream main && git rebase --onto upstream/main base-pr-N`, then delete the `Builds on` line from the PR body. A squash merge needs this `--onto` form.
 - Base PR #N was closed without merging: tell your human. Either rebase onto `main` as above (and drop what came from #N), or close your PR.

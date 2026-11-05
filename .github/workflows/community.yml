@@ -1,0 +1,139 @@
+# Community site: tells it when a PR changes, and sends it a screenshot of the PR's preview after
+# logging in, for the PR's card.
+# Runs on pull_request_target so this file always comes from main. It never checks out PR code.
+# The PR's game runs only in the browser of the `shoot` job, which holds no secret. `notify` and `upload`
+# hold the token and never load a PR page. The site re-reads PR facts from GitHub itself and re-encodes
+# the image, so nothing sent here is trusted.
+# Settings (Settings > Secrets and variables > Actions): variables COMMUNITY_URL and PREVIEW_URL
+# (with {number}), secret COMMUNITY_HOOK_TOKEN. Missing settings: the jobs do nothing.
+name: community
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited, closed, ready_for_review, converted_to_draft]
+
+permissions: {}
+
+jobs:
+  notify:
+    name: notify
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Tell the community site this PR changed
+        env:
+          COMMUNITY_URL: ${{ vars.COMMUNITY_URL }}
+          TOKEN: ${{ secrets.COMMUNITY_HOOK_TOKEN }}
+          N: ${{ github.event.pull_request.number }}
+        run: |
+          if [ -z "$COMMUNITY_URL" ] || [ -z "$TOKEN" ]; then echo "::notice::community site not configured"; exit 0; fi
+          curl -fsS -m 20 --retry 3 -o /dev/null -X POST -H "Authorization: Bearer $TOKEN" "$COMMUNITY_URL/api/hook/pr/$N"
+
+  shoot:
+    name: screenshot
+    if: >-
+      vars.PREVIEW_URL != '' &&
+      contains(fromJSON('["opened","synchronize","reopened","ready_for_review"]'), github.event.action)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: community-shoot-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    outputs:
+      ready: ${{ steps.wait.outputs.ready }}
+    steps:
+      - name: Wait for the preview of this commit
+        id: wait
+        env:
+          PREVIEW_URL: ${{ vars.PREVIEW_URL }}
+          N: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          url="${PREVIEW_URL//\{number\}/$N}"
+          url="${url%/}/"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          # The preview host says which commit it serves. 80 x 15 s = 20 min, enough for a build.
+          for _ in $(seq 80); do
+            got=$(curl -sS -m 10 -o /dev/null -D - "${url}?commit=$SHA" 2>/dev/null | tr -d '\r' |
+              awk 'tolower($1) == "x-preview-commit:" { print $2 }')
+            if [ "$got" = "$SHA" ]; then echo "ready=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+            sleep 15
+          done
+          echo "::notice::No preview of this commit after 20 minutes (deploy-gate refused, build failed, or evicted): no screenshot."
+
+      - name: Screenshot after logging in
+        if: steps.wait.outputs.ready == 'true'
+        env:
+          URL: ${{ steps.wait.outputs.url }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/shot" && cd "$RUNNER_TEMP/shot"
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 > /dev/null
+          # Google Chrome of the runner. Its sandbox may be off: this VM is thrown away and holds no secret.
+          cat > shoot.mjs <<'EOF'
+          // Screenshot of a PR preview after logging in: node shoot.mjs <https url> <out.png>
+          import { chromium } from 'playwright-core';
+          const [url, out] = process.argv.slice(2);
+          if (!/^https:\/\/[a-z0-9.-]+\/$/.test(url || '') || !out) { console.error('usage: shoot.mjs https://host/ out.png'); process.exit(2); }
+          const fail = (phase, e) => { console.error(`failed: ${phase}: ${e?.message ?? e}`); process.exit(1); };
+          setTimeout(() => fail('total', 'over 120 s'), 120_000).unref();
+          const browser = await chromium.launch({
+            channel: process.env.CHROME_CHANNEL || undefined,
+            args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
+          }).catch(e => fail('launch', e));
+          try {
+            const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+            await page.goto(url, { waitUntil: 'load', timeout: 60_000 }).catch(e => fail('load', e));
+            // Godot's loader removes or hides #status once the engine runs.
+            await page.waitForFunction(() => { const s = document.getElementById('status'); return !s || s.style.display === 'none' || s.style.visibility === 'hidden'; },
+              null, { timeout: 60_000 }).catch(e => fail('engine', e));
+            await page.waitForTimeout(1500);
+            await page.keyboard.type('screenshot-bot', { delay: 40 });
+            await page.keyboard.press('Enter');
+            await page.waitForTimeout(4000);
+            await page.screenshot({ path: out, type: 'png' });
+          } finally {
+            await browser.close();
+          }
+          EOF
+          CHROME_CHANNEL=chrome node shoot.mjs "$URL" shot.png
+
+      - name: Keep the screenshot for the upload job
+        if: steps.wait.outputs.ready == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: screenshot
+          path: ${{ runner.temp }}/shot/shot.png
+          retention-days: 1
+          if-no-files-found: error
+
+  upload:
+    name: upload screenshot
+    needs: shoot
+    if: needs.shoot.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: screenshot
+          path: ${{ runner.temp }}/shot
+
+      - name: Send it to the community site
+        env:
+          COMMUNITY_URL: ${{ vars.COMMUNITY_URL }}
+          TOKEN: ${{ secrets.COMMUNITY_HOOK_TOKEN }}
+          N: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ -z "$COMMUNITY_URL" ] || [ -z "$TOKEN" ]; then echo "::notice::community site not configured"; exit 0; fi
+          f="$RUNNER_TEMP/shot/shot.png"
+          if [ "$(stat -c %s "$f")" -gt 2097152 ]; then echo "::error::screenshot over 2 MiB"; exit 1; fi
+          code=$(curl -sS -m 60 --retry 3 -o /dev/null -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer $TOKEN" -H "Content-Type: image/png" --data-binary @"$f" \
+            "$COMMUNITY_URL/api/hook/pr/$N/screenshot?sha=$SHA")
+          case "$code" in
+            204) echo "stored" ;;
+            409) echo "::notice::the site already shows a newer commit" ;;
+            *) echo "::error::community site answered $code"; exit 1 ;;
+          esac
