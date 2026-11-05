@@ -2,7 +2,7 @@
 class_name IsoLayer
 extends RefCounted
 
-const TILE_SIZE := Vector2i(32, 16)
+const TILE_SIZE := Vector2i(128, 64)
 
 
 ## A TileMapLayer with the game's isometric TileSet. texture = the tiles atlas (null in tests).
