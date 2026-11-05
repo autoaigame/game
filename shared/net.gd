@@ -25,6 +25,11 @@ func move_to(cell: Vector2i) -> void:
 	_forward("on_move_to", [multiplayer.get_remote_sender_id(), cell])
 
 
+@rpc("any_peer", "call_remote", "reliable")
+func stop() -> void:
+	_forward("on_stop", [multiplayer.get_remote_sender_id()])
+
+
 # server -> client
 @rpc("authority", "call_remote", "reliable")
 func welcome(peer_id: int, cell: Vector2i) -> void:

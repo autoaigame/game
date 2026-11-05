@@ -6,7 +6,7 @@ const SAVE_INTERVAL_S := 10.0
 
 var _db: RefCounted
 var _net: Node
-## peer_id -> {name: String, pos: Vector2, target: Vector2i}
+## peer_id -> {name: String, pos: Vector2, target: Vector2i, stopped: bool}
 var _players := {}
 var _tick_acc := 0.0
 var _save_acc := 0.0
@@ -56,7 +56,7 @@ func on_join(peer_id: int, player_name: String) -> void:
 		return
 	var saved: Variant = _db.load_player(player_name)
 	var cell: Vector2i = saved if saved != null and MapData.is_walkable(saved) else MapData.spawn_cell()
-	_players[peer_id] = {"name": player_name, "pos": Vector2(cell), "target": cell}
+	_players[peer_id] = {"name": player_name, "pos": Vector2(cell), "target": cell, "stopped": false}
 	_net.welcome.rpc_id(peer_id, peer_id, cell)
 	print("server: %s joined at %s" % [player_name, cell])
 
@@ -64,6 +64,13 @@ func on_join(peer_id: int, player_name: String) -> void:
 func on_move_to(peer_id: int, cell: Vector2i) -> void:
 	if _players.has(peer_id) and MapData.is_walkable(cell):
 		_players[peer_id]["target"] = cell
+		_players[peer_id]["stopped"] = false
+
+
+## The player stays where it is until its next move_to.
+func on_stop(peer_id: int) -> void:
+	if _players.has(peer_id):
+		_players[peer_id]["stopped"] = true
 
 
 func _on_peer_disconnected(peer_id: int) -> void:
@@ -76,13 +83,19 @@ func _on_peer_disconnected(peer_id: int) -> void:
 
 
 func _step(dt: float) -> void:
+	_move_players(dt)
 	var snap: Array = []
 	for id in _players:
 		var p: Dictionary = _players[id]
-		p["pos"] = Protocol.step_towards(p["pos"], p["target"], dt)
 		snap.append({"id": id, "name": p["name"], "pos": p["pos"]})
 	for id in _players:
 		_net.snapshot.rpc_id(id, snap)
+
+
+func _move_players(dt: float) -> void:
+	for p in _players.values():
+		if not p["stopped"]:
+			p["pos"] = Protocol.step_towards(p["pos"], p["target"], dt)
 
 
 func _exit_tree() -> void:
