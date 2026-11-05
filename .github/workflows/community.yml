@@ -85,6 +85,12 @@ jobs:
             args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
           }).catch(e => fail('launch', e));
           try {
+            // Refuse to load the PR's page unless Chrome reports its sandbox working.
+            const check = await browser.newPage();
+            await check.goto('chrome://sandbox').catch(e => fail('sandbox', e));
+            const status = await check.evaluate(() => document.body.innerText).catch(e => fail('sandbox', e));
+            if (!/You are adequately sandboxed/.test(status)) fail('sandbox', 'Chrome is not adequately sandboxed');
+            await check.close();
             const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
             await page.goto(url, { waitUntil: 'load', timeout: 60_000 }).catch(e => fail('load', e));
             // Godot's loader removes or hides #status once the engine runs.
@@ -102,8 +108,19 @@ jobs:
           cd /tmp/shot
           sudo -u shooter -H npm init -y > /dev/null
           sudo -u shooter -H npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 > /dev/null
-          sudo -u shooter -H env CHROME_CHANNEL=chrome node shoot.mjs "$URL" shot.png
-          install -d "$RUNNER_TEMP/shot" && cp /tmp/shot/shot.png "$RUNNER_TEMP/shot/shot.png"
+          # Chrome needs writable XDG dirs (else its crash handler aborts the launch).
+          sudo -u shooter -H env CHROME_CHANNEL=chrome XDG_CONFIG_HOME=/tmp/shot/.config XDG_CACHE_HOME=/tmp/shot/.cache \
+            node shoot.mjs "$URL" shot.png
+          # From here on, shooter is untrusted: stop all its processes, read the file as shooter (never
+          # follow a link it planted as the runner), at most 2 MiB, and keep it only if it is a PNG.
+          sudo pkill -KILL -u shooter || true
+          install -d "$RUNNER_TEMP/shot"
+          # shellcheck disable=SC2024 # on purpose: shooter reads, the runner writes
+          sudo -u shooter head -c 2097153 /tmp/shot/shot.png > "$RUNNER_TEMP/shot/shot.png"
+          f="$RUNNER_TEMP/shot/shot.png"
+          if [ "$(stat -c %s "$f")" -gt 2097152 ] || [ "$(head -c 8 "$f" | od -An -tx1 | tr -d ' \n')" != "89504e470d0a1a0a" ]; then
+            echo "::error::not a PNG of at most 2 MiB"; rm -f "$f"; exit 1
+          fi
 
       - name: Keep the screenshot for the upload job
         if: steps.wait.outputs.ready == 'true'
