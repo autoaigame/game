@@ -97,9 +97,34 @@ jobs:
             await page.waitForFunction(() => { const s = document.getElementById('status'); return !s || s.style.display === 'none' || s.style.visibility === 'hidden'; },
               null, { timeout: 60_000 }).catch(e => fail('engine', e));
             await page.waitForTimeout(1500);
+            // The login panel sits in the middle of the screen. Once the server welcomes the player it disappears,
+            // so most of that area changes. Shoot only then: never a screenshot of the login screen.
+            const panel = { x: 500, y: 280, width: 280, height: 160 };
+            const before = await page.screenshot({ clip: panel });
+            const helper = await browser.newPage(); // compares images, away from the PR's page
+            const changed = async () => helper.evaluate(async ([a, b]) => {
+              const load = src => new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = src; });
+              const [ia, ib] = await Promise.all([load(a), load(b)]);
+              const c = document.createElement('canvas'); c.width = ia.width; c.height = ia.height;
+              const g = c.getContext('2d');
+              g.drawImage(ia, 0, 0); const da = g.getImageData(0, 0, c.width, c.height).data;
+              g.drawImage(ib, 0, 0); const db = g.getImageData(0, 0, c.width, c.height).data;
+              let n = 0;
+              for (let k = 0; k < da.length; k += 4) {
+                if (Math.abs(da[k] - db[k]) + Math.abs(da[k + 1] - db[k + 1]) + Math.abs(da[k + 2] - db[k + 2]) > 60) n++;
+              }
+              return n / (da.length / 4);
+            }, ['data:image/png;base64,' + before.toString('base64'),
+                'data:image/png;base64,' + (await page.screenshot({ clip: panel })).toString('base64')]);
             await page.keyboard.type('screenshot-bot', { delay: 40 });
             await page.keyboard.press('Enter');
-            await page.waitForTimeout(4000);
+            const deadline = Date.now() + 30_000;
+            let share = 0;
+            while ((share = await changed()) < 0.8) {
+              if (Date.now() > deadline) fail('join', `login panel still shown after 30 s (${share.toFixed(2)} changed)`);
+              await page.waitForTimeout(500);
+            }
+            await page.waitForTimeout(2000);
             await page.screenshot({ path: out, type: 'png' });
           } finally {
             await browser.close();
