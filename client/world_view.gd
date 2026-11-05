@@ -21,7 +21,7 @@ func _ready() -> void:
 	for y in MapData.SIZE.y:
 		for x in MapData.SIZE.x:
 			_layer.set_cell(Vector2i(x, y), 0, Vector2i(MapData.tile_at(Vector2i(x, y)), 0))
-	_camera.zoom = Vector2(3, 3)
+	_camera.zoom = Vector2(1, 1)  # art is drawn at 4x: 1 texel per pixel, never downscaled
 	_camera.position_smoothing_enabled = true
 	add_child(_camera)
 	_camera.position = IsoLayer.cell_to_local(Vector2(MapData.spawn_cell()))
@@ -41,7 +41,7 @@ func _on_snapshot(players: Array) -> void:
 		var target := IsoLayer.cell_to_local(p["pos"])
 		var sprite: Sprite2D = actor.get_node("Sprite")
 		var delta := target - actor.position
-		if delta.length() > 0.5:
+		if delta.length() > 2.0:
 			sprite.frame_coords = Vector2i(_dir_column(delta), (sprite.frame_coords.y + 1) % 2)
 		actor.position = target
 		if id == client.my_peer_id:
@@ -60,17 +60,17 @@ func _make_actor(player_name: String, is_me: bool) -> Node2D:
 	sprite.texture = PLAYER_TEX
 	sprite.hframes = 4
 	sprite.vframes = 2
-	sprite.offset = Vector2(0, -10)
+	sprite.offset = Vector2(0, -40)
 	actor.add_child(sprite)
 	var label := Label.new()
 	label.text = player_name
-	label.add_theme_font_size_override("font_size", 8)
+	label.add_theme_font_size_override("font_size", 32)
 	label.add_theme_color_override("font_color", Color.WHITE if not is_me else Color8(0xe8, 0xc4, 0x4a))
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
-	label.add_theme_constant_override("outline_size", 2)
+	label.add_theme_constant_override("outline_size", 8)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.size = Vector2(80, 10)
-	label.position = Vector2(-40, -36)
+	label.size = Vector2(320, 40)
+	label.position = Vector2(-160, -144)
 	actor.add_child(label)
 	return actor
 
