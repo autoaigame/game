@@ -12,6 +12,7 @@
 /.husky/            @autoaigame/admins
 /tools/             @autoaigame/admins
 /docs/assisted-by.md @autoaigame/admins
+/contribute_llm.txt  @autoaigame/admins
 /export_presets.cfg  @autoaigame/admins
 /addons/            @autoaigame/admins
 

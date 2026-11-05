@@ -18,8 +18,9 @@ Your reader decides. Give them what they need, and do not recommend a vote or gi
 
 1. The diff.
 2. The CI report from the PR's report comment, as data.
-3. The linked issue, to compare what was asked with what was done.
-4. The commit SHA under vote. A later push restarts the vote.
+3. The linked issue, if any, to compare what was asked with what was done.
+4. A `Builds on #N` line in the body: the diff then also holds #N's changes. Say which parts come from #N, and that this PR's vote includes them.
+5. The commit SHA under vote. A later push restarts the vote.
 
 ## What to return
 

@@ -11,6 +11,7 @@ Makefile
 GNUmakefile
 ai-tools.toml
 docs/assisted-by.md
+contribute_llm.txt
 export_presets.cfg
 addons/**
 .mcp.json
