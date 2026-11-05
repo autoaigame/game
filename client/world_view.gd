@@ -81,7 +81,7 @@ func _make_actor(player_name: String, is_me: bool) -> Node2D:
 	sprite.name = "Sprite"
 	sprite.texture = PLAYER_TEX
 	sprite.hframes = 4
-	sprite.vframes = 2
+	sprite.vframes = 1 + WalkAnim.WALK_FRAMES
 	sprite.offset = Vector2(0, SPRITE_OFFSET_Y)
 	actor.add_child(sprite)
 	var label := Label.new()

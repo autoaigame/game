@@ -11,7 +11,9 @@ const SNAP_CELLS := 3.0
 ## Distance walked per walk frame.
 const STRIDE_CELLS := 0.5
 ## Height of the step bob, in pixels.
-const BOB_PX := 6.0
+const BOB_PX := 3.0  ## the drawn walk frames already move the body; this only softens the steps
+## Walk frames in assets/player.png (rows 1..WALK_FRAMES, row 0 is standing): one cycle is two steps.
+const WALK_FRAMES := 4
 
 
 ## Next drawn position, in cells: towards the server's position, never past it.
@@ -40,7 +42,7 @@ static func facing(screen_delta: Vector2) -> int:
 
 ## Sprite row (walk frame) after walking this many cells.
 static func walk_row(walked: float) -> int:
-	return int(walked / STRIDE_CELLS) % 2
+	return 1 + int(walked / (STRIDE_CELLS * 2.0) * WALK_FRAMES) % WALK_FRAMES
 
 
 ## Vertical offset of the sprite, in pixels: a small hop each stride while walking, none when still.

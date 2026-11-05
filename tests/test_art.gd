@@ -16,8 +16,22 @@ func test_tiles_atlas_matches_tile_size() -> void:
 
 func test_player_frames_are_high_resolution() -> void:
 	var tex: Texture2D = load("res://assets/player.png")
-	# 4 directions x 2 walk frames of 64x96
-	assert_eq(Vector2i(tex.get_width(), tex.get_height()), Vector2i(64 * 4, 96 * 2))
+	# 4 directions x (standing + the walk cycle) of 64x96
+	assert_eq(Vector2i(tex.get_width(), tex.get_height()), Vector2i(64 * 4, 96 * (1 + WalkAnim.WALK_FRAMES)))
+
+
+## Every walk frame of every direction is drawn, and differs from the standing pose and from each other.
+func test_walk_frames_are_all_different() -> void:
+	var img: Image = load("res://assets/player.png").get_image()
+	var rows := img.get_height() / 96
+	for dir in 4:
+		var seen := {}
+		for row in rows:
+			var frame := img.get_region(Rect2i(dir * 64, row * 96, 64, 96))
+			assert_false(frame.is_invisible(), "direction %d row %d is empty" % [dir, row])
+			var key := frame.get_data()
+			assert_false(seen.has(key), "direction %d row %d repeats an earlier frame" % [dir, row])
+			seen[key] = true
 
 
 ## Neighbouring tiles are offset by (w/2, h/2) and (-w/2, h/2). Each tile must
