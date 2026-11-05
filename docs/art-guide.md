@@ -8,3 +8,5 @@
 - **Scale:** the camera shows art at 1 texel per screen pixel (zoom 1). Draw details at this size; do not upscale smaller art.
 - **Format:** PNG, RGBA, no metadata you would not want public.
 - **Generated art:** prefer extending `tools/gen_art.gd` (regenerate with `make art`). Images from other tools are fine with a full `ASSETS.toml` entry.
+
+<!-- Test of the community workflow (PR screenshots). This PR will be closed without merging. -->
