@@ -1,5 +1,5 @@
 ## Generates the game's pixel art. Deterministic: same script, same PNGs.
-## Usage: godot --headless --path . -s res://tools/gen_art.gd   (or: make art)
+## Usage: godot --headless --path . -s res://art/gen_art.gd   (or: make art)
 extends SceneTree
 
 ## Color ramps, dark to light, hue-shifted: shadows lean cool, highlights warm (see docs/art-guide.md).

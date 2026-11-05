@@ -14,13 +14,14 @@ The game uses Godot 4.7 (GDScript only). Install Godot 4.7.2 and put `godot` on 
 - `make smoke`: a real headless server and headless clients play join, move, disconnect and reconnect.
 - `make run-server`: a local server on port 9000. Run the client with `godot --path . -- --connect ws://127.0.0.1:9000`.
 - `make export-web`: the browser build in `build/web/`.
-- `make art`: regenerate the pixel art from `tools/gen_art.gd`.
+- `make art`: regenerate the pixel art from `art/gen_art.gd`.
 
 ## Layout
 
 - `shared/`: code used by both sides (map, protocol, RPC endpoint). Deterministic.
 - `server/`: the authoritative server and its SQLite storage. Never in the web build.
 - `client/`: connection, rendering and input.
+- `art/`: `art/gen_art.gd`, which draws the pixel art in `assets/` (`make art`).
 - `tests/`: one `test_*.gd` file per topic, extending `TestCase`.
 - Rules every change must keep: `docs/invariants.md`.
 

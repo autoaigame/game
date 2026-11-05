@@ -23,6 +23,7 @@ Content is data with a schema. It needs no engine code, which makes it the easie
 ## Assets
 
 1. Read `docs/art-guide.md` and follow its palette, size and format.
+   The game's pixel art is drawn by `art/gen_art.gd`. To change or add sprites (new frames, tiles), extend it, run `make art`, and commit the script with the regenerated PNGs. Keep `tests/test_art.gd` true, or change it with the reason in the PR.
 2. Add an entry to `ASSETS.toml` for each file. CI refuses a file without one:
 
 ```toml

@@ -14,8 +14,8 @@ smoke: setup ## headless server + clients: join, move, disconnect, reconnect
 
 check: test smoke ## everything CI requires
 
-art: ## regenerate assets/*.png from tools/gen_art.gd
-	@$(RUN) -s res://tools/gen_art.gd
+art: ## regenerate assets/*.png from art/gen_art.gd
+	@$(RUN) -s res://art/gen_art.gd
 
 export-web: setup ## web build into build/web/
 	@mkdir -p build/web
