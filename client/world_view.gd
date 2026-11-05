@@ -3,14 +3,14 @@ extends Node2D
 
 const TILES_TEX := preload("res://assets/tiles.png")
 const PLAYER_TEX := preload("res://assets/player.png")
-const KEY_REPEAT_S := 0.2
 
 var client: Node  ## client/client.gd
 var _layer: TileMapLayer
 var _actors := {}  ## peer_id -> Node2D
 var _camera := Camera2D.new()
-var _my_cell := Vector2i.ZERO
-var _key_cooldown := 0.0
+var _my_pos := Vector2.ZERO  ## my position in the last snapshot, in cells
+var _key_dir := Vector2i.ZERO  ## direction of the held keys at the last frame
+var _key_target := Vector2i.ZERO  ## last target sent for the held keys
 
 
 func _ready() -> void:
@@ -45,7 +45,7 @@ func _on_snapshot(players: Array) -> void:
 			sprite.frame_coords = Vector2i(_dir_column(delta), (sprite.frame_coords.y + 1) % 2)
 		actor.position = target
 		if id == client.my_peer_id:
-			_my_cell = Protocol.cell_of(p["pos"])
+			_my_pos = p["pos"]
 			_camera.position = target
 	for id in _actors.keys():
 		if not seen.has(id):
@@ -89,17 +89,19 @@ func _unhandled_input(event: InputEvent) -> void:
 		client.request_move(_layer.local_to_map(_layer.get_local_mouse_position()))
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if client.my_peer_id == 0:
 		return
-	_key_cooldown -= delta
-	if _key_cooldown > 0.0:
+	var dir := KeyMove.direction(
+			Input.is_physical_key_pressed(KEY_W), Input.is_physical_key_pressed(KEY_S),
+			Input.is_physical_key_pressed(KEY_A), Input.is_physical_key_pressed(KEY_D))
+	if dir == Vector2i.ZERO:
+		if _key_dir != Vector2i.ZERO:
+			client.request_move(KeyMove.release_target(_my_pos, _key_dir))
+		_key_dir = dir
 		return
-	var dir := Vector2i.ZERO
-	if Input.is_physical_key_pressed(KEY_W): dir = Vector2i(0, -1)
-	elif Input.is_physical_key_pressed(KEY_S): dir = Vector2i(0, 1)
-	elif Input.is_physical_key_pressed(KEY_A): dir = Vector2i(-1, 0)
-	elif Input.is_physical_key_pressed(KEY_D): dir = Vector2i(1, 0)
-	if dir != Vector2i.ZERO:
-		_key_cooldown = KEY_REPEAT_S
-		client.request_move(_my_cell + dir)
+	var target := KeyMove.held_target(_my_pos, dir)
+	if dir != _key_dir or target != _key_target:
+		client.request_move(target)
+	_key_dir = dir
+	_key_target = target
