@@ -1,0 +1,7 @@
+{
+	"id": "forest_floor",
+	"name": "Forest floor",
+	"walkable": true,
+	"priority": 5,
+	"atlas": 0
+}

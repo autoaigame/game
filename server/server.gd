@@ -54,11 +54,21 @@ func on_join(peer_id: int, player_name: String) -> void:
 	if problem != "":
 		_net.rejected.rpc_id(peer_id, problem)
 		return
-	var saved: Variant = _db.load_player(player_name)
-	var cell: Vector2i = saved if saved != null and MapData.is_walkable(saved) else MapData.spawn_cell()
+	var cell := join_cell(_db.load_player(player_name))
 	_players[peer_id] = {"name": player_name, "pos": Vector2(cell), "target": cell, "stopped": false}
 	_net.welcome.rpc_id(peer_id, peer_id, cell)
 	print("server: %s joined at %s" % [player_name, cell])
+
+
+## Where a joining player appears: its saved cell, or the walkable cell nearest to it if the map
+## changed under it (old saves), or the spawn for a new player.
+static func join_cell(saved: Variant) -> Vector2i:
+	if saved == null:
+		return MapData.spawn_cell()
+	if MapData.is_walkable(saved):
+		return saved
+	var near: Variant = MapData.nearest_walkable(saved)
+	return near if near != null else MapData.spawn_cell()
 
 
 func on_move_to(peer_id: int, cell: Vector2i) -> void:

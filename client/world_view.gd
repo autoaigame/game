@@ -20,9 +20,11 @@ func _ready() -> void:
 	_layer = IsoLayer.new_layer(TILES_TEX)
 	_layer.z_index = -1
 	add_child(_layer)
-	for y in MapData.SIZE.y:
-		for x in MapData.SIZE.x:
-			_layer.set_cell(Vector2i(x, y), 0, Vector2i(MapData.tile_at(Vector2i(x, y)), 0))
+	var s := MapData.spawn_cell()
+	for y in range(s.y - 40, s.y + 41):
+		for x in range(s.x - 40, s.x + 41):
+			var tile := WorldData.tile(MapData.tile_at(Vector2i(x, y)))
+			_layer.set_cell(Vector2i(x, y), 0, Vector2i(tile["atlas"], 0))
 	_camera.zoom = Vector2(1, 1)  # art is drawn at 4x: 1 texel per pixel, never downscaled
 	_camera.position_smoothing_enabled = true
 	add_child(_camera)
