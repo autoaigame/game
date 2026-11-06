@@ -7,6 +7,8 @@ const SPRITE_OFFSET_Y := -40.0
 
 var client: Node  ## client/client.gd
 var _layer: TileMapLayer
+var _streamer := ChunkStreamer.new(2, 3, 1)
+var _chunk_nodes := {}  ## chunk -> Node2D
 var _actors := {}  ## peer_id -> Node2D
 var _walk := {}  ## peer_id -> {server, shown: Vector2 in cells, walked: float in cells}
 var _camera := Camera2D.new()
@@ -17,19 +19,14 @@ var _key_target := Vector2i.ZERO  ## last target sent for the held keys
 
 func _ready() -> void:
 	y_sort_enabled = true
-	_layer = IsoLayer.new_layer(TILES_TEX)
-	_layer.z_index = -1
+	_layer = IsoLayer.new_layer(null)  # empty: only converts mouse positions to cells
 	add_child(_layer)
-	var s := MapData.spawn_cell()
-	for y in range(s.y - 40, s.y + 41):
-		for x in range(s.x - 40, s.x + 41):
-			var tile := WorldData.tile(MapData.tile_at(Vector2i(x, y)))
-			_layer.set_cell(Vector2i(x, y), 0, Vector2i(tile["atlas"], 0))
 	_camera.zoom = Vector2(1, 1)  # art is drawn at 4x: 1 texel per pixel, never downscaled
 	_camera.position_smoothing_enabled = true
 	add_child(_camera)
 	_camera.position = IsoLayer.cell_to_local(Vector2(MapData.spawn_cell()))
 	client.snapshot_received.connect(_on_snapshot)
+	client.welcomed.connect(func(cell: Vector2i): _my_pos = Vector2(cell))
 
 
 func _on_snapshot(players: Array) -> void:
@@ -77,6 +74,19 @@ func _animate_actors(dt: float) -> void:
 			_camera.position = pos
 
 
+## Builds the chunks around the player (or the spawn before joining), a few per frame, and frees far ones.
+func _stream_chunks() -> void:
+	var at := Protocol.cell_of(_my_pos) if client.my_peer_id != 0 else MapData.spawn_cell()
+	for c in _streamer.update(at):
+		if _chunk_nodes.has(c):
+			_chunk_nodes[c].queue_free()
+			_chunk_nodes.erase(c)
+	for c in _streamer.take_builds():
+		var node := ChunkView.build(c, TILES_TEX)
+		_chunk_nodes[c] = node
+		add_child(node)
+
+
 func _make_actor(player_name: String, is_me: bool) -> Node2D:
 	var actor := Node2D.new()
 	var sprite := Sprite2D.new()
@@ -108,6 +118,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	_animate_actors(delta)
+	_stream_chunks()
 	if client.my_peer_id == 0:
 		return
 	var dir := KeyMove.direction(
