@@ -12,35 +12,29 @@ const _GRAD_X := [1.0, -1.0, 0.0, 0.0, _DIAG, -_DIAG, _DIAG, -_DIAG]
 const _GRAD_Y := [0.0, 0.0, 1.0, -1.0, _DIAG, _DIAG, -_DIAG, -_DIAG]
 
 
-## a * b modulo 2^32 for 32-bit a and b, split in 16-bit halves so no 64-bit product overflows.
-static func mul32(a: int, b: int) -> int:
-	var lo := a * (b & 0xFFFF)
-	var hi := ((a * (b >> 16)) & 0xFFFF) << 16
-	return (lo + hi) & MASK32
-
-
-## Avalanche of a 32-bit value (the murmur3 finalizer).
+## Avalanche of a 32-bit value: xor-shift-multiply rounds with the "lowbias32" constants published
+## by Chris Wellons (hash-prospector, public domain). Both constants are below 2^31, so a 32-bit value
+## times one of them fits in GDScript's 64-bit int: no overflow, same result on every platform.
 static func mix32(h: int) -> int:
 	h &= MASK32
 	h ^= h >> 16
-	h = mul32(h, 0x85EBCA6B)
-	h ^= h >> 13
-	h = mul32(h, 0xC2B2AE35)
-	h ^= h >> 16
+	h = (h * 0x21F0AAAD) & MASK32
+	h ^= h >> 15
+	h = (h * 0x735A2D97) & MASK32
+	h ^= h >> 15
 	return h
 
 
 ## 32-bit hash of (seed, x, y). Negative and large coordinates are fine (two's complement low bits).
 static func hash2(seed: int, x: int, y: int) -> int:
-	var h := mix32((seed & MASK32) ^ 0x9E3779B9)
-	h = mix32(h ^ mul32(x & MASK32, 0x27D4EB2F))
-	h = mix32(h ^ mul32(y & MASK32, 0x165667B1))
-	return h
+	var h := mix32(seed ^ 0x9E3779B9)
+	h = mix32(h ^ x)
+	return mix32(h ^ (y & MASK32) ^ 0x6A09E667)
 
 
 ## 32-bit hash of (seed, x, y, z), e.g. z = an object type or a field number.
 static func hash3(seed: int, x: int, y: int, z: int) -> int:
-	return mix32(hash2(seed, x, y) ^ mul32(z & MASK32, 0xD3A2646C))
+	return mix32(hash2(seed, x, y) ^ (z & MASK32) ^ 0x3C6EF372)
 
 
 ## A hash as a float in [0, 1).
@@ -69,21 +63,33 @@ static func noise(seed: int, x: float, y: float) -> float:
 ## Fractal noise in [0, 1]: octaves of doubling frequency and halving amplitude. Each octave has its
 ## own seed and offset so their lattices never line up. x, y are in units of the first octave.
 static func fbm(seed: int, x: float, y: float, octaves: int) -> float:
+	var oct: Array = _octaves(seed, octaves)
 	var sum := 0.0
 	var amp := 1.0
 	var total := 0.0
 	var freq := 1.0
 	for o in octaves:
-		var s := hash2(seed, o, 0x0C7A7E)
-		var ox := unit(hash2(s, 1, 0)) * 256.0
-		var oy := unit(hash2(s, 2, 0)) * 256.0
-		sum += noise(s, x * freq + ox, y * freq + oy) * amp
+		var p: Array = oct[o]
+		sum += noise(p[0], x * freq + p[1], y * freq + p[2]) * amp
 		total += amp
 		amp *= 0.5
 		freq *= 2.0
 	return sum / total
 
 
+static var _octave_memo := {}  ## seed -> [[octave seed, x offset, y offset], ...] (pure memo)
+
+
+static func _octaves(seed: int, octaves: int) -> Array:
+	var oct: Array = _octave_memo.get(seed, [])
+	while oct.size() < octaves:
+		var s := hash2(seed, oct.size(), 0x0C7A7E)
+		oct.append([s, unit(hash2(s, 1, 0)) * 256.0, unit(hash2(s, 2, 0)) * 256.0])
+		_octave_memo[seed] = oct
+	return oct
+
+
+## Gradient at a lattice point: a single mixing round (hash2 does three), it runs 4 times per sample.
 static func _dot_grad(seed: int, ix: int, iy: int, dx: float, dy: float) -> float:
-	var g := hash2(seed, ix, iy) & 7
+	var g := mix32(seed ^ ((ix * 0x27D4EB2F) & MASK32) ^ ((iy * 0x165667B1) & MASK32)) & 7
 	return _GRAD_X[g] * dx + _GRAD_Y[g] * dy
