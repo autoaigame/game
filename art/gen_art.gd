@@ -111,7 +111,7 @@ func _put(img: Image, o: Vector2i, x: int, y: int, col: Color) -> void:
 
 
 ## Ground types, one atlas row each, in the order of the "atlas" field of data/tiles/*.json.
-const GROUNDS := ["deep_water", "shallow_water", "sand", "grass", "dry_grass", "forest_floor"]
+const GROUNDS := ["deep_water", "shallow_water", "sand", "grass", "dry_grass", "forest_floor", "packed_dirt"]
 ## Each row has one tile per corner mask (DualGrid): NW << 3 | NE << 2 | SW << 1 | SE, where on screen
 ## NW is the top corner, NE the right one, SW the left one and SE the bottom one.
 const MASKS := IsoLayer.ATLAS_COLUMNS
@@ -124,6 +124,7 @@ const EDGES := {
 	"grass": {"ramp": GRASS, "dark": 1, "lit": 5, "outer": "shadow"},
 	"dry_grass": {"ramp": DRY, "dark": 2, "lit": 6, "outer": "shadow"},
 	"forest_floor": {"ramp": FOREST, "dark": 0, "lit": 4, "outer": "shadow"},
+	"packed_dirt": {"ramp": DIRT, "dark": 1, "lit": 5, "outer": "shadow"},
 }
 
 
@@ -153,6 +154,7 @@ func _ground(kind: String, row: int) -> Image:
 				"grass": col = _c(GRASS, _pick(GRASS, v * 1.25 - 0.12, x, y, 1, 4))
 				"dry_grass": col = _c(DRY, _pick(DRY, v * 1.25 - 0.12, x, y, 2, 4))
 				"forest_floor": col = _c(FOREST, _pick(FOREST, v * 1.3 - 0.15, x, y, 1, 3))
+				"packed_dirt": col = _c(DIRT, _pick(DIRT, v * 1.2 - 0.1, x, y, 2, 5))
 			img.set_pixel(x, y, col)
 	match kind:
 		"deep_water": _water_details(img, o, -2)
@@ -161,6 +163,7 @@ func _ground(kind: String, row: int) -> Image:
 		"grass": _grass_details(img, o)
 		"dry_grass": _dry_details(img, o)
 		"forest_floor": _forest_details(img, o)
+		"packed_dirt": _path_details(img, o)
 	return img
 
 
@@ -368,7 +371,8 @@ func _lum(n: Vector2) -> float:
 # The object's cell centre is IsoLayer.OBJECT_FOOT_PX above the bottom edge, horizontally centred.
 
 const OBJECTS := {"oak": Vector2i(96, 128), "pine": Vector2i(64, 128), "rock": Vector2i(48, 40),
-	"bush": Vector2i(48, 40)}
+	"bush": Vector2i(48, 40), "stone_wall": Vector2i(64, 64), "standing_stone": Vector2i(32, 64),
+	"campfire": Vector2i(48, 40)}
 const OBJECT_FOOT := IsoLayer.OBJECT_FOOT_PX
 
 
@@ -395,6 +399,37 @@ func _object(id: String) -> Image:
 		"rock":
 			_blob(img, o, cx, foot - 10, 18, 13, STONE, 2.6)
 			_blob(img, o, cx + 9, foot - 4, 10, 7, STONE, 2.4, -0.1)
+		"stone_wall":
+			# a low wall block on a 48 x 24 base: lit top face, darker front faces, brick lines
+			var top_c := foot - 26.0
+			var base_c := foot - 4.0
+			for y in size.y:
+				for x in size.x:
+					var dx := absf(x + 0.5 - cx) / 24.0
+					if dx > 1.0:
+						continue
+					var half := 12.0 * (1.0 - dx)
+					var yy := y + 0.5
+					var face := -1
+					if yy >= top_c - half and yy <= top_c + half:
+						face = 4
+					elif yy > top_c + half and yy <= base_c + half:
+						face = 3 if x < cx else 2
+					if face < 0:
+						continue
+					var brick := 1 if face < 4 and ((y % 7 == 0) or ((x + (y / 7) * 5) % 10 == 0)) else 0
+					_px(img, o, x, y, _c(STONE, face - brick))
+		"standing_stone":
+			_blob(img, o, cx, foot - 26, 10, 28, STONE, 3.0)
+			for y in range(foot - 44, foot - 10, 7):
+				_px(img, o, int(cx) - 2, y, _c(GRASS, 3))  # moss
+		"campfire":
+			for k in 6:
+				var a := k * TAU / 6.0
+				_blob(img, o, cx + cos(a) * 14.0, foot - 6 + sin(a) * 6.0, 4, 3, STONE)
+			_limb(img, o, int(cx) - 8, foot - 9, 16, 3, DIRT)
+			_blob(img, o, cx, foot - 16, 6, 10, GOLD, 2.0, 0.2)
+			_blob(img, o, cx, foot - 13, 4, 6, TUNIC, 2.0, 0.3)
 		"bush":
 			for b in [[-8, -10, 12, 10], [8, -10, 12, 10], [0, -16, 13, 11]]:
 				_blob(img, o, cx + b[0], foot + b[1], b[2], b[3], GRASS, 2.0, 0.05)

@@ -1,0 +1,8 @@
+{
+	"id": "campfire",
+	"name": "Campfire",
+	"blocks": true,
+	"cell_size": 1,
+	"sprite": "res://assets/objects/campfire.png",
+	"densities": {}
+}

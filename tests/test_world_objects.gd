@@ -13,7 +13,7 @@ func _find_object(id: String) -> Variant:
 
 func test_objects_are_loaded_sorted_by_id() -> void:
 	var ids := WorldData.objects().map(func(o): return o["id"])
-	assert_eq(ids, ["bush", "oak", "pine", "rock"])
+	assert_eq(ids, ["bush", "campfire", "oak", "pine", "rock", "standing_stone", "stone_wall"])
 	assert_true(WorldData.object(WorldData.object_index("oak"))["blocks"])
 	assert_false(WorldData.object(WorldData.object_index("bush"))["blocks"])
 

@@ -1,4 +1,4 @@
-## Game data for world generation, read once from res://data/ (tiles, biomes, objects). Shared by the server
+## Game data for world generation, read once from res://data/ (tiles, biomes, objects, places). Shared by the server
 ## and the client, so both build the same world. Ids are text and never renamed: saves and other data
 ## refer to them. Tile indices (what MapData.tile_at returns) follow the tiles' priorities.
 class_name WorldData
@@ -14,6 +14,7 @@ static var _biome_index := {}  ## id -> index
 static var _gen := {}  ## the rest of biomes.json (seed, noise settings, table)
 static var _objects: Array[Dictionary] = []  ## sorted by id; index = object index
 static var _object_index := {}  ## id -> index
+static var _places: Array[Dictionary] = []  ## sorted by id; index = place index
 
 
 ## Tile records: {id, name, walkable, priority, atlas}, lowest priority first.
@@ -62,6 +63,14 @@ static func object_index(id: String) -> int:
 	return _object_index.get(id, -1)
 
 
+## Hand-made places, sorted by id: {id, name, size: Vector2i, cells: [[offset, tile, object], ...]
+## (tile and object are indices or -1 to keep the natural one; every footprint cell loses its natural
+## object), biomes: {biome index: true}, max_altitude_range, chance, min_distance}.
+static func places() -> Array[Dictionary]:
+	_ensure()
+	return _places
+
+
 ## Generation settings from biomes.json.
 static func gen() -> Dictionary:
 	_ensure()
@@ -104,6 +113,41 @@ static func _ensure() -> void:
 				"salt": WorldNoise.hash_text(rec["id"])})
 	for i in _objects.size():
 		_object_index[_objects[i]["id"]] = i
+	for rec in _read_dir(DATA_DIR.path_join("places")):
+		_places.append(_place(rec))
+
+
+## A place record from its JSON: the plan is rows of characters, " " is outside the place.
+static func _place(rec: Dictionary) -> Dictionary:
+	var plan: Array = rec["plan"]
+	var legend: Dictionary = rec["legend"]
+	var cells := []
+	var width := 0
+	for y in plan.size():
+		var row: String = plan[y]
+		width = maxi(width, row.length())
+		for x in row.length():
+			var ch := row[x]
+			if ch == " ":
+				continue
+			if not legend.has(ch):
+				push_error("data: place %s uses %s, missing from its legend" % [rec["id"], ch])
+				continue
+			var entry: Dictionary = legend[ch]
+			var t := tile_index(entry.get("tile", "")) if entry.has("tile") else -1
+			var o := object_index(entry.get("object", "")) if entry.has("object") else -1
+			if (entry.has("tile") and t < 0) or (entry.has("object") and o < 0):
+				push_error("data: place %s legend %s names an unknown tile or object" % [rec["id"], ch])
+			cells.append([Vector2i(x, y), t, o])
+	var rules: Dictionary = rec["rules"]
+	var biomes := {}
+	for b in rules["biomes"]:
+		if not _biome_index.has(b):
+			push_error("data: place %s names unknown biome %s" % [rec["id"], b])
+		biomes[_biome_index.get(b, -1)] = true
+	return {"id": String(rec["id"]), "name": String(rec["name"]), "size": Vector2i(width, plan.size()),
+			"cells": cells, "biomes": biomes, "max_altitude_range": float(rules["max_altitude_range"]),
+			"chance": float(rules["chance"]), "min_distance": float(rules["min_distance"])}
 
 
 ## Every *.json record of a folder, in file name order (DirAccess order differs between platforms).

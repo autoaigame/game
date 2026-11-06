@@ -12,6 +12,8 @@ static func object_at(cell: Vector2i) -> int:
 	var objects := WorldData.objects()
 	for i in objects.size():
 		var obj: Dictionary = objects[i]
+		if obj["max_density"] <= 0.0:
+			continue  # only placed by hand-made places
 		var size: int = obj["cell_size"]
 		var g := Vector2i(floori(cell.x / float(size)), floori(cell.y / float(size)))
 		var h := _hash(obj, g)

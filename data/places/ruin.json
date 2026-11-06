@@ -1,0 +1,25 @@
+{
+	"id": "ruin",
+	"name": "Ruin",
+	"plan": [
+		"wwwww.www",
+		"w,,,,,,,w",
+		"w,,,,,,,.",
+		"w,,,,,,,w",
+		".,,,,,,,w",
+		"w,,,,,,,w",
+		"w,,,,,,,w",
+		"ww.wwwwww"
+	],
+	"legend": {
+		"w": {"tile": "packed_dirt", "object": "stone_wall"},
+		".": {"tile": "packed_dirt"},
+		",": {}
+	},
+	"rules": {
+		"biomes": ["grassland", "steppe", "highland", "forest"],
+		"max_altitude_range": 0.12,
+		"chance": 0.4,
+		"min_distance": 100
+	}
+}

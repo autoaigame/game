@@ -91,8 +91,9 @@ func test_world_has_variety() -> void:
 			var id: String = WorldData.tile(WorldData.biomes()[Terrain.biome(x, y)]["tile"])["id"]
 			count[id] = count.get(id, 0) + 1
 			n += 1
-	for t in WorldData.tiles():
-		assert_true(count.get(t["id"], 0) > 0, "no %s in the sample" % t["id"])
+	for b in WorldData.biomes():  # natural grounds (places add more)
+		var id: String = WorldData.tile(b["tile"])["id"]
+		assert_true(count.get(id, 0) > 0, "no %s in the sample" % id)
 	var water: float = count.get("deep_water", 0) + count.get("shallow_water", 0)
 	assert_true(water / n > 0.08 and water / n < 0.35, "water share %f" % (water / n))
 	assert_true(count.get("forest_floor", 0) / float(n) < 0.4, "forest share %f" % (count.get("forest_floor", 0) / float(n)))
