@@ -1,7 +1,7 @@
 ## Draws the isometric map and the players; turns clicks and WASD into move requests.
 extends Node2D
 
-const TILES_TEX := preload("res://assets/tiles.png")
+var _tiles_tex: Texture2D = load(IsoLayer.TILES_ATLAS)
 const PLAYER_TEX := preload("res://assets/player.png")
 const SPRITE_OFFSET_Y := -40.0
 
@@ -21,7 +21,7 @@ func _ready() -> void:
 	y_sort_enabled = true
 	_layer = IsoLayer.new_layer(null)  # empty: only converts mouse positions to cells
 	add_child(_layer)
-	_camera.zoom = Vector2(1, 1)  # art is drawn at 4x: 1 texel per pixel, never downscaled
+	_camera.zoom = Vector2(IsoLayer.CAMERA_ZOOM, IsoLayer.CAMERA_ZOOM)
 	_camera.position_smoothing_enabled = true
 	add_child(_camera)
 	_camera.position = IsoLayer.cell_to_local(Vector2(MapData.spawn_cell()))
@@ -82,7 +82,7 @@ func _stream_chunks() -> void:
 			_chunk_nodes[c].queue_free()
 			_chunk_nodes.erase(c)
 	for c in _streamer.take_builds():
-		var node := ChunkView.build(c, TILES_TEX)
+		var node := ChunkView.build(c, _tiles_tex)
 		_chunk_nodes[c] = node
 		add_child(node)
 

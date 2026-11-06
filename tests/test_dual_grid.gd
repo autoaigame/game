@@ -3,9 +3,16 @@ extends TestCase
 ## Ground transitions on the dual grid (client/dual_grid.gd, client/chunk_view.gd).
 
 
-func test_corner_cells_in_bit_order() -> void:
+func test_corner_cells_are_nw_ne_sw_se() -> void:
 	assert_eq(DualGrid.corner_cells(Vector2i(5, -2)),
-			[Vector2i(4, -3), Vector2i(5, -3), Vector2i(5, -2), Vector2i(4, -2)] as Array[Vector2i])
+			[Vector2i(4, -3), Vector2i(5, -3), Vector2i(4, -2), Vector2i(5, -2)] as Array[Vector2i])
+
+
+func test_mask_bits_are_nw3_ne2_sw1_se0() -> void:
+	assert_eq([DualGrid.NW, DualGrid.NE, DualGrid.SW, DualGrid.SE], [8, 4, 2, 1])
+	assert_eq(DualGrid.mask_at_least([1, 0, 0, 0], 1), 8)
+	assert_eq(DualGrid.mask_at_least([0, 0, 0, 1], 1), 1)
+	assert_eq(DualGrid.mask_at_least([0, 1, 1, 0], 1), 6)
 
 
 func test_one_ground_is_one_full_tile() -> void:
@@ -13,17 +20,17 @@ func test_one_ground_is_one_full_tile() -> void:
 
 
 func test_higher_ground_covers_its_corners() -> void:
-	# top and right corners are priority 3 over a priority 0 ground
-	assert_eq(DualGrid.layers([3, 3, 0, 0]), [[0, DualGrid.FULL], [3, DualGrid.TOP | DualGrid.RIGHT]])
-	assert_eq(DualGrid.layers([0, 0, 0, 4]), [[0, DualGrid.FULL], [4, DualGrid.LEFT]])
+	# the two north corners are priority 3 over a priority 0 ground
+	assert_eq(DualGrid.layers([3, 3, 0, 0]), [[0, DualGrid.FULL], [3, DualGrid.NW | DualGrid.NE]])
+	assert_eq(DualGrid.layers([0, 0, 0, 4]), [[0, DualGrid.FULL], [4, DualGrid.SE]])
 
 
 ## Each layer covers the corners at or above its priority: a middle ground also fills under the top one.
 func test_three_grounds_stack() -> void:
 	assert_eq(DualGrid.layers([0, 5, 3, 5]), [
 		[0, DualGrid.FULL],
-		[3, DualGrid.RIGHT | DualGrid.BOTTOM | DualGrid.LEFT],
-		[5, DualGrid.RIGHT | DualGrid.LEFT],
+		[3, DualGrid.NE | DualGrid.SW | DualGrid.SE],
+		[5, DualGrid.NE | DualGrid.SE],
 	])
 
 
@@ -71,7 +78,7 @@ func test_edge_tiles_use_the_neighbour_chunk() -> void:
 			var g := ChunkView.ground_tiles(chunk)
 			assert_true(g.has(left_t) and g[left_t].has(d), "%s ignores ground %d of its left cell" % [d, left_t])
 			if g.has(left_t) and g[left_t].has(d) and left_t > MapData.tile_at(d):
-				assert_true(g[left_t][d].x & DualGrid.LEFT != 0, "left corner not covered at %s" % d)
+				assert_true(g[left_t][d].x & DualGrid.SW != 0, "SW corner not covered at %s" % d)
 			break
 		if found:
 			break

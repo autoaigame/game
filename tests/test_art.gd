@@ -10,7 +10,7 @@ func test_tiles_are_high_resolution() -> void:
 ## One row per ground (data/tiles "atlas"), one column per DualGrid corner mask.
 func test_tiles_atlas_has_a_row_per_ground_and_a_column_per_mask() -> void:
 	var tex: Texture2D = load("res://assets/tiles.png")
-	assert_eq(tex.get_width(), IsoLayer.TILE_SIZE.x * 16)
+	assert_eq(tex.get_width(), IsoLayer.TILE_SIZE.x * IsoLayer.ATLAS_COLUMNS)
 	assert_eq(tex.get_height(), IsoLayer.TILE_SIZE.y * WorldData.tiles().size())
 	var rows := {}
 	for t in WorldData.tiles():
@@ -20,20 +20,21 @@ func test_tiles_atlas_has_a_row_per_ground_and_a_column_per_mask() -> void:
 
 
 ## Mask 0 is empty. Near each corner of the diamond, a tile is opaque exactly when the mask has that
-## corner's bit, in DualGrid's order (top, right, bottom, left).
+## corner's bit (DualGrid: top = NW, right = NE, bottom = SE, left = SW).
 func test_mask_tiles_follow_the_corner_bits() -> void:
 	var img: Image = load("res://assets/tiles.png").get_image()
 	var w := IsoLayer.TILE_SIZE.x
 	var h := IsoLayer.TILE_SIZE.y
-	var probes := [Vector2i(w / 2, 8), Vector2i(w - 18, h / 2), Vector2i(w / 2, h - 9), Vector2i(17, h / 2)]
+	var probes := [Vector2i(w / 2, h / 8), Vector2i(w - w / 7, h / 2), Vector2i(w / 2, h - h / 7), Vector2i(w / 7, h / 2)]
+	var bits := [DualGrid.NW, DualGrid.NE, DualGrid.SE, DualGrid.SW]
 	for row in img.get_height() / h:
 		var empty := img.get_region(Rect2i(0, row * h, w, h))
 		assert_true(empty.is_invisible(), "row %d mask 0 is not empty" % row)
-		for mask in range(1, 16):
+		for mask in range(1, IsoLayer.ATLAS_COLUMNS):
 			for i in 4:
 				var p: Vector2i = probes[i] + Vector2i(mask * w, row * h)
 				var opaque := img.get_pixelv(p).a == 1.0
-				assert_eq(opaque, mask & (1 << i) != 0, "row %d mask %d corner %d" % [row, mask, i])
+				assert_eq(opaque, mask & bits[i] != 0, "row %d mask %d corner %d" % [row, mask, i])
 
 
 func test_player_frames_are_high_resolution() -> void:
@@ -65,7 +66,7 @@ func test_tiles_cover_the_plane_exactly_once() -> void:
 	for row in img.get_height() / h:
 		var seen := {}
 		var overlaps := 0
-		var ox := 15 * w
+		var ox := DualGrid.FULL * w
 		var oy := row * h
 		for y in h:
 			for x in w:

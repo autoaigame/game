@@ -22,14 +22,14 @@ const EYE_WHITE := "f4f1ea"
 const EYE := "203a6b"
 const SHADOW := Color(0.05, 0.03, 0.1, 0.38)
 
-const TILE := Vector2i(128, 64)
+const TILE := IsoLayer.TILE_SIZE  ## tile size and atlas layout live in client/iso_layer.gd
 const SPRITE := Vector2i(64, 96)
 const LIGHT := Vector3(-0.55, -0.65, 0.52)  ## from the top left, towards the viewer
 const BAYER := [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
 
 
 func _initialize() -> void:
-	_tiles().save_png("res://assets/tiles.png")
+	_tiles().save_png(IsoLayer.TILES_ATLAS)
 	_player().save_png("res://assets/player.png")
 	print("art: wrote assets/tiles.png and assets/player.png")
 	quit()
@@ -109,8 +109,9 @@ func _put(img: Image, o: Vector2i, x: int, y: int, col: Color) -> void:
 
 ## Ground types, one atlas row each, in the order of the "atlas" field of data/tiles/*.json.
 const GROUNDS := ["deep_water", "shallow_water", "sand", "grass", "dry_grass", "forest_floor"]
-## Each row has one tile per corner mask (DualGrid): bit 1 = top corner, 2 = right, 4 = bottom, 8 = left.
-const MASKS := 16
+## Each row has one tile per corner mask (DualGrid): NW << 3 | NE << 2 | SW << 1 | SE, where on screen
+## NW is the top corner, NE the right one, SW the left one and SE the bottom one.
+const MASKS := IsoLayer.ATLAS_COLUMNS
 ## How a ground's edge looks: rim ramp and steps (dark side, lit side), and what it casts outside
 ## (a translucent shadow on the bottom-right side, foam all around, or nothing).
 const EDGES := {
@@ -165,7 +166,8 @@ func _ground(kind: String, row: int) -> Image:
 ## on a tile edge it depends only on the two corners of that edge, and the noise is periodic over
 ## the tile lattice, so neighbouring tiles always meet. Edge texels get a rim, lit on the top left.
 func _cut(img: Image, full: Image, o: Vector2i, mask: int, kind: String, seed: int) -> void:
-	var c := [float(mask & 1), float((mask >> 1) & 1), float((mask >> 2) & 1), float((mask >> 3) & 1)]
+	# corner values on screen: top (NW), right (NE), bottom (SE), left (SW)
+	var c := [float((mask >> 3) & 1), float((mask >> 2) & 1), float(mask & 1), float((mask >> 1) & 1)]
 	var edge: Dictionary = EDGES[kind]
 	for y in TILE.y:
 		for x in TILE.x:
