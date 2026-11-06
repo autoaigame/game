@@ -3,5 +3,5 @@
 	"name": "Sand",
 	"walkable": true,
 	"priority": 2,
-	"atlas": 1
+	"atlas": 2
 }

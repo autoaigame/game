@@ -15,8 +15,9 @@ static func new_layer(texture: Texture2D) -> TileMapLayer:
 		var src := TileSetAtlasSource.new()
 		src.texture = texture
 		src.texture_region_size = TILE_SIZE
-		for i in int(texture.get_width() / TILE_SIZE.x):
-			src.create_tile(Vector2i(i, 0))
+		for row in int(texture.get_height() / TILE_SIZE.y):
+			for col in int(texture.get_width() / TILE_SIZE.x):
+				src.create_tile(Vector2i(col, row))
 		ts.add_source(src, 0)
 	var layer := TileMapLayer.new()
 	layer.tile_set = ts

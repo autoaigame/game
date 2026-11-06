@@ -3,5 +3,5 @@
 	"name": "Forest floor",
 	"walkable": true,
 	"priority": 5,
-	"atlas": 0
+	"atlas": 5
 }

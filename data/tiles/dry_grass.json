@@ -3,5 +3,5 @@
 	"name": "Dry grass",
 	"walkable": true,
 	"priority": 4,
-	"atlas": 1
+	"atlas": 4
 }

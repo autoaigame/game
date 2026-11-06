@@ -2,7 +2,7 @@
 
 [[asset]]
 path = "assets/tiles.png"
-author = "vitteloil"
+author = "vitteloil, M3t4Data"
 origin = "generated"
 tool = "art/gen_art.gd (Godot 4.7.2)"
 prompt = ""

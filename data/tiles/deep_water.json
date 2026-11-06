@@ -3,5 +3,5 @@
 	"name": "Deep water",
 	"walkable": false,
 	"priority": 0,
-	"atlas": 2
+	"atlas": 0
 }
