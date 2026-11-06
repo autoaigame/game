@@ -17,7 +17,9 @@ static var _object_index := {}  ## id -> index
 static var _places: Array[Dictionary] = []  ## sorted by id; index = place index
 
 
-## Tile records: {id, name, walkable, priority, atlas}, lowest priority first.
+## Tile records: {id, name, walkable, priority, atlas, full_variants, mask_variants}, lowest priority
+## first. full_variants: how many versions of the full tile the atlas row holds (picked per drawn tile).
+## mask_variants: reserved for versions of each transition tile, only 1 is supported for now.
 static func tiles() -> Array[Dictionary]:
 	_ensure()
 	return _tiles
@@ -83,7 +85,11 @@ static func _ensure() -> void:
 	_loaded = true
 	for rec in _read_dir(DATA_DIR.path_join("tiles")):
 		_tiles.append({"id": String(rec["id"]), "name": String(rec["name"]),
-				"walkable": bool(rec["walkable"]), "priority": int(rec["priority"]), "atlas": int(rec["atlas"])})
+				"walkable": bool(rec["walkable"]), "priority": int(rec["priority"]), "atlas": int(rec["atlas"]),
+				"full_variants": maxi(1, int(rec.get("full_variants", 1))),
+				"mask_variants": maxi(1, int(rec.get("mask_variants", 1)))})
+		if _tiles.back()["mask_variants"] != 1:
+			push_error("data: tile %s: mask_variants other than 1 is not supported yet" % rec["id"])
 	_tiles.sort_custom(func(a, b): return a["priority"] < b["priority"])
 	for i in _tiles.size():
 		_tile_index[_tiles[i]["id"]] = i

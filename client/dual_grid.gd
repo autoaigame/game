@@ -22,6 +22,14 @@ static func corner_cells(d: Vector2i) -> Array[Vector2i]:
 	return [d + Vector2i(-1, -1), d + Vector2i(0, -1), d + Vector2i(-1, 0), d]
 
 
+## Which of `count` variants a full tile drawn at `d` uses: a hash of the world seed and `d`, so it
+## never depends on which chunk is built first.
+static func full_variant(d: Vector2i, count: int) -> int:
+	if count <= 1:
+		return 0
+	return WorldNoise.hash3(int(WorldData.gen()["seed"]), d.x, d.y, 0x7A41A7) % count
+
+
 ## Layers of one drawn tile from the priorities of its 4 corners (corner_cells() order): [[priority, mask], ...],
 ## lowest first. The lowest ground fills the whole tile; each higher ground present covers the corners
 ## whose priority is at least its own.

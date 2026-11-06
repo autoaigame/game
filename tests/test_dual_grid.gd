@@ -43,7 +43,7 @@ func test_chunks_partition_the_drawn_tiles() -> void:
 			var g := ChunkView.ground_tiles(Vector2i(cx, cy))
 			for t in g:
 				for d in g[t]:
-					if g[t][d].x != DualGrid.FULL:
+					if IsoLayer.mask_of_column(g[t][d].x) != DualGrid.FULL:
 						continue
 					assert_false(owner.has(d), "%s drawn twice" % d)
 					owner[d] = Vector2i(cx, cy)
@@ -90,3 +90,61 @@ func test_layers_use_the_tile_atlas_row() -> void:
 	for t in g:
 		for d in g[t]:
 			assert_eq(g[t][d].y, WorldData.tile(t)["atlas"])
+
+
+
+## Full tiles pick one of the ground's variants from a hash of the drawn tile: stable, in range, all used.
+func test_full_variant_is_stable_and_spread() -> void:
+	var seen := {}
+	for i in 2000:
+		var d := Vector2i(i * 7 - 7000, 300 - i * 3)
+		var v := DualGrid.full_variant(d, 4)
+		assert_true(v >= 0 and v < 4, str(v))
+		assert_eq(DualGrid.full_variant(d, 4), v)
+		seen[v] = seen.get(v, 0) + 1
+	for v in 4:
+		assert_true(seen.get(v, 0) > 350, "variant %d used %d times" % [v, seen.get(v, 0)])
+	assert_eq(DualGrid.full_variant(Vector2i(5, 5), 1), 0)
+
+
+## Neighbouring full tiles do not all share a variant (no visible stripes).
+func test_neighbouring_variants_differ() -> void:
+	var same := 0
+	for i in 400:
+		if DualGrid.full_variant(Vector2i(i, 0), 4) == DualGrid.full_variant(Vector2i(i + 1, 0), 4):
+			same += 1
+	assert_true(same < 160, "%d of 400 neighbours share a variant" % same)
+
+
+func test_atlas_columns_for_masks_and_variants() -> void:
+	assert_eq(IsoLayer.atlas_column(5, 0), 5)
+	assert_eq(IsoLayer.atlas_column(DualGrid.FULL, 0), DualGrid.FULL)
+	assert_eq(IsoLayer.atlas_column(DualGrid.FULL, 1), IsoLayer.MASK_COLUMNS)
+	assert_eq(IsoLayer.atlas_column(DualGrid.FULL, 3), IsoLayer.MASK_COLUMNS + 2)
+	for v in IsoLayer.MAX_FULL_VARIANTS:
+		assert_eq(IsoLayer.mask_of_column(IsoLayer.atlas_column(DualGrid.FULL, v)), DualGrid.FULL)
+	assert_eq(IsoLayer.mask_of_column(6), 6)
+
+
+## A chunk's full tiles use the variant chosen for their drawn tile; masked tiles keep their mask column.
+func test_chunk_full_tiles_use_their_variant() -> void:
+	var chunk := Vector2i(2, 2)  # meadow: mostly full grass tiles
+	var g := ChunkView.ground_tiles(chunk)
+	var full := 0
+	for t in g:
+		var count: int = WorldData.tile(t)["full_variants"]
+		for d in g[t]:
+			var col: int = g[t][d].x
+			if IsoLayer.mask_of_column(col) == DualGrid.FULL:
+				assert_eq(col, IsoLayer.atlas_column(DualGrid.FULL, DualGrid.full_variant(d, count)), str(d))
+				full += 1
+			else:
+				assert_true(col < DualGrid.FULL, "masked tile at %s in column %d" % [d, col])
+	assert_true(full > 100)
+
+
+func test_tiles_declare_variants() -> void:
+	for t in WorldData.tiles():
+		assert_true(t["full_variants"] >= 1 and t["full_variants"] <= IsoLayer.MAX_FULL_VARIANTS, t["id"])
+		assert_eq(t["mask_variants"], 1, "variants per mask are not implemented yet: " + t["id"])
+	assert_eq(WorldData.tile(WorldData.tile_index("grass"))["full_variants"], 4)

@@ -22,7 +22,8 @@ static func ground_tiles(chunk: Vector2i) -> Dictionary:
 				var t: int = layer[0]
 				if not out.has(t):
 					out[t] = {}
-				out[t][d] = Vector2i(layer[1], tiles[t]["atlas"])
+				var variant := DualGrid.full_variant(d, tiles[t]["full_variants"]) if layer[1] == DualGrid.FULL else 0
+				out[t][d] = Vector2i(IsoLayer.atlas_column(layer[1], variant), tiles[t]["atlas"])
 	return out
 
 

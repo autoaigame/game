@@ -52,7 +52,7 @@ func _pick(ramp: Array, v: float, x: int, y: int, lo := 0, hi := -1) -> int:
 
 ## Deterministic hash in [0, 1).
 func _hash(x: int, y: int, seed: int) -> float:
-	var h := (x * 374761393 + y * 668265263 + seed * 1442695041) & 0x7fffffff
+	var h := (x * 374761393 + y * 668265263 + (seed + _salt * 7919) * 1442695041) & 0x7fffffff
 	h = ((h ^ (h >> 13)) * 1274126177) & 0x7fffffff
 	h = h ^ (h >> 16)
 	return float(h % 100000) / 100000.0
@@ -113,8 +113,16 @@ func _put(img: Image, o: Vector2i, x: int, y: int, col: Color) -> void:
 ## Ground types, one atlas row each, in the order of the "atlas" field of data/tiles/*.json.
 const GROUNDS := ["deep_water", "shallow_water", "sand", "grass", "dry_grass", "forest_floor", "packed_dirt"]
 ## Each row has one tile per corner mask (DualGrid): NW << 3 | NE << 2 | SW << 1 | SE, where on screen
-## NW is the top corner, NE the right one, SW the left one and SE the bottom one.
-const MASKS := IsoLayer.ATLAS_COLUMNS
+## NW is the top corner, NE the right one, SW the left one and SE the bottom one. Then the other
+## variants of the full tile (data/tiles "full_variants"), see IsoLayer.atlas_column().
+const MASKS := IsoLayer.MASK_COLUMNS
+## Variants keep variant 0's texels this close to the tile edge (lattice units), and their own beyond
+## VARIANT_EDGE_IN, with dithering in between, so any two variants join seamlessly.
+const VARIANT_EDGE_OUT := 0.03
+const VARIANT_EDGE_IN := 0.13
+
+## Shifts every hash seed, so each variant gets its own texture and details.
+var _salt := 0
 ## How a ground's edge looks: rim ramp and steps (dark side, lit side), and what it casts outside
 ## (a translucent shadow on the bottom-right side, foam all around, or nothing).
 const EDGES := {
@@ -129,12 +137,33 @@ const EDGES := {
 
 
 func _tiles() -> Image:
-	var img := Image.create_empty(TILE.x * MASKS, TILE.y * GROUNDS.size(), false, Image.FORMAT_RGBA8)
+	var img := Image.create_empty(TILE.x * IsoLayer.ATLAS_COLUMNS, TILE.y * GROUNDS.size(), false,
+			Image.FORMAT_RGBA8)
 	for row in GROUNDS.size():
 		var full := _ground(GROUNDS[row], row)
 		for mask in MASKS:
 			_cut(img, full, Vector2i(mask * TILE.x, row * TILE.y), mask, GROUNDS[row], 60 + row * 5)
+		var tile := WorldData.tile(WorldData.tile_index(GROUNDS[row]))
+		for v in range(1, tile["full_variants"]):
+			_salt = v
+			var own := _ground(GROUNDS[row], row)
+			_salt = 0
+			var col := IsoLayer.atlas_column(MASKS - 1, v)
+			_blend_variant(img, full, own, Vector2i(col * TILE.x, row * TILE.y))
 	return img
+
+
+## A full tile variant: `own` inside, `base` (variant 0) along the edges, dithered in between.
+func _blend_variant(img: Image, base: Image, own: Image, o: Vector2i) -> void:
+	for y in TILE.y:
+		for x in TILE.x:
+			if not _inside(x, y):
+				continue
+			var l := _lattice(x + 0.5, y + 0.5)
+			var edge := 0.5 - maxf(absf(l.x), absf(l.y))
+			var w := clampf((edge - VARIANT_EDGE_OUT) / (VARIANT_EDGE_IN - VARIANT_EDGE_OUT), 0.0, 1.0)
+			var b: float = (BAYER[(y % 4) * 4 + (x % 4)] + 0.5) / 16.0
+			img.set_pixel(o.x + x, o.y + y, own.get_pixel(x, y) if w > b else base.get_pixel(x, y))
 
 
 ## The whole diamond of one ground, seamless with copies of itself.
@@ -145,7 +174,7 @@ func _ground(kind: String, row: int) -> Image:
 		for x in TILE.x:
 			if not _inside(x, y):
 				continue
-			var v := _fbm(x, y, 10 + row * 7)
+			var v := _fbm(x, y, 10 + row * 7 + _salt * 101)
 			var col: Color
 			match kind:
 				"deep_water": col = _c(WATER, _pick(WATER, v * 1.3 - 0.15, x, y, 0, 2))

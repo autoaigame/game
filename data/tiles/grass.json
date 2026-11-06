@@ -3,5 +3,7 @@
 	"name": "Grass",
 	"walkable": true,
 	"priority": 3,
-	"atlas": 3
+	"atlas": 3,
+	"full_variants": 4,
+	"mask_variants": 1
 }

@@ -3,5 +3,7 @@
 	"name": "Deep water",
 	"walkable": false,
 	"priority": 0,
-	"atlas": 0
+	"atlas": 0,
+	"full_variants": 4,
+	"mask_variants": 1
 }

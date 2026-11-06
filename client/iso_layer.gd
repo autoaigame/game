@@ -4,9 +4,12 @@ extends RefCounted
 
 ## Tile size and atlas layout: the one place to change them (art/gen_art.gd reads them too).
 const TILE_SIZE := Vector2i(128, 64)
-## Ground atlas: one row per ground (data/tiles "atlas"), one column per DualGrid corner mask.
+## Ground atlas: one row per ground (data/tiles "atlas"). Columns 0-15: one per DualGrid corner mask
+## (column 15 = full tile, variant 0). Columns 16 and up: the other variants of the full tile.
 const TILES_ATLAS := "res://assets/tiles.png"
-const ATLAS_COLUMNS := 16
+const MASK_COLUMNS := 16
+const MAX_FULL_VARIANTS := 8  ## data/tiles "full_variants" at most
+const ATLAS_COLUMNS := MASK_COLUMNS + MAX_FULL_VARIANTS - 1
 ## Object sprites (data/objects "sprite"): the object's cell centre is this many px above the bottom
 ## edge of its image, horizontally centred.
 const OBJECT_FOOT_PX := 8
@@ -31,6 +34,18 @@ static func new_layer(texture: Texture2D) -> TileMapLayer:
 	var layer := TileMapLayer.new()
 	layer.tile_set = ts
 	return layer
+
+
+## Atlas column of a corner mask; for the full mask (15), of one of its variants.
+static func atlas_column(mask: int, variant: int) -> int:
+	if mask != MASK_COLUMNS - 1 or variant == 0:
+		return mask
+	return MASK_COLUMNS + variant - 1
+
+
+## Corner mask drawn by an atlas column.
+static func mask_of_column(column: int) -> int:
+	return mini(column, MASK_COLUMNS - 1)
 
 
 ## Local position of a (possibly fractional) cell position, consistent with map_to_local.
