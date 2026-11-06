@@ -1,4 +1,4 @@
-## Game data for world generation, read once from res://data/ (tiles, biomes). Shared by the server
+## Game data for world generation, read once from res://data/ (tiles, biomes, objects). Shared by the server
 ## and the client, so both build the same world. Ids are text and never renamed: saves and other data
 ## refer to them. Tile indices (what MapData.tile_at returns) follow the tiles' priorities.
 class_name WorldData
@@ -12,6 +12,8 @@ static var _tile_index := {}  ## id -> index
 static var _biomes: Array[Dictionary] = []  ## sorted by id; index = biome index
 static var _biome_index := {}  ## id -> index
 static var _gen := {}  ## the rest of biomes.json (seed, noise settings, table)
+static var _objects: Array[Dictionary] = []  ## sorted by id; index = object index
+static var _object_index := {}  ## id -> index
 
 
 ## Tile records: {id, name, walkable, priority, atlas}, lowest priority first.
@@ -39,6 +41,25 @@ static func biomes() -> Array[Dictionary]:
 static func biome_index(id: String) -> int:
 	_ensure()
 	return _biome_index.get(id, -1)
+
+
+## Object records, sorted by id: {id, name, blocks, cell_size, sprite, density: PackedFloat64Array by
+## biome index, max_density, salt: hash of the id (seeds its placement, so adding an object moves no
+## other)}.
+static func objects() -> Array[Dictionary]:
+	_ensure()
+	return _objects
+
+
+static func object(index: int) -> Dictionary:
+	_ensure()
+	return _objects[index]
+
+
+## Index of an object id, or -1.
+static func object_index(id: String) -> int:
+	_ensure()
+	return _object_index.get(id, -1)
 
 
 ## Generation settings from biomes.json.
@@ -69,6 +90,20 @@ static func _ensure() -> void:
 			push_error("data: biome %s uses unknown tile %s" % [id, b["tile"]])
 		_biome_index[id] = _biomes.size()
 		_biomes.append({"id": String(id), "tile": t})
+	for rec in _read_dir(DATA_DIR.path_join("objects")):
+		var density := PackedFloat64Array()
+		density.resize(_biomes.size())
+		for b in rec["densities"]:
+			if not _biome_index.has(b):
+				push_error("data: object %s names unknown biome %s" % [rec["id"], b])
+				continue
+			density[_biome_index[b]] = float(rec["densities"][b])
+		_objects.append({"id": String(rec["id"]), "name": String(rec["name"]), "blocks": bool(rec["blocks"]),
+				"cell_size": maxi(1, int(rec["cell_size"])), "sprite": String(rec["sprite"]), "density": density,
+				"max_density": Array(density).max() if density.size() > 0 else 0.0,
+				"salt": WorldNoise.hash_text(rec["id"])})
+	for i in _objects.size():
+		_object_index[_objects[i]["id"]] = i
 
 
 ## Every *.json record of a folder, in file name order (DirAccess order differs between platforms).

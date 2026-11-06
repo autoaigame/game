@@ -31,7 +31,10 @@ const BAYER := [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
 func _initialize() -> void:
 	_tiles().save_png(IsoLayer.TILES_ATLAS)
 	_player().save_png("res://assets/player.png")
-	print("art: wrote assets/tiles.png and assets/player.png")
+	DirAccess.make_dir_recursive_absolute("res://assets/objects")
+	for id in OBJECTS:
+		_object(id).save_png("res://assets/objects/%s.png" % id)
+	print("art: wrote assets/tiles.png, assets/player.png and assets/objects/*.png")
 	quit()
 
 
@@ -358,6 +361,68 @@ func _lum(n: Vector2) -> float:
 	var z := sqrt(maxf(0.0, 1.0 - n.length_squared()))
 	var normal := Vector3(n.x, n.y, z).normalized()
 	return clampf(0.18 + 0.9 * maxf(0.0, normal.dot(LIGHT.normalized())), 0.0, 1.0)
+
+
+# --- Objects -----------------------------------------------------------------
+# Provisional sprites (PixelLab sprites may replace them: data/objects/<id>.json names each file).
+# The object's cell centre is IsoLayer.OBJECT_FOOT_PX above the bottom edge, horizontally centred.
+
+const OBJECTS := {"oak": Vector2i(96, 128), "pine": Vector2i(64, 128), "rock": Vector2i(48, 40),
+	"bush": Vector2i(48, 40)}
+const OBJECT_FOOT := IsoLayer.OBJECT_FOOT_PX
+
+
+func _object(id: String) -> Image:
+	var size: Vector2i = OBJECTS[id]
+	var img := Image.create_empty(size.x, size.y, false, Image.FORMAT_RGBA8)
+	var o := Vector2i.ZERO
+	var cx := size.x / 2.0
+	var foot := size.y - OBJECT_FOOT
+	match id:
+		"oak":
+			_limb(img, o, int(cx) - 5, foot - 44, 10, 46, DIRT)
+			for b in [[-16, -60, 22, 18], [16, -62, 22, 18], [0, -84, 28, 22], [-10, -72, 24, 20], [10, -74, 24, 20]]:
+				_blob(img, o, cx + b[0], foot + b[1], b[2], b[3], GRASS, 2.0, -0.05)
+		"pine":
+			_limb(img, o, int(cx) - 3, foot - 24, 6, 26, DIRT)
+			for k in 4:
+				var top := foot - 30 - k * 22
+				for y in 30:
+					var half := (y + 4) * (0.9 - k * 0.12)
+					for x in range(int(cx - half), int(cx + half)):
+						var n := Vector2((x + 0.5 - cx) / maxf(half, 1.0), 0.2)
+						_px(img, o, x, top + y, _c(FOREST, int(_lum(n) * 5.0) + 1))
+		"rock":
+			_blob(img, o, cx, foot - 10, 18, 13, STONE, 2.6)
+			_blob(img, o, cx + 9, foot - 4, 10, 7, STONE, 2.4, -0.1)
+		"bush":
+			for b in [[-8, -10, 12, 10], [8, -10, 12, 10], [0, -16, 13, 11]]:
+				_blob(img, o, cx + b[0], foot + b[1], b[2], b[3], GRASS, 2.0, 0.05)
+			for k in 5:
+				_px(img, o, int(cx) - 10 + k * 5, foot - 12 - (k % 2) * 6, _c(TUNIC, 4))
+	_object_outline(img)
+	for y in range(foot - 5, foot + 6):
+		for x in size.x:
+			var n := Vector2((x + 0.5 - cx) / (size.x * 0.42), (y + 0.5 - foot) / 5.0)
+			if n.length_squared() <= 1.0 and img.get_pixel(x, y).a == 0.0:
+				img.set_pixel(x, y, SHADOW)
+	return img
+
+
+func _object_outline(img: Image) -> void:
+	var edge := {}
+	for y in img.get_height():
+		for x in img.get_width():
+			if img.get_pixel(x, y).a > 0.0:
+				continue
+			for n in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				var p: Vector2i = Vector2i(x, y) + n
+				if p.x >= 0 and p.y >= 0 and p.x < img.get_width() and p.y < img.get_height() \
+						and img.get_pixelv(p).a > 0.0:
+					edge[Vector2i(x, y)] = Color.html(OUTLINE).lerp(img.get_pixelv(p), 0.18)
+					break
+	for p in edge:
+		img.set_pixelv(p, edge[p])
 
 
 # --- Characters --------------------------------------------------------------

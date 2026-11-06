@@ -10,7 +10,7 @@ const CACHE_MAX_CHUNKS := 4096
 ## How far nearest_walkable() looks, in cells.
 const SEARCH_RADIUS := 128
 
-static var _chunks := {}  ## chunk coords -> {tiles: PackedByteArray, walk: PackedByteArray}
+static var _chunks := {}  ## chunk coords -> {tiles, walk, objects: PackedByteArray}
 static var _spawn: Variant = null
 
 
@@ -20,6 +20,19 @@ static func tile_at(cell: Vector2i) -> int:
 	return _chunk(c)["tiles"][_index_in_chunk(cell, c)]
 
 
+## Index of the object on a cell (WorldData.objects()), or -1.
+static func object_index_at(cell: Vector2i) -> int:
+	var c := chunk_of(cell)
+	return _chunk(c)["objects"][_index_in_chunk(cell, c)] - 1
+
+
+## Id of the object on a cell, or "".
+static func object_at(cell: Vector2i) -> String:
+	var i := object_index_at(cell)
+	return WorldData.object(i)["id"] if i >= 0 else ""
+
+
+## Walkable ground and no blocking object.
 static func is_walkable(cell: Vector2i) -> bool:
 	var c := chunk_of(cell)
 	return _chunk(c)["walk"][_index_in_chunk(cell, c)] == 1
@@ -95,12 +108,19 @@ static func _chunk(c: Vector2i) -> Dictionary:
 static func _generate(c: Vector2i) -> Dictionary:
 	var tiles := PackedByteArray()
 	var walk := PackedByteArray()
+	var objects := PackedByteArray()  ## object index + 1, 0 = none
 	tiles.resize(CHUNK * CHUNK)
 	walk.resize(CHUNK * CHUNK)
+	objects.resize(CHUNK * CHUNK)
 	var biomes := WorldData.biomes()
 	for y in CHUNK:
 		for x in CHUNK:
-			var t: int = biomes[Terrain.biome(c.x * CHUNK + x, c.y * CHUNK + y)]["tile"]
-			tiles[y * CHUNK + x] = t
-			walk[y * CHUNK + x] = 1 if WorldData.tile(t)["walkable"] else 0
-	return {"tiles": tiles, "walk": walk}
+			var cell := c * CHUNK + Vector2i(x, y)
+			var i := y * CHUNK + x
+			var t: int = biomes[Terrain.biome(cell.x, cell.y)]["tile"]
+			var ob := WorldObjects.object_at(cell)
+			tiles[i] = t
+			objects[i] = ob + 1
+			var blocked: bool = ob >= 0 and WorldData.object(ob)["blocks"]
+			walk[i] = 1 if WorldData.tile(t)["walkable"] and not blocked else 0
+	return {"tiles": tiles, "walk": walk, "objects": objects}

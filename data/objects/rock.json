@@ -1,0 +1,8 @@
+{
+	"id": "rock",
+	"name": "Rock",
+	"blocks": true,
+	"cell_size": 7,
+	"sprite": "res://assets/objects/rock.png",
+	"densities": {"steppe": 0.25, "highland": 0.35, "grassland": 0.06, "beach": 0.08, "forest": 0.05}
+}

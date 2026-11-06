@@ -37,6 +37,14 @@ static func hash3(seed: int, x: int, y: int, z: int) -> int:
 	return mix32(hash2(seed, x, y) ^ (z & MASK32) ^ 0x3C6EF372)
 
 
+## 32-bit hash of a text (its UTF-8 bytes), e.g. to seed something by its data id.
+static func hash_text(text: String) -> int:
+	var h := 0x811C9DC5
+	for b in text.to_utf8_buffer():
+		h = mix32(h ^ b)
+	return h
+
+
 ## A hash as a float in [0, 1).
 static func unit(h: int) -> float:
 	return float(h & MASK32) / 4294967296.0

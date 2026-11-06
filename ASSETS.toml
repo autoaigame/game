@@ -17,3 +17,39 @@ tool = "art/gen_art.gd (Godot 4.7.2)"
 prompt = ""
 license = "CC0-1.0"
 source = ""
+
+[[asset]]
+path = "assets/objects/bush.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "art/gen_art.gd (Godot 4.7.2)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/oak.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "art/gen_art.gd (Godot 4.7.2)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/pine.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "art/gen_art.gd (Godot 4.7.2)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/rock.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "art/gen_art.gd (Godot 4.7.2)"
+prompt = ""
+license = "CC0-1.0"
+source = ""

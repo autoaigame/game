@@ -63,10 +63,13 @@ func test_chunk_of_floors_negative_cells() -> void:
 	assert_eq(MapData.chunk_of(Vector2i(-17, 100000)), Vector2i(-2, 6250))
 
 
-func test_walkable_follows_tile_data() -> void:
+## Walkable: the ground is walkable and no blocking object stands there.
+func test_walkable_follows_tile_data_and_objects() -> void:
 	for i in 400:
 		var c := Vector2i(-2600 + (i * 13) % 64, -5000 + (i * 29) % 64)
-		assert_eq(MapData.is_walkable(c), WorldData.tile(MapData.tile_at(c))["walkable"], str(c))
+		var o := MapData.object_index_at(c)
+		var blocked: bool = o >= 0 and WorldData.object(o)["blocks"]
+		assert_eq(MapData.is_walkable(c), WorldData.tile(MapData.tile_at(c))["walkable"] and not blocked, str(c))
 
 
 func test_water_is_not_walkable() -> void:
