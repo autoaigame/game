@@ -100,7 +100,7 @@ func test_stuck_dog_is_put_back() -> void:
 func test_dogs_are_sent_as_creatures() -> void:
 	var at := Vector2(_open_cell())
 	var server := _server(at, at + Vector2(1, 0))
-	var list: Array = server._creature_snapshot()
+	var list: Array = server._creatures_for(1)
 	assert_eq(list.size(), 1)
 	assert_eq(list[0]["kind"], "dog")
 	assert_eq(list[0]["owner"], 1)
