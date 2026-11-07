@@ -7,6 +7,7 @@ signal join_rejected(reason: String)
 signal snapshot_received(players: Array)
 signal creatures_received(creatures: Array)
 signal marks_received(marks: Array)
+signal status_received(status: Dictionary)
 signal connection_lost
 
 ## ws(s):// URL of the server. On the web it defaults to the page's own host + /ws.
@@ -41,6 +42,9 @@ func _add_views() -> void:
 	var view: Node2D = load("res://client/world_view.gd").new()
 	view.client = self
 	add_child(view)
+	var hud: CanvasLayer = load("res://client/hud.gd").new()
+	hud.client = self
+	add_child(hud)
 	var ui: CanvasLayer = load("res://client/login_ui.gd").new()
 	ui.client = self
 	add_child(ui)
@@ -81,6 +85,10 @@ func on_creatures(creatures: Array) -> void:
 
 func on_marks(marks: Array) -> void:
 	marks_received.emit(marks)
+
+
+func on_status(status: Dictionary) -> void:
+	status_received.emit(status)
 
 
 func _on_connected() -> void:
