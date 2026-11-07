@@ -49,3 +49,28 @@ func test_click_on_plain_ground_finds_nothing() -> void:
 func test_reached_within_reach() -> void:
 	assert_true(Interact.reached(Vector2(5, 5), Vector2i(5, 6)))
 	assert_false(Interact.reached(Vector2(5, 5), Vector2i(5, 8)))
+
+
+## Trees are gatherable too; the click walks to a walkable cell next to them (they block).
+func test_click_on_a_tree() -> void:
+	var s := MapData.spawn_cell()
+	var tree := s
+	for r in 300:
+		var c := s + Vector2i(r, r / 2)
+		if MapData.object_at(c) in ["oak", "birch", "pine"]:
+			tree = c
+			break
+	assert_true(MapData.object_at(tree) in ["oak", "birch", "pine"], "test needs a tree")
+	assert_eq(Interact.gatherable_at(tree), tree)
+	var walk: Vector2i = Interact.walk_target(tree)
+	assert_true(MapData.is_walkable(walk), "walks to a walkable cell")
+	assert_true(Interact.reached(Vector2(walk), tree), "close enough from there")
+
+
+func test_walk_target_of_a_bush_is_the_bush() -> void:
+	var bush := _bush()
+	assert_eq(Interact.walk_target(bush), bush)
+
+
+func test_sticks_item() -> void:
+	assert_eq(ItemData.item("sticks")["food"], 0)

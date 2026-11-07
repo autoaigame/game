@@ -40,6 +40,11 @@ func eat(item: String) -> void:
 	_forward("on_eat", [multiplayer.get_remote_sender_id(), item])
 
 
+@rpc("any_peer", "call_remote", "reliable")
+func build_fire() -> void:
+	_forward("on_build_fire", [multiplayer.get_remote_sender_id()])
+
+
 # server -> client
 @rpc("authority", "call_remote", "reliable")
 func welcome(peer_id: int, cell: Vector2i) -> void:

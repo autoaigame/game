@@ -15,6 +15,11 @@ class FakeClient:
 	func request_eat(item: String) -> void:
 		eaten.append(item)
 
+	var fires := 0
+
+	func request_build_fire() -> void:
+		fires += 1
+
 
 func _hud() -> CanvasLayer:
 	var hud: CanvasLayer = load("res://client/hud.gd").new()
@@ -87,4 +92,16 @@ func test_eat_button_on_food() -> void:
 	assert_true(btn != null, "berries can be eaten")
 	btn.pressed.emit()
 	assert_eq(hud.client.eaten, ["berries"])
+	hud.free()
+
+
+## With enough sticks, the bag offers to build a fire.
+func test_build_fire_button() -> void:
+	var hud := _hud()
+	hud.client.inventory_received.emit({"sticks": Protocol.FIRE_STICKS - 1})
+	assert_true(hud.fire_button().disabled, "not enough sticks")
+	hud.client.inventory_received.emit({"sticks": Protocol.FIRE_STICKS})
+	assert_false(hud.fire_button().disabled)
+	hud.fire_button().pressed.emit()
+	assert_eq(hud.client.fires, 1)
 	hud.free()

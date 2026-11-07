@@ -219,7 +219,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		var cell := _layer.local_to_map(_layer.get_local_mouse_position())
 		_gather_at = Interact.gatherable_at(cell)
-		client.request_move(Vector2(_gather_at) if _gather_at != null else Vector2(cell))
+		client.request_move(Vector2(Interact.walk_target(_gather_at)) if _gather_at != null else Vector2(cell))
 
 
 ## Asks the server to gather once the player has walked up to the bush they clicked.

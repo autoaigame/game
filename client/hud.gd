@@ -16,6 +16,7 @@ var _starving: Label
 var _bag: PanelContainer
 var _bag_list: VBoxContainer
 var _bag_empty: Label
+var _fire: Button
 var _notice: Label
 var _notice_left := 0.0
 
@@ -65,6 +66,10 @@ func eat_button(item: String) -> Button:
 		if row.get_meta("item", "") == item and not row.is_queued_for_deletion():
 			return row.get_node_or_null("Eat")
 	return null
+
+
+func fire_button() -> Button:
+	return _fire
 
 
 func toggle_bag() -> void:
@@ -129,6 +134,7 @@ func _on_inventory(items: Dictionary) -> void:
 		row.set_meta("item", String(id))
 		_bag_list.add_child(row)
 	_bag_empty.visible = _bag_list.get_child_count() == 0
+	_fire.disabled = int(items.get("sticks", 0)) < Protocol.FIRE_STICKS
 
 
 func _on_status(status: Dictionary) -> void:
@@ -188,6 +194,12 @@ func _build() -> void:
 	_bag_empty.text = UiText.BAG_EMPTY
 	_bag_empty.add_theme_color_override("font_color", UiTheme.TEXT_DIM)
 	inner.add_child(_bag_empty)
+	_fire = Button.new()
+	_fire.text = UiText.BUILD_FIRE
+	_fire.focus_mode = Control.FOCUS_NONE
+	_fire.disabled = true
+	_fire.pressed.connect(func(): client.request_build_fire())
+	inner.add_child(_fire)
 	_notice = Label.new()
 	_notice.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	_notice.position = Vector2(-200, 24)
