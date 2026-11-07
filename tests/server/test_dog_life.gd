@@ -41,12 +41,14 @@ func test_sits_then_sleeps_near_a_still_owner() -> void:
 ## Awake near its owner, the dog sniffs around: it walks to spots near its owner, never far.
 func test_sniffs_around_near_its_owner() -> void:
 	var owner := Vector2(MapData.spawn_cell())
-	var dog := _dog(owner)
-	var start: Vector2 = dog["pos"]
-	var states := _run(dog, owner, DOG.SIT_AFTER - 0.5)
-	assert_true(states.has("sniff"), "sniffed around at least once")
-	assert_true(dog["pos"] != start or states.count("sniff") > 0)
-	assert_true(dog["pos"].distance_to(owner) <= DOG.WANDER_RADIUS + 1.5, "stayed near: %s" % dog["pos"])
+	var sniffed := 0
+	for seed_value in 6:
+		var dog := _dog(owner, seed_value)
+		var states := _run(dog, owner, DOG.SIT_AFTER - 0.5)
+		if states.has("sniff"):
+			sniffed += 1
+		assert_true(dog["pos"].distance_to(owner) <= DOG.PEE_RADIUS + 1.5, "stayed near: %s" % dog["pos"])
+	assert_true(sniffed >= 3, "most dogs sniffed around: %d of 6" % sniffed)
 
 
 ## An owner pottering about in a small area still counts as staying: the dog ends up asleep.

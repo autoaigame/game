@@ -128,9 +128,14 @@ func _move_dogs(dt: float) -> void:
 ## Turns creature events into marks on the ground.
 func _add_events(events: Array) -> void:
 	for e in events:
-		if e["kind"] == "pee":
-			MARKS.add(_marks, "pee", e["pos"], DOG.PEE_MARK_S)
-			_marks_changed = true
+		match e["kind"]:
+			"pee":
+				MARKS.add(_marks, "pee", e["pos"], DOG.PEE_MARK_S)
+			"hole":
+				MARKS.add(_marks, "hole", e["pos"], DOG.HOLE_MARK_S)
+			_:
+				continue
+		_marks_changed = true
 
 
 ## The creatures clients draw: {id, kind, owner (peer id or 0), pos, state}. A dog's id is its owner's peer id.
