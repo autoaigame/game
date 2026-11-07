@@ -10,7 +10,11 @@ const CACHE_MAX_CHUNKS := 4096
 ## How far nearest_walkable() looks, in cells.
 const SEARCH_RADIUS := 128
 
+## Rows generate_step() fills per call: a few milliseconds of work, so the client spreads a chunk over frames.
+const ROWS_PER_STEP := 4
+
 static var _chunks := {}  ## chunk coords -> {tiles, walk, objects, places: PackedByteArray}
+static var _partial := {}  ## chunk coords -> {tiles, objects, row}: generation in progress (generate_step)
 static var _spawn: Variant = null
 
 
@@ -91,9 +95,32 @@ static func _nearest(from: Vector2i, cells: Dictionary) -> Variant:
 	return best
 
 
+## Generates a few rows (ROWS_PER_STEP) of a chunk; true once the whole chunk is generated. The result
+## is the same as generating it at once: the client calls it to spread the work over frames.
+static func generate_step(c: Vector2i) -> bool:
+	if _chunks.has(c):
+		return true
+	var p: Variant = _partial.get(c)
+	if p == null:
+		p = _start(c)
+		_partial[c] = p
+	_fill_rows(c, p, ROWS_PER_STEP)
+	if p["row"] < CHUNK:
+		return false
+	_partial.erase(c)
+	_store(c, _finish(c, p))
+	return true
+
+
+## Whether a chunk is generated and cached.
+static func is_generated(c: Vector2i) -> bool:
+	return _chunks.has(c)
+
+
 ## Forgets every cached chunk (tests use it to check that results do not depend on the cache).
 static func clear_cache() -> void:
 	_chunks.clear()
+	_partial.clear()
 	_spawn = null
 	WorldPlaces.clear_cache()
 
@@ -106,41 +133,67 @@ static func _chunk(c: Vector2i) -> Dictionary:
 	var data: Variant = _chunks.get(c)
 	if data != null:
 		return data
-	if _chunks.size() >= CACHE_MAX_CHUNKS:
-		_chunks.clear()
-	data = _generate(c)
-	_chunks[c] = data
+	var p: Variant = _partial.get(c)
+	if p == null:
+		p = _start(c)
+	_partial.erase(c)
+	_fill_rows(c, p, CHUNK)
+	data = _finish(c, p)
+	_store(c, data)
 	return data
 
 
-static func _generate(c: Vector2i) -> Dictionary:
+static func _store(c: Vector2i, data: Dictionary) -> void:
+	if _chunks.size() >= CACHE_MAX_CHUNKS:
+		_chunks.clear()
+	_chunks[c] = data
+
+
+static func _start(_c: Vector2i) -> Dictionary:
 	var tiles := PackedByteArray()
-	var walk := PackedByteArray()
 	var objects := PackedByteArray()  ## object index + 1, 0 = none
-	var places := PackedByteArray()  ## place index + 1, 0 = none
 	tiles.resize(CHUNK * CHUNK)
-	walk.resize(CHUNK * CHUNK)
 	objects.resize(CHUNK * CHUNK)
-	places.resize(CHUNK * CHUNK)
+	return {"tiles": tiles, "objects": objects, "row": 0}
+
+
+## Natural ground and objects of up to `rows` more rows of the chunk.
+static func _fill_rows(c: Vector2i, p: Dictionary, rows: int) -> void:
 	var biomes := WorldData.biomes()
-	for y in CHUNK:
+	var tiles: PackedByteArray = p["tiles"]
+	var objects: PackedByteArray = p["objects"]
+	var end := mini(p["row"] + rows, CHUNK)
+	for y in range(p["row"], end):
 		for x in CHUNK:
 			var cell := c * CHUNK + Vector2i(x, y)
 			tiles[y * CHUNK + x] = biomes[Terrain.biome(cell.x, cell.y)]["tile"]
 			objects[y * CHUNK + x] = WorldObjects.object_at(cell) + 1
+	p["tiles"] = tiles
+	p["objects"] = objects
+	p["row"] = end
+
+
+## Hand-made places and walkability, once every row is filled.
+static func _finish(c: Vector2i, p: Dictionary) -> Dictionary:
+	var tiles: PackedByteArray = p["tiles"]
+	var objects: PackedByteArray = p["objects"]
+	var walk := PackedByteArray()
+	var places := PackedByteArray()  ## place index + 1, 0 = none
+	walk.resize(CHUNK * CHUNK)
+	places.resize(CHUNK * CHUNK)
 	# hand-made places replace the ground and the objects under their footprint
 	var rect := Rect2i(c * CHUNK, Vector2i(CHUNK, CHUNK))
-	for p in WorldPlaces.places_in(rect):
-		var place: Dictionary = WorldData.places()[p["index"]]
+	for pl in WorldPlaces.places_in(rect):
+		var place: Dictionary = WorldData.places()[pl["index"]]
 		for pc in place["cells"]:
-			var cell: Vector2i = p["origin"] + pc[0]
+			var cell: Vector2i = pl["origin"] + pc[0]
 			if not rect.has_point(cell):
 				continue
 			var i := _index_in_chunk(cell, c)
 			if pc[1] >= 0:
 				tiles[i] = pc[1]
 			objects[i] = pc[2] + 1
-			places[i] = p["index"] + 1
+			places[i] = pl["index"] + 1
 	for i in CHUNK * CHUNK:
 		var ob := objects[i] - 1
 		var blocked: bool = ob >= 0 and WorldData.object(ob)["blocks"]

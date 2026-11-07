@@ -14,8 +14,23 @@ const ATLAS_COLUMNS := MASK_COLUMNS + MAX_FULL_VARIANTS - 1
 const CAMERA_ZOOM := 1.0
 
 
-## A TileMapLayer with the game's isometric TileSet. texture = the tiles atlas (null in tests).
+static var _tile_sets := {}  ## texture -> TileSet, shared by every layer drawing that texture
+
+
+## A TileMapLayer with the game's isometric TileSet. texture = the tiles atlas (null in tests). Layers
+## of the same texture share one TileSet: building one creates a tile per atlas cell, too slow per chunk.
 static func new_layer(texture: Texture2D) -> TileMapLayer:
+	var layer := TileMapLayer.new()
+	if texture != null and _tile_sets.has(texture):
+		layer.tile_set = _tile_sets[texture]
+		return layer
+	layer.tile_set = _new_tile_set(texture)
+	if texture != null:
+		_tile_sets[texture] = layer.tile_set
+	return layer
+
+
+static func _new_tile_set(texture: Texture2D) -> TileSet:
 	var ts := TileSet.new()
 	ts.tile_shape = TileSet.TILE_SHAPE_ISOMETRIC
 	ts.tile_layout = TileSet.TILE_LAYOUT_DIAMOND_DOWN
@@ -28,9 +43,7 @@ static func new_layer(texture: Texture2D) -> TileMapLayer:
 			for col in int(texture.get_width() / TILE_SIZE.x):
 				src.create_tile(Vector2i(col, row))
 		ts.add_source(src, 0)
-	var layer := TileMapLayer.new()
-	layer.tile_set = ts
-	return layer
+	return ts
 
 
 ## Atlas column of a corner mask; for the full mask (15), of one of its variants.

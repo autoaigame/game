@@ -66,7 +66,7 @@ static func is_accepted(r: Vector2i) -> bool:
 	if ok:
 		var places := WorldData.places()
 		var me: Dictionary = places[c["index"]]
-		var reach := ceili(_max_distance() / REGION) + 1
+		var reach := _reach()
 		for dy in range(-reach, reach + 1):
 			for dx in range(-reach, reach + 1):
 				if dx == 0 and dy == 0:
@@ -83,6 +83,32 @@ static func is_accepted(r: Vector2i) -> bool:
 				break
 	_accepted[r] = ok
 	return ok
+
+
+## The regions a rectangle of world cells touches.
+static func regions_in(rect: Rect2i) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	var r0 := _region_of(rect.position)
+	var r1 := _region_of(rect.end - Vector2i.ONE)
+	for ry in range(r0.y, r1.y + 1):
+		for rx in range(r0.x, r1.x + 1):
+			out.append(Vector2i(rx, ry))
+	return out
+
+
+## The regions whose candidates is_accepted(r) may read, r included.
+static func neighbourhood(r: Vector2i) -> Array[Vector2i]:
+	_setup()
+	var out: Array[Vector2i] = []
+	var reach := _reach()
+	for dy in range(-reach, reach + 1):
+		for dx in range(-reach, reach + 1):
+			out.append(r + Vector2i(dx, dy))
+	return out
+
+
+static func _reach() -> int:
+	return ceili(_max_distance() / REGION) + 1
 
 
 ## Forgets the memo (tests use it to check that results do not depend on it).

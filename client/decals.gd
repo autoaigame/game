@@ -30,12 +30,19 @@ static func decal_at(cell: Vector2i) -> Dictionary:
 ## The decals of a chunk's cells: [[cell, {index, offset}], ...] in cell order.
 static func in_chunk(chunk: Vector2i) -> Array:
 	var out := []
-	var o := chunk * MapData.CHUNK
 	for y in MapData.CHUNK:
-		for x in MapData.CHUNK:
-			var d := decal_at(o + Vector2i(x, y))
-			if not d.is_empty():
-				out.append([o + Vector2i(x, y), d])
+		out.append_array(in_row(chunk, y))
+	return out
+
+
+## The decals of row `y` of a chunk, as in_chunk gives them.
+static func in_row(chunk: Vector2i, y: int) -> Array:
+	var out := []
+	var o := chunk * MapData.CHUNK
+	for x in MapData.CHUNK:
+		var d := decal_at(o + Vector2i(x, y))
+		if not d.is_empty():
+			out.append([o + Vector2i(x, y), d])
 	return out
 
 
