@@ -9,6 +9,7 @@ const FADE_IN_S := 0.3
 const FADE_OUT_S := 0.4
 
 var client: Node  ## client/client.gd
+var sounds: Node  ## client/sound_director.gd, or null (no sound)
 var state := State.CONNECTING
 var _root := Control.new()
 var _name_edit := LineEdit.new()
@@ -124,6 +125,8 @@ func _build() -> void:
 	_button.text = UiText.ENTER
 	_button.custom_minimum_size = Vector2(0, 44)
 	_button.pressed.connect(_submit)
+	_button.mouse_entered.connect(func(): _play("hover"))
+	_button.button_down.connect(func(): _play("click"))
 	box.add_child(_button)
 	var gap2 := Control.new()
 	gap2.custom_minimum_size = Vector2(0, 2)
@@ -155,6 +158,11 @@ func _icon_row(icon: TextureRect, label: Label) -> HBoxContainer:
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(label)
 	return row
+
+
+func _play(kind: String) -> void:
+	if sounds != null and not _button.disabled:
+		sounds.ui(kind)
 
 
 func _set_state(s: State) -> void:
