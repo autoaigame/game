@@ -40,7 +40,7 @@
     "ogg",
     "ttf"
   ],
-  "ai_diff_budget_chars": 150000,
+  "ai_diff_budget_chars": 200000,
   "model": "deepseek/deepseek-v4.1-flash",
   "provider_only": [
     "deepseek"
