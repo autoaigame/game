@@ -28,10 +28,7 @@ const LIGHT := Vector3(-0.55, -0.65, 0.52)  ## from the top left, towards the vi
 
 func _initialize() -> void:
 	_player().save_png("res://assets/player.png")
-	DirAccess.make_dir_recursive_absolute("res://assets/decals")
-	for id in DECALS:
-		_decal(id).save_png("res://assets/decals/%s.png" % id)
-	print("art: wrote assets/player.png and assets/decals/*.png (tiles and objects come from the PixelLab kit)")
+	print("art: wrote assets/player.png (tiles, objects and decals come from the PixelLab kit)")
 	quit()
 
 
@@ -52,65 +49,6 @@ func _lum(n: Vector2) -> float:
 	var z := sqrt(maxf(0.0, 1.0 - n.length_squared()))
 	var normal := Vector3(n.x, n.y, z).normalized()
 	return clampf(0.18 + 0.9 * maxf(0.0, normal.dot(LIGHT.normalized())), 0.0, 1.0)
-
-
-# --- Decals ------------------------------------------------------------------
-# Small flat details drawn over the ground (data/decals/<id>.json), centred on their position.
-# Provisional, like the objects.
-
-const DECALS := {"tuft": Vector2i(40, 28), "pebble": Vector2i(30, 16), "flowers": Vector2i(36, 22),
-	"leaves": Vector2i(36, 20)}
-
-
-func _decal(id: String) -> Image:
-	var size: Vector2i = DECALS[id]
-	var img := Image.create_empty(size.x, size.y, false, Image.FORMAT_RGBA8)
-	var o := Vector2i.ZERO
-	match id:
-		"tuft":
-			# a clump: dark base, blades fanning out, light tips
-			for x in range(6, size.x - 6):
-				_px(img, o, x, size.y - 1, Color(SHADOW, 0.6))
-				_px(img, o, x, size.y - 2, _c(GRASS, 1))
-			for k in 13:
-				var x := 6 + k * 2
-				var tall := 10 + int(_hash(k, 0, 81) * 14) - absi(k - 6)
-				var lean := (k - 6) / 2
-				for j in tall:
-					var shade := 1 + int(float(j) / tall * 5.0)
-					var px := clampi(x + (lean * j) / maxi(tall / 2, 1), 0, size.x - 1)
-					_px(img, o, px, size.y - 3 - j, _c(GRASS, shade))
-		"pebble":
-			_blob(img, o, 9, 8, 7, 5, STONE, 2.2)
-			_blob(img, o, 21, 9, 5, 4, STONE, 2.2, -0.05)
-			_blob(img, o, 15, 12, 3, 2.5, STONE, 2.2, -0.1)
-			for x in range(3, size.x - 3):
-				if img.get_pixel(x, size.y - 2).a == 0.0:
-					_px(img, o, x, size.y - 2, Color(SHADOW, 0.5))
-		"flowers":
-			for k in 5:
-				var x := 4 + int(_hash(k, 0, 83) * (size.x - 8))
-				var y := 4 + int(_hash(k, 1, 83) * (size.y - 10))
-				var petal := Color.html(FLOWERS[k % FLOWERS.size()])
-				for j in 4:
-					_px(img, o, x, y + 2 + j, _c(GRASS, 2 + j % 2))  # stem
-				_px(img, o, x + 1, y + 4, _c(GRASS, 4))  # leaf
-				for dy in range(-1, 2):
-					for dx in range(-1, 2):
-						if absi(dx) + absi(dy) > 0:
-							_px(img, o, x + dx, y + dy, petal)
-				_px(img, o, x - 1, y + 2, _c(GRASS, 1))
-				_px(img, o, x, y, _c(GOLD, 2))
-		"leaves":
-			for k in 9:
-				var x := 2 + int(_hash(k, 0, 82) * (size.x - 6))
-				var y := 2 + int(_hash(k, 1, 82) * (size.y - 5))
-				var col := _c(DIRT, 3 + k % 3) if k % 4 else _c(GOLD, 1)
-				for p in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(1, -1)]:
-					_px(img, o, x + p.x, y + p.y, col)
-				_px(img, o, x + 1, y + 1, _c(DIRT, 1))
-				_px(img, o, x + 2, y + 1, _c(DIRT, 1))
-	return img
 
 
 # --- Characters --------------------------------------------------------------

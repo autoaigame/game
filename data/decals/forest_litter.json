@@ -1,0 +1,15 @@
+{
+	"id": "forest_litter",
+	"name": "Forest litter",
+	"sprites": [
+		"res://assets/decals/forest_litter_0.png",
+		"res://assets/decals/forest_litter_1.png",
+		"res://assets/decals/forest_litter_2.png",
+		"res://assets/decals/forest_litter_3.png"
+	],
+	"grounds": [
+		"forest_floor"
+	],
+	"cell_size": 2,
+	"density": 0.4
+}

@@ -1,0 +1,16 @@
+{
+	"id": "dry_grass_tuft",
+	"name": "Dry grass tuft",
+	"sprites": [
+		"res://assets/decals/dry_grass_tuft_0.png",
+		"res://assets/decals/dry_grass_tuft_1.png",
+		"res://assets/decals/dry_grass_tuft_2.png"
+	],
+	"grounds": [
+		"dry_grass",
+		"grass",
+		"sand"
+	],
+	"cell_size": 2,
+	"density": 0.35
+}

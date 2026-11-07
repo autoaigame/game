@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bfr1c84k7grfj"
-path="res://.godot/imported/pebble.png-0a995dfa03c32964e994012f444b783d.ctex"
+uid="uid://c03wtigpxmpkp"
+path="res://.godot/imported/twigs_2.png-317e531474ce7ffd72cf38684424c292.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/decals/pebble.png"
-dest_files=["res://.godot/imported/pebble.png-0a995dfa03c32964e994012f444b783d.ctex"]
+source_file="res://assets/decals/twigs_2.png"
+dest_files=["res://.godot/imported/twigs_2.png-317e531474ce7ffd72cf38684424c292.ctex"]
 
 [params]
 

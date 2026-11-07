@@ -19,42 +19,6 @@ license = "CC0-1.0"
 source = ""
 
 [[asset]]
-path = "assets/decals/flowers.png"
-author = "M3t4Data"
-origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
-license = "CC0-1.0"
-source = ""
-
-[[asset]]
-path = "assets/decals/leaves.png"
-author = "M3t4Data"
-origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
-license = "CC0-1.0"
-source = ""
-
-[[asset]]
-path = "assets/decals/pebble.png"
-author = "M3t4Data"
-origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
-license = "CC0-1.0"
-source = ""
-
-[[asset]]
-path = "assets/decals/tuft.png"
-author = "M3t4Data"
-origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
-license = "CC0-1.0"
-source = ""
-
-[[asset]]
 path = "assets/objects/oak.png"
 author = "M3t4Data"
 origin = "generated"
@@ -168,5 +132,275 @@ author = "M3t4Data"
 origin = "generated"
 tool = "PixelLab create_1_direction_object, retouched by script"
 prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/grass_tuft_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/grass_tuft_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/grass_tuft_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/grass_tuft_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/dry_grass_tuft_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/dry_grass_tuft_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/dry_grass_tuft_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/flowers_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/flowers_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/flowers_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/flowers_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/pebbles_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/pebbles_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/pebbles_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/pebbles_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/leaves_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/leaves_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/leaves_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/leaves_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/twigs_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/twigs_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/twigs_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/twigs_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/mud_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/mud_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/mud_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/forest_litter_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/forest_litter_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/forest_litter_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/forest_litter_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
 license = "CC0-1.0"
 source = ""

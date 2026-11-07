@@ -107,7 +107,7 @@ static func ground_tint() -> ShaderMaterial:
 ## A flat sprite for a decal, centred on its cell centre moved by the decal's offset.
 static func decal_sprite(cell: Vector2i, d: Dictionary) -> Sprite2D:
 	var sprite := Sprite2D.new()
-	sprite.texture = _texture(WorldData.decals()[d["index"]]["sprite"])
+	sprite.texture = _texture(WorldData.decals()[d["index"]]["sprites"][d["sprite"]])
 	sprite.position = IsoLayer.cell_to_local(Vector2(cell) + d["offset"]).round()
 	return sprite
 

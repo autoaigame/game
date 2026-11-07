@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b6lfvp5awo7lq"
-path="res://.godot/imported/tuft.png-5a5ccbca0adce250b64ed55bfd3ebf04.ctex"
+uid="uid://coj4c5vr81glk"
+path="res://.godot/imported/dry_grass_tuft_0.png-9d1ec44e325ed3827c8d9dad19b07736.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/decals/tuft.png"
-dest_files=["res://.godot/imported/tuft.png-5a5ccbca0adce250b64ed55bfd3ebf04.ctex"]
+source_file="res://assets/decals/dry_grass_tuft_0.png"
+dest_files=["res://.godot/imported/dry_grass_tuft_0.png-9d1ec44e325ed3827c8d9dad19b07736.ctex"]
 
 [params]
 

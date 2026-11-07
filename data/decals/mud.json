@@ -1,0 +1,15 @@
+{
+	"id": "mud",
+	"name": "Mud",
+	"sprites": [
+		"res://assets/decals/mud_0.png",
+		"res://assets/decals/mud_1.png",
+		"res://assets/decals/mud_2.png"
+	],
+	"grounds": [
+		"packed_dirt",
+		"grass"
+	],
+	"cell_size": 4,
+	"density": 0.15
+}

@@ -12,7 +12,7 @@ const MAX_OFFSET := 0.3
 static var _seed := -1
 
 
-## The decal drawn on a cell: {} or {index, offset: Vector2 in cells}. Where several types land on the
+## The decal drawn on a cell: {} or {index, sprite: index in its sprites, offset: Vector2 in cells}. Where several types land on the
 ## same cell, the first in id order wins.
 static func decal_at(cell: Vector2i) -> Dictionary:
 	var decals := WorldData.decals()
@@ -22,7 +22,8 @@ static func decal_at(cell: Vector2i) -> Dictionary:
 		if position_in(i, g) == cell and is_present(i, g):
 			var h := _hash(i, g)
 			var off := Vector2(WorldNoise.unit(WorldNoise.mix32(h ^ 3)), WorldNoise.unit(WorldNoise.mix32(h ^ 4)))
-			return {"index": i, "offset": (off * 2.0 - Vector2.ONE) * MAX_OFFSET}
+			var n: int = decals[i]["sprites"].size()
+			return {"index": i, "sprite": WorldNoise.mix32(h ^ 5) % n, "offset": (off * 2.0 - Vector2.ONE) * MAX_OFFSET}
 	return {}
 
 

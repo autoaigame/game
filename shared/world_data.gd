@@ -47,7 +47,7 @@ static func biome_index(id: String) -> int:
 	return _biome_index.get(id, -1)
 
 
-## Object records, sorted by id: {id, name, blocks, cell_size, sprite, density: PackedFloat64Array by
+## Object records, sorted by id: {id, name, blocks, cell_size, sprites: [{file, anchor_px}], density: PackedFloat64Array by
 ## biome index, max_density, salt: hash of the id (seeds its placement, so adding an object moves no
 ## other)}.
 static func objects() -> Array[Dictionary]:
@@ -74,7 +74,7 @@ static func places() -> Array[Dictionary]:
 	return _places
 
 
-## Ground decals, sorted by id: {id, name, sprite, grounds: {tile index: true}, cell_size, density,
+## Ground decals, sorted by id: {id, name, sprites: [file, ...], grounds: {tile index: true}, cell_size, density,
 ## salt}. Drawing only: decals never block and the server ignores them.
 static func decals() -> Array[Dictionary]:
 	_ensure()
@@ -122,7 +122,7 @@ static func _ensure() -> void:
 				continue
 			density[_biome_index[b]] = float(rec["densities"][b])
 		_objects.append({"id": String(rec["id"]), "name": String(rec["name"]), "blocks": bool(rec["blocks"]),
-				"cell_size": maxi(1, int(rec["cell_size"])), "sprite": String(rec["sprite"]), "density": density,
+				"cell_size": maxi(1, int(rec["cell_size"])), "sprites": _sprites(rec), "density": density,
 				"max_density": Array(density).max() if density.size() > 0 else 0.0,
 				"salt": WorldNoise.hash_text(rec["id"])})
 	for i in _objects.size():
@@ -135,9 +135,17 @@ static func _ensure() -> void:
 			if tile_index(g) < 0:
 				push_error("data: decal %s names unknown ground %s" % [rec["id"], g])
 			grounds[tile_index(g)] = true
-		_decals.append({"id": String(rec["id"]), "name": String(rec["name"]), "sprite": String(rec["sprite"]),
+		_decals.append({"id": String(rec["id"]), "name": String(rec["name"]), "sprites": Array(rec["sprites"]),
 				"grounds": grounds, "cell_size": maxi(1, int(rec["cell_size"])), "density": float(rec["density"]),
 				"salt": WorldNoise.hash_text("decal:" + String(rec["id"]))})
+
+
+## An object's sprites: [{file, anchor_px: Vector2i (the point standing on the cell centre)}].
+static func _sprites(rec: Dictionary) -> Array:
+	var out := []
+	for sp in rec["sprites"]:
+		out.append({"file": String(sp["file"]), "anchor_px": Vector2i(int(sp["anchor_px"][0]), int(sp["anchor_px"][1]))})
+	return out
 
 
 ## A place record from its JSON: the plan is rows of characters, " " is outside the place.
