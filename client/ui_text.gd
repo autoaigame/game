@@ -17,7 +17,12 @@ const NOTICES := {
 	"bush_empty": "Ce buisson n'a plus de baies. Reviens plus tard.",
 	"too_far": "Trop loin.",
 	"ate": "Tu manges : %s",
+	"tree_empty": "Plus de bâtons sur cet arbre pour l'instant.",
+	"fire_built": "Tu allumes un feu.",
+	"need_sticks": "Il te faut %d bâtons pour faire un feu." % Protocol.FIRE_STICKS,
+	"fire_here": "Il y a déjà un feu ici.",
 }
+const BUILD_FIRE := "Faire un feu (%d bâtons)" % Protocol.FIRE_STICKS
 const EAT := "Manger"
 const ENTER := "Entrer dans le monde"
 
