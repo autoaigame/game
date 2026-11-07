@@ -8,6 +8,15 @@ const NAME_LABEL := "Ton nom"
 const NAME_PLACEHOLDER := "ex. Corbeau_42"
 const NAME_HINT := "Lettres, chiffres, _ et - (%d au plus)"
 const ENTER := "Entrer dans le monde"
+const SETTINGS := "Paramètres"
+
+const SETTINGS_TITLE := "Paramètres"
+const TAB_SOUND := "Son"
+const SOUND_CHANNELS := {"master": "Général", "music": "Musique", "ambience": "Ambiance", "effects": "Effets",
+		"ui": "Interface"}
+const MUTE := "Couper le son (M)"
+const CLOSE := "Fermer"
+const SETTINGS_HINT := "Échap pour fermer"
 
 const CONNECTING := "Connexion au serveur…"
 const READY := "Serveur prêt."

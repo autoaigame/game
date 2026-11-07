@@ -26,24 +26,17 @@ static func save_name(player_name: String, path := PATH) -> void:
 	cfg.save(path)  # failure (no storage) is silent: the name is just not remembered
 
 
-## {muted: bool, volume: 0..1}: sound settings, defaults when missing or unusable.
+## The sound settings (client/audio_settings.gd), defaults when missing or unusable. An older file's
+## [audio] volume is read as the master level.
 static func load_audio(path := PATH) -> Dictionary:
 	var cfg := ConfigFile.new()
-	var out := {"muted": false, "volume": DEFAULT_VOLUME}
 	if cfg.load(path) != OK:
-		return out
-	var muted: Variant = cfg.get_value("audio", "muted", false)
-	if typeof(muted) == TYPE_BOOL:
-		out["muted"] = muted
-	var volume: Variant = cfg.get_value("audio", "volume", DEFAULT_VOLUME)
-	if typeof(volume) == TYPE_FLOAT or typeof(volume) == TYPE_INT:
-		out["volume"] = clampf(float(volume), 0.0, 1.0)
-	return out
+		return AudioSettings.defaults()
+	return AudioSettings.read(cfg)
 
 
-static func save_audio(muted: bool, volume: float, path := PATH) -> void:
+static func save_audio(settings: Dictionary, path := PATH) -> void:
 	var cfg := ConfigFile.new()
 	cfg.load(path)
-	cfg.set_value("audio", "muted", muted)
-	cfg.set_value("audio", "volume", clampf(volume, 0.0, 1.0))
+	AudioSettings.write(cfg, settings)
 	cfg.save(path)

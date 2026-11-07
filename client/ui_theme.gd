@@ -81,7 +81,53 @@ static func build() -> Theme:
 	t.set_type_variation("TaglineLabel", "Label")
 	t.set_constant("outline_size", "TaglineLabel", 6)
 	t.set_color("font_outline_color", "TaglineLabel", TEXT_DARK)
+	_settings_controls(t)
 	return t
+
+
+## Sliders, check boxes and tab buttons of the settings menu, from the same boxes and colours.
+static func _settings_controls(t: Theme) -> void:
+	var track := box("field_normal", 0)
+	track.content_margin_top = 5
+	track.content_margin_bottom = 5
+	t.set_stylebox("slider", "HSlider", track)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color8(0x8d, 0x90, 0x64)
+	fill.content_margin_top = 5
+	fill.content_margin_bottom = 5
+	t.set_stylebox("grabber_area", "HSlider", fill)
+	var fill_hi := fill.duplicate()
+	fill_hi.bg_color = Color8(0xa8, 0xab, 0x77)
+	t.set_stylebox("grabber_area_highlight", "HSlider", fill_hi)
+	t.set_stylebox("focus", "HSlider", box("focus", 0))
+	t.set_icon("grabber", "HSlider", square_icon(16, Color8(0x5d, 0x5c, 0x55), TEXT_DARK))
+	t.set_icon("grabber_highlight", "HSlider", square_icon(16, Color8(0x77, 0x75, 0x6c), TEXT_LIGHT))
+	t.set_icon("grabber_disabled", "HSlider", square_icon(16, Color8(0x44, 0x44, 0x3f), TEXT_DARK))
+	t.set_stylebox("normal", "CheckBox", StyleBoxEmpty.new())
+	t.set_stylebox("hover", "CheckBox", StyleBoxEmpty.new())
+	t.set_stylebox("pressed", "CheckBox", StyleBoxEmpty.new())
+	t.set_stylebox("hover_pressed", "CheckBox", StyleBoxEmpty.new())
+	t.set_stylebox("focus", "CheckBox", box("focus", 0))
+	t.set_icon("unchecked", "CheckBox", square_icon(18, Color8(0xbd, 0xb5, 0x9f), Color8(0x54, 0x48, 0x3a)))
+	t.set_icon("checked", "CheckBox", square_icon(18, Color8(0xbd, 0xb5, 0x9f), Color8(0x54, 0x48, 0x3a), TEXT_DARK))
+	t.set_constant("h_separation", "CheckBox", 8)
+	t.set_font_size("font_size", "CheckBox", FONT_SIZE)
+	for c in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color"]:
+		t.set_color(c, "CheckBox", TEXT_LIGHT)
+	t.set_type_variation("TabButton", "Button")
+	t.set_font_size("font_size", "TabButton", FONT_SIZE)
+	t.set_stylebox("pressed", "TabButton", box("button_hover", 10))
+	t.set_stylebox("hover_pressed", "TabButton", box("button_hover", 10))
+
+
+## A square `size` px icon: `fill` inside a 2 px `border`, and a `mark` square in the middle if given.
+static func square_icon(size: int, fill: Color, border: Color, mark := Color(0, 0, 0, 0)) -> Texture2D:
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	img.fill(border)
+	img.fill_rect(Rect2i(2, 2, size - 4, size - 4), fill)
+	if mark.a > 0.0:
+		img.fill_rect(Rect2i(5, 5, size - 10, size - 10), mark)
+	return ImageTexture.create_from_image(img)
 
 
 ## The style for `key`: its 9-slice PNG if it exists, a flat box otherwise. `pad` is the room

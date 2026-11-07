@@ -994,3 +994,13 @@ prompt = "Subtle start game sound, soft muffled whoosh and a gentle low thud, un
 license = "LicenseRef-ElevenLabs-in-game-only"
 note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
 source = ""
+
+[[asset]]
+path = "assets/sounds/music/menu.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "Suno v6, Advanced mode, Instrumental on, Weirdness 35, Style Influence 70, Variety Normal, Max Mode off (song \"Wind and Silence\", id 80dca1ef-a6e9-4c5d-a397-ea412b02f6c9); excluded styles: vocals, choir, humming, singing, vocal chops, spoken word, epic trailer, uplifting, hopeful, sentimental piano, melancholic, drums, percussion; by script: -20 LUFS, intro 0 to 31.4 s then loop 31.4 s to the end with a 2 s crossfade, Vorbis q2"
+prompt = "Style: Dark ambient instrumental for a post-apocalyptic title screen. Slow swells of dissonant low brass clusters over a constant sub-bass drone, bowed metal resonating in a vast empty space, cold wind, faint tape hiss. No melody, no resolution, heavy and suffocating. 52 BPM, D phrygian. Lyrics: [Intro: wind and sub-bass rumble only] [Instrumental: low brass cluster swells in, bowed metal] [Crescendo] [Silence] [Instrumental: drone returns, quieter, distant metallic hits] [Decrescendo] [Outro: wind only, fade out] [End]"
+license = "LicenseRef-Suno-in-game-only"
+note = "Generated with Suno; may be used only inside this game, not on its own or in a music library."
+source = ""

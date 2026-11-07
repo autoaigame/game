@@ -10,5 +10,6 @@
 	"footstep_others_volume_db": -28.0,
 	"footstep_pitch": 0.08,
 	"ui": {"hover": "hover", "click": "click", "enter": "enter"},
-	"ui_volume_db": {"hover": -10.0, "click": -6.0, "enter": -4.0}
+	"ui_volume_db": {"hover": -10.0, "click": -6.0, "enter": -4.0},
+	"menu_music": {"file": "menu", "volume_db": 0.0, "fade_out_s": 3.0, "crossfade_s": 0.2}
 }

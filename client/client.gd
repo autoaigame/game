@@ -40,14 +40,19 @@ func _add_views() -> void:
 	sounds.name = "Sounds"
 	sounds.client = self
 	add_child(sounds)
+	var settings: CanvasLayer = load("res://client/settings_menu.gd").new()
+	settings.sounds = sounds
 	var view: Node2D = load("res://client/world_view.gd").new()
 	view.client = self
 	view.sounds = sounds
+	view.menu = settings
 	add_child(view)
 	var ui: CanvasLayer = load("res://client/login_ui.gd").new()
 	ui.client = self
 	ui.sounds = sounds
+	ui.settings = settings
 	add_child(ui)
+	add_child(settings)
 
 
 func join_with(new_name: String) -> void:
