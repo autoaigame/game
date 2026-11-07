@@ -8,4 +8,4 @@ Rules that must hold whatever the change. Tests and audits check changes against
 4. **One online player per name.** A second join with a name already online is rejected. Names follow `Protocol.validate_name`.
 5. **Positions survive a disconnect.** A player who leaves, even abruptly, comes back at the cell where they were. Saves happen on disconnect and periodically.
 6. **The web build contains no server code.** `server/` and `addons/godot-sqlite/` are excluded from the Web export; client code never loads them.
-7. **Shared code is deterministic.** `shared/` uses no wall clock, no randomness without a fixed seed, and no network.
+7. **Shared code is deterministic.** `shared/` uses no wall clock, no randomness without a fixed seed, and no network. The world is a pure function of the world seed and the cell coordinates: a cell is the same whichever chunk asks, on the server and in every client.
