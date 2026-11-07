@@ -6,6 +6,7 @@ const PLAYER_TEX := preload("res://assets/player.png")
 
 var client: Node  ## client/client.gd
 var sounds: Node  ## client/sound_director.gd, or null (no sound)
+var menu: Node  ## client/settings_menu.gd, or null; while it is open my keys do not move me
 var _layer: TileMapLayer
 var _streamer := ChunkStreamer.new(2, 3, 1)
 var _builder: ChunkBuilder
@@ -146,6 +147,8 @@ func _process(delta: float) -> void:
 	var dir := KeyMove.direction(
 			Input.is_physical_key_pressed(KEY_W), Input.is_physical_key_pressed(KEY_S),
 			Input.is_physical_key_pressed(KEY_A), Input.is_physical_key_pressed(KEY_D))
+	if menu != null and menu.is_open():
+		dir = Vector2i.ZERO  # stops me if I was walking
 	if dir == Vector2i.ZERO:
 		if _key_dir != Vector2i.ZERO:
 			client.request_stop()

@@ -10,10 +10,12 @@ const FADE_OUT_S := 0.4
 
 var client: Node  ## client/client.gd
 var sounds: Node  ## client/sound_director.gd, or null (no sound)
+var settings: Node  ## client/settings_menu.gd, or null
 var state := State.CONNECTING
 var _root := Control.new()
 var _name_edit := LineEdit.new()
 var _button := Button.new()
+var _settings_button := Button.new()
 var _hint := Label.new()
 var _hint_icon := TextureRect.new()
 var _status := Label.new()
@@ -61,6 +63,9 @@ func _ready() -> void:
 	client.welcomed.connect(func(_c): _on_welcomed())
 	client.join_rejected.connect(_on_rejected)
 	client.connection_lost.connect(_on_lost)
+	if settings != null:
+		settings.opened.connect(_on_settings_opened)
+		settings.closed.connect(_on_settings_closed)
 	_root.modulate.a = 0.0
 	_fade_to(1.0, FADE_IN_S)
 	# focused on the first frame, once every control is in the tree
@@ -128,6 +133,13 @@ func _build() -> void:
 	_button.mouse_entered.connect(func(): _play("hover"))
 	_button.button_down.connect(func(): _play("click"))
 	box.add_child(_button)
+	_settings_button.text = UiText.SETTINGS
+	_settings_button.custom_minimum_size = Vector2(0, 36)
+	_settings_button.theme_type_variation = "TabButton"
+	_settings_button.pressed.connect(_open_settings)
+	_settings_button.mouse_entered.connect(func(): if sounds != null: sounds.ui("hover"))
+	_settings_button.button_down.connect(func(): if sounds != null: sounds.ui("click"))
+	box.add_child(_settings_button)
 	var gap2 := Control.new()
 	gap2.custom_minimum_size = Vector2(0, 2)
 	box.add_child(gap2)
@@ -140,6 +152,12 @@ func _build() -> void:
 	var button_path := _button.get_path_to(_name_edit)
 	_button.focus_neighbor_top = button_path
 	_button.focus_previous = button_path
+	_button.focus_neighbor_bottom = _button.get_path_to(_settings_button)
+	_button.focus_next = _button.get_path_to(_settings_button)
+	_settings_button.focus_neighbor_top = _settings_button.get_path_to(_button)
+	_settings_button.focus_previous = _settings_button.get_path_to(_button)
+	_settings_button.focus_neighbor_bottom = _settings_button.get_path_to(_name_edit)
+	_settings_button.focus_next = _settings_button.get_path_to(_name_edit)
 
 
 func _label(text: String, variation: String) -> Label:
@@ -158,6 +176,23 @@ func _icon_row(icon: TextureRect, label: Label) -> HBoxContainer:
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(label)
 	return row
+
+
+func _open_settings() -> void:
+	if settings != null:
+		settings.open()
+
+
+## The settings menu takes this one's place while it is open.
+func _on_settings_opened() -> void:
+	_root.visible = false
+
+
+## Back from the settings menu while this menu shows: the focus returns to its button.
+func _on_settings_closed() -> void:
+	_root.visible = true
+	if visible and not _in_game:
+		_focus_next = _settings_button
 
 
 func _play(kind: String) -> void:
