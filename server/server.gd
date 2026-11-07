@@ -4,11 +4,14 @@ extends Node
 
 const SAVE_INTERVAL_S := 10.0
 const DOG := preload("res://server/dog.gd")
+const MARKS := preload("res://server/marks.gd")
 
 var _db: RefCounted
 var _net: Node
 ## peer_id -> {name: String, pos: Vector2, target: Vector2, stopped: bool, dog: server/dog.gd record}
 var _players := {}
+var _marks: Dictionary = MARKS.new_marks()
+var _marks_changed := false
 var _tick_acc := 0.0
 var _save_acc := 0.0
 
@@ -60,6 +63,7 @@ func on_join(peer_id: int, player_name: String) -> void:
 	_players[peer_id] = {"name": player_name, "pos": Vector2(cell), "target": Vector2(cell), "stopped": false,
 			"dog": DOG.new_dog(dog_pos, hash(player_name))}
 	_net.welcome.rpc_id(peer_id, peer_id, cell)
+	_net.marks.rpc_id(peer_id, MARKS.snapshot(_marks))
 	print("server: %s joined at %s" % [player_name, cell])
 
 
@@ -99,6 +103,8 @@ func _on_peer_disconnected(peer_id: int) -> void:
 func _step(dt: float) -> void:
 	_move_players(dt)
 	_move_dogs(dt)
+	if MARKS.tick(_marks, dt):
+		_marks_changed = true
 	var snap: Array = []
 	for id in _players:
 		var p: Dictionary = _players[id]
@@ -107,11 +113,24 @@ func _step(dt: float) -> void:
 	for id in _players:
 		_net.snapshot.rpc_id(id, snap)
 		_net.creatures.rpc_id(id, creatures)
+	if _marks_changed:
+		_marks_changed = false
+		var marks := MARKS.snapshot(_marks)
+		for id in _players:
+			_net.marks.rpc_id(id, marks)
 
 
 func _move_dogs(dt: float) -> void:
 	for p in _players.values():
-		DOG.update(p["dog"], p["pos"], dt)
+		_add_events(DOG.update(p["dog"], p["pos"], dt))
+
+
+## Turns creature events into marks on the ground.
+func _add_events(events: Array) -> void:
+	for e in events:
+		if e["kind"] == "pee":
+			MARKS.add(_marks, "pee", e["pos"], DOG.PEE_MARK_S)
+			_marks_changed = true
 
 
 ## The creatures clients draw: {id, kind, owner (peer id or 0), pos, state}. A dog's id is its owner's peer id.

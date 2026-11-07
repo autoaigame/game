@@ -8,6 +8,7 @@ class FakeClient:
 	signal welcomed(cell: Vector2i)
 	signal snapshot_received(players: Array)
 	signal creatures_received(creatures: Array)
+	signal marks_received(marks: Array)
 	var my_peer_id := 1
 
 	func request_move(_cell: Vector2i) -> void:
@@ -66,4 +67,19 @@ func test_dog_uses_its_sprite_sheet() -> void:
 	view.client.creatures_received.emit([{"id": 1, "kind": "dog", "owner": 1, "pos": Vector2(7, 5)}])
 	view._animate_creatures(0.1)
 	assert_true(sprite.frame_coords.y in [DogAnim.row_of("walk"), DogAnim.row_of("run")], "walking")
+	view.free()
+
+
+## Marks on the ground are drawn flat, fade out at the end, and go when the server drops them.
+func test_marks_drawn_fade_and_go() -> void:
+	var view := _view()
+	view.client.marks_received.emit([{"id": 9, "kind": "pee", "pos": Vector2(3, 3), "left": 60.0}])
+	var node: Node2D = view._marks[9]["node"]
+	assert_eq(node.position, IsoLayer.cell_to_local(Vector2(3, 3)))
+	assert_true(node.z_index < 0, "flat on the ground, under creatures")
+	assert_eq(node.modulate.a, 1.0)
+	view._age_marks(60.0 - MarkView.FADE_S / 2.0)
+	assert_almost(node.modulate.a, 0.5)
+	view.client.marks_received.emit([])
+	assert_false(view._marks.has(9))
 	view.free()
