@@ -1,0 +1,404 @@
+{
+ "bones": 21,
+ "checks": {
+  "attack": {
+   "arm_in_torso_L": {
+    "max_m": 0.0,
+    "poses": 0
+   },
+   "arm_in_torso_R": {
+    "max_m": 0.0,
+    "poses": 0
+   },
+   "ik_miss_m": 0.0,
+   "joints": {
+    "DEF-foot.L": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-foot.R": {
+     "max_m": 0.0021,
+     "poses": 0
+    },
+    "DEF-forearm.L": {
+     "max_m": 0.0068,
+     "poses": 0
+    },
+    "DEF-forearm.R": {
+     "max_m": 0.0055,
+     "poses": 0
+    },
+    "DEF-hand.L": {
+     "max_m": 0.0041,
+     "poses": 0
+    },
+    "DEF-hand.R": {
+     "max_m": 0.0052,
+     "poses": 0
+    },
+    "DEF-head": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-neck": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-shin.L": {
+     "max_m": 0.0038,
+     "poses": 0
+    },
+    "DEF-shoulder.L": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-shoulder.R": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-spine.001": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-spine.002": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-spine.003": {
+     "max_m": 0.0045,
+     "poses": 0
+    },
+    "DEF-thigh.L": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-thigh.R": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-upper_arm.L": {
+     "max_m": 0.0005,
+     "poses": 0
+    },
+    "DEF-upper_arm.R": {
+     "max_m": 0.0,
+     "poses": 0
+    }
+   },
+   "leg_in_leg_L": {
+    "max_m": 0.0,
+    "poses": 0
+   },
+   "leg_in_leg_R": {
+    "max_m": 0.0,
+    "poses": 0
+   },
+   "slide_max_m": 0.0018,
+   "sole_max_m": 0.0,
+   "sole_min_m": -0.001
+  },
+  "death": {
+   "ground_lift_max_m": 0.1781,
+   "ik_miss_m": 0.0,
+   "joints": {
+    "DEF-foot.L": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-foot.R": {
+     "max_m": 0.0067,
+     "poses": 0
+    },
+    "DEF-forearm.L": {
+     "max_m": 0.0038,
+     "poses": 0
+    },
+    "DEF-forearm.R": {
+     "max_m": 0.003,
+     "poses": 0
+    },
+    "DEF-hand.L": {
+     "max_m": 0.0041,
+     "poses": 0
+    },
+    "DEF-hand.R": {
+     "max_m": 0.0052,
+     "poses": 0
+    },
+    "DEF-head": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-neck": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-shin.L": {
+     "max_m": 0.0046,
+     "poses": 0
+    },
+    "DEF-shoulder.L": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-shoulder.R": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-spine.001": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-spine.002": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-spine.003": {
+     "max_m": 0.005,
+     "poses": 0
+    },
+    "DEF-thigh.L": {
+     "max_m": 0.0037,
+     "poses": 0
+    },
+    "DEF-thigh.R": {
+     "max_m": 0.0051,
+     "poses": 0
+    },
+    "DEF-upper_arm.L": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-upper_arm.R": {
+     "max_m": 0.0007,
+     "poses": 0
+    }
+   },
+   "slide_max_m": 0.0,
+   "sole_max_m": 0.1726,
+   "sole_min_m": -0.0019
+  },
+  "idle": {
+   "arm_in_torso_L": {
+    "max_m": 0.0,
+    "poses": 0
+   },
+   "arm_in_torso_R": {
+    "max_m": 0.0,
+    "poses": 0
+   },
+   "ik_miss_m": 0.0,
+   "joints": {
+    "DEF-foot.L": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-foot.R": {
+     "max_m": 0.0021,
+     "poses": 0
+    },
+    "DEF-forearm.L": {
+     "max_m": 0.0048,
+     "poses": 0
+    },
+    "DEF-forearm.R": {
+     "max_m": 0.003,
+     "poses": 0
+    },
+    "DEF-hand.L": {
+     "max_m": 0.0041,
+     "poses": 0
+    },
+    "DEF-hand.R": {
+     "max_m": 0.0052,
+     "poses": 0
+    },
+    "DEF-head": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-neck": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-shin.L": {
+     "max_m": 0.0023,
+     "poses": 0
+    },
+    "DEF-shoulder.L": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-shoulder.R": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-spine.001": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-spine.002": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-spine.003": {
+     "max_m": 0.0023,
+     "poses": 0
+    },
+    "DEF-thigh.L": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-thigh.R": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-upper_arm.L": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-upper_arm.R": {
+     "max_m": 0.0004,
+     "poses": 0
+    }
+   },
+   "leg_in_leg_L": {
+    "max_m": 0.0,
+    "poses": 0
+   },
+   "leg_in_leg_R": {
+    "max_m": 0.0,
+    "poses": 0
+   },
+   "slide_max_m": 0.0001,
+   "sole_max_m": 0.0,
+   "sole_min_m": -0.0
+  },
+  "walk": {
+   "arm_in_torso_L": {
+    "max_m": 0.0,
+    "poses": 0
+   },
+   "arm_in_torso_R": {
+    "max_m": 0.0,
+    "poses": 0
+   },
+   "ik_miss_m": 0.0,
+   "joints": {
+    "DEF-foot.L": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-foot.R": {
+     "max_m": 0.0022,
+     "poses": 0
+    },
+    "DEF-forearm.L": {
+     "max_m": 0.0032,
+     "poses": 0
+    },
+    "DEF-forearm.R": {
+     "max_m": 0.0011,
+     "poses": 0
+    },
+    "DEF-hand.L": {
+     "max_m": 0.0033,
+     "poses": 0
+    },
+    "DEF-hand.R": {
+     "max_m": 0.0041,
+     "poses": 0
+    },
+    "DEF-head": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-neck": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-shin.L": {
+     "max_m": 0.0043,
+     "poses": 0
+    },
+    "DEF-shoulder.L": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-shoulder.R": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-spine.001": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-spine.002": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-spine.003": {
+     "max_m": 0.0022,
+     "poses": 0
+    },
+    "DEF-thigh.L": {
+     "max_m": 0.0069,
+     "poses": 0
+    },
+    "DEF-thigh.R": {
+     "max_m": 0.0,
+     "poses": 0
+    },
+    "DEF-upper_arm.L": {
+     "max_m": 0.0005,
+     "poses": 0
+    },
+    "DEF-upper_arm.R": {
+     "max_m": 0.0006,
+     "poses": 0
+    }
+   },
+   "leg_in_leg_L": {
+    "max_m": 0.0,
+    "poses": 0
+   },
+   "leg_in_leg_R": {
+    "max_m": 0.0,
+    "poses": 0
+   },
+   "slide_max_m": 0.0086,
+   "sole_max_m": 0.0064,
+   "sole_min_m": -0.0001
+  },
+  "weights": {
+   "blended_vertices": 420
+  }
+ },
+ "clips": {
+  "attack": {
+   "duration_s": 1.2,
+   "hit_s": 0.54,
+   "loop": false
+  },
+  "death": {
+   "duration_s": 1.6,
+   "loop": false
+  },
+  "idle": {
+   "duration_s": 3.0,
+   "loop": true
+  },
+  "walk": {
+   "duration_s": 1.5,
+   "ground_speed_m_s": 0.4133,
+   "left_contact": 0.0,
+   "loop": true,
+   "right_contact": 0.5,
+   "stride_m": 0.62
+  }
+ },
+ "forward": "+z",
+ "height_m": 1.75,
+ "tris": 2120,
+ "verts": 1172
+}
