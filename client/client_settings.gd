@@ -62,3 +62,24 @@ static func save_look(look: Array, path := PATH) -> void:
 	cfg.load(path)
 	cfg.set_value("player", "look", JSON.stringify(look))
 	cfg.save(path)
+
+
+## Whether the player chose fullscreen; windowed when missing or unusable.
+static func load_fullscreen(path := PATH) -> bool:
+	var cfg := ConfigFile.new()
+	if cfg.load(path) != OK:
+		return false
+	var value: Variant = cfg.get_value("display", "fullscreen", false)
+	return typeof(value) == TYPE_BOOL and value
+
+
+static func save_fullscreen(on: bool, path := PATH) -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(path)
+	cfg.set_value("display", "fullscreen", on)
+	cfg.save(path)
+
+
+## Whether to go fullscreen at launch. A browser allows it only after a click, so never on the web.
+static func fullscreen_at_launch(on_web: bool, path := PATH) -> bool:
+	return not on_web and load_fullscreen(path)
