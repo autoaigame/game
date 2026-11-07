@@ -7,7 +7,7 @@ class FakeClock:
 	var now := 0
 	var tick := 0  ## microseconds added at each read
 
-	func read() -> int:
+	func now_usec() -> int:
 		now += tick
 		return now
 
@@ -22,7 +22,7 @@ func test_stops_when_the_budget_is_spent() -> void:
 	var b := _builder()
 	var clock := FakeClock.new()
 	clock.tick = 1000
-	b.run(4000, clock.read)
+	b.run(4000, clock)
 	assert_true(b.steps_last_run >= 3 and b.steps_last_run <= 4, "about 4 ms of 1 ms steps: %d" % b.steps_last_run)
 	b.drop([Vector2i(0, 0)] as Array[Vector2i])
 
@@ -32,7 +32,7 @@ func test_always_one_step_per_frame() -> void:
 	var b := _builder()
 	var clock := FakeClock.new()
 	clock.tick = 1_000_000
-	b.run(4000, clock.read)
+	b.run(4000, clock)
 	assert_eq(b.steps_last_run, 1)
 	b.drop([Vector2i(0, 0)] as Array[Vector2i])
 
@@ -43,7 +43,7 @@ func test_builds_all_queued_chunks() -> void:
 	var clock := FakeClock.new()
 	var built := {}
 	for frame in 2000:
-		for pair in b.run(4000, clock.read):
+		for pair in b.run(4000, clock):
 			built[pair[0]] = pair[1]
 		if b.pending() == 0:
 			break
@@ -51,7 +51,7 @@ func test_builds_all_queued_chunks() -> void:
 	for c in built:
 		assert_eq(String(built[c].name), "Chunk_%d_%d" % [c.x, c.y])
 		built[c].free()
-	assert_eq(b.run(4000, clock.read), [])
+	assert_eq(b.run(4000, clock), [])
 
 
 ## A chunk freed while its job runs is dropped: its job stops and gives no node.
@@ -59,9 +59,9 @@ func test_dropped_chunk_gives_no_node() -> void:
 	var b := _builder()
 	var clock := FakeClock.new()
 	clock.tick = 1_000_000
-	b.run(4000, clock.read)
+	b.run(4000, clock)
 	assert_eq(b.pending(), 1)
 	b.drop([Vector2i(0, 0)] as Array[Vector2i])
 	assert_eq(b.pending(), 0)
 	clock.tick = 0
-	assert_eq(b.run(4000, clock.read), [])
+	assert_eq(b.run(4000, clock), [])

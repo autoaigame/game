@@ -8,6 +8,7 @@ var client: Node  ## client/client.gd
 var _layer: TileMapLayer
 var _streamer := ChunkStreamer.new(2, 3, 1)
 var _builder: ChunkBuilder
+var _clock := ChunkBuilder.WallClock.new()
 var _chunk_nodes := {}  ## chunk -> Node2D
 var _actors := {}  ## peer_id -> Node2D
 var _walk := {}  ## peer_id -> {server, shown: Vector2 in cells, walked: float in cells, facing: WalkAnim.FACINGS index, still: s}
@@ -79,7 +80,7 @@ func _stream_chunks() -> void:
 		if _chunk_nodes.has(c):
 			_chunk_nodes[c].queue_free()
 			_chunk_nodes.erase(c)
-	for built in _builder.run(ChunkBuilder.BUDGET_USEC, Time.get_ticks_usec):
+	for built in _builder.run(ChunkBuilder.BUDGET_USEC, _clock):
 		_chunk_nodes[built[0]] = built[1]
 		add_child(built[1])
 

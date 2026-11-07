@@ -9,6 +9,15 @@ const BUDGET_USEC := 4000
 
 var steps_last_run := 0  ## steps the last run() took (tests read it)
 
+
+## The clock run() reads: the engine's. Tests give a fake one with the same method.
+class WallClock:
+	extends RefCounted
+
+	func now_usec() -> int:
+		return Time.get_ticks_usec()
+
+
 var _streamer: ChunkStreamer
 var _tiles: Texture2D
 var _jobs: Array[ChunkJob] = []
@@ -19,11 +28,11 @@ func _init(streamer: ChunkStreamer, tiles: Texture2D) -> void:
 	_tiles = tiles
 
 
-## Runs job steps until `budget_usec` has passed on `clock` (returns microseconds). Returns the
-## chunks completed: [[chunk, node], ...].
-func run(budget_usec: int, clock: Callable) -> Array:
+## Runs job steps until `budget_usec` has passed on `clock` (an object with now_usec(), like WallClock).
+## Returns the chunks completed: [[chunk, node], ...].
+func run(budget_usec: int, clock: Object) -> Array:
 	var out := []
-	var start: int = clock.call()
+	var start: int = clock.now_usec()
 	steps_last_run = 0
 	while true:
 		if _jobs.is_empty():
@@ -31,7 +40,7 @@ func run(budget_usec: int, clock: Callable) -> Array:
 				_jobs.append(ChunkJob.new(c, _tiles))
 			if _jobs.is_empty():
 				break
-		if steps_last_run > 0 and clock.call() - start >= budget_usec:
+		if steps_last_run > 0 and clock.now_usec() - start >= budget_usec:
 			break
 		steps_last_run += 1
 		if _jobs[0].step():
