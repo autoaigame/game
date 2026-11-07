@@ -1,0 +1,3 @@
+{"id": "hair_short", "slot": "hair", "name": "Courts", "kind": "rigid", "glb": "res://assets/character/parts/hair_short.glb",
+ "bone": "DEF-head", "covers": ["hair_top"], "hides": ["scalp", "nape"],
+ "colors": ["hair_brown", "hair_black", "hair_fair", "hair_grey"]}

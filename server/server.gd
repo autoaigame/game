@@ -2,6 +2,9 @@
 ## Server-authoritative positions, broadcast at Protocol.TICK_HZ, persisted in SQLite.
 extends Node
 
+## A look was sent to peer `to`: what player `who` wears.
+signal look_sent(to: int, who: int, look: Array)
+
 const SAVE_INTERVAL_S := 10.0
 const CARCASS_S := 120.0  ## how long a caught animal lies on the ground
 ## Raw meat a caught animal gives, by mark kind: when the dog brings it back, or when picked up off the
@@ -13,12 +16,17 @@ const HUNGER := preload("res://server/hunger.gd")
 const INV := preload("res://server/inventory.gd")
 const GATHER := preload("res://server/gather.gd")
 const WILD := preload("res://server/wildlife.gd")
+## Looks kept for peers that have not joined yet, at most (each is dropped on join or disconnect).
+const MAX_EARLY_LOOKS := 64
 
 var _db: RefCounted
 var _net: Node
 ## peer_id -> {name, pos: Vector2, target: Vector2i, stopped: bool, dog: server/dog.gd record,
-## hunger: float, sent: what the client was last told of its status, inventory: item id -> count}
+## hunger: float, sent: what the client was last told of its status, inventory: item id -> count,
+## look: Array (CharacterParts)}
 var _players := {}
+## peer_id -> look sent before joining (the client sends it first, so others never see a default look)
+var _early_looks := {}
 var _marks: Dictionary = MARKS.new_marks()
 var _marks_changed := false
 var _wild: Dictionary = WILD.new_wild()
@@ -73,20 +81,33 @@ func on_join(peer_id: int, player_name: String) -> void:
 		_net.rejected.rpc_id(peer_id, problem)
 		return
 	var cell := join_cell(_db.load_player(player_name))
-	_players[peer_id] = _new_player(player_name, cell, _db.load_stats(player_name), _db.load_inventory(player_name))
+	_players[peer_id] = _new_player(player_name, cell, _db.load_stats(player_name), _db.load_inventory(player_name),
+			_early_looks.get(peer_id, []))
+	_early_looks.erase(peer_id)
 	_net.welcome.rpc_id(peer_id, peer_id, cell)
 	_net.marks.rpc_id(peer_id, MARKS.snapshot(_marks))
 	_net.status.rpc_id(peer_id, _status_to_send(_players[peer_id]))
 	_net.inventory.rpc_id(peer_id, _players[peer_id]["inventory"])
+	# Before the next snapshot: everyone learns what the newcomer wears, the newcomer what the others wear.
+	for id in _players:
+		if id != peer_id:
+			_send_look(peer_id, id)
+		_send_look(id, peer_id)
 	print("server: %s joined at %s" % [player_name, cell])
 
 
-## A joined player's record at `cell`, with their dog and their saved stats (hunger: full if none).
-func _new_player(player_name: String, cell: Vector2i, stats: Dictionary, inventory := {}) -> Dictionary:
+## A joined player's record at `cell`, with their dog and their saved stats (hunger: full if none),
+## wearing `look` if it is valid, the default look otherwise.
+func _new_player(player_name: String, cell: Vector2i, stats: Dictionary, inventory := {}, look: Variant = []) -> Dictionary:
 	var dog_pos := Vector2(DOG.spot_near(cell, cell + Vector2i(1, 1)))
 	return {"name": player_name, "pos": Vector2(cell), "target": Vector2(cell), "stopped": false,
 			"dog": DOG.new_dog(dog_pos, hash(player_name)), "hunger": float(stats.get("hunger", HUNGER.MAX)),
-			"sent": {}, "inventory": inventory.duplicate()}
+			"sent": {}, "inventory": inventory.duplicate(), "look": wearable(look)}
+
+
+## `look` if it is a valid look (CharacterParts.validate), a copy; the default look otherwise.
+static func wearable(look: Variant) -> Array:
+	return (look if CharacterParts.validate(look) == "" else CharacterParts.default_look()).duplicate(true)
 
 
 func _save(p: Dictionary) -> void:
@@ -272,7 +293,33 @@ func on_stop(peer_id: int) -> void:
 		_players[peer_id]["stopped"] = true
 
 
+## The parts a player wears. Refused (the old look stays) unless every id exists in data/character and
+## fits its slot and colours (CharacterParts.validate). A change is sent to everyone at once.
+func on_set_look(peer_id: int, look: Variant) -> void:
+	var problem := CharacterParts.validate(look)
+	if problem != "":
+		print("server: look from peer %d refused: %s" % [peer_id, problem])
+		return
+	if not _players.has(peer_id):
+		if _early_looks.has(peer_id) or _early_looks.size() < MAX_EARLY_LOOKS:
+			_early_looks[peer_id] = look.duplicate(true)
+		return
+	if look == _players[peer_id]["look"]:
+		return
+	_players[peer_id]["look"] = look.duplicate(true)
+	for id in _players:
+		_send_look(id, peer_id)
+
+
+## Tells peer `to` what player `who` wears.
+func _send_look(to: int, who: int) -> void:
+	look_sent.emit(to, who, _players[who]["look"])
+	if _net != null:
+		_net.look.rpc_id(to, who, _players[who]["look"])
+
+
 func _on_peer_disconnected(peer_id: int) -> void:
+	_early_looks.erase(peer_id)
 	if not _players.has(peer_id):
 		return
 	var p: Dictionary = _players[peer_id]

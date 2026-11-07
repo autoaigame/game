@@ -1,0 +1,4 @@
+{"id": "hair_long", "slot": "hair", "name": "Longs", "kind": "rigid", "glb": "res://assets/character/parts/hair_long.glb",
+ "bone": "DEF-head", "covers": ["hair_top", "hair_back"], "hides": ["scalp", "nape"],
+ "when_hidden": {"glb": "res://assets/character/parts/hair_long_under.glb", "covers": ["hair_back"], "hides": ["nape"]},
+ "colors": ["hair_brown", "hair_black", "hair_fair", "hair_grey"]}

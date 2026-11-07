@@ -1,0 +1,22 @@
+{
+	"comment": "Named colours for character parts: each a ramp of palette colours (data/palette.json), dark to light. A part lists the ramps a player may choose for it (\"colors\"); the first is its default. The second colour of a ramp is the colour the part is.",
+	"ramps": {
+		"khaki": {"name": "Kaki", "colours": ["4e4a33", "6e6948", "8f8a63", "9e9268"]},
+		"olive": {"name": "Olive", "colours": ["3b4530", "4d5638", "616a43", "767d52"]},
+		"workwear_blue": {"name": "Bleu de travail", "colours": ["2f3a46", "455466", "64758a", "77756c"]},
+		"faded_denim": {"name": "Jean usé", "colours": ["455466", "64758a", "77756c"]},
+		"canvas_blue": {"name": "Toile bleue", "colours": ["1d2a2b", "2f3a46", "455466", "64758a"]},
+		"grey": {"name": "Gris", "colours": ["44443f", "5d5c55", "77756c", "938f84"]},
+		"sand": {"name": "Sable", "colours": ["8a8270", "a39b86", "bdb59f", "d3ccb7"]},
+		"brown": {"name": "Marron", "colours": ["2e2822", "40372d", "54483a", "6a5c49"]},
+		"leather": {"name": "Cuir", "colours": ["2e2822", "3a2f27", "51433a", "6b5a4c"]},
+		"teal": {"name": "Sarcelle", "colours": ["283a3b", "34494a", "45605d", "5f7a74"]},
+		"skin_light": {"name": "Peau claire", "colours": ["9a6d56", "c09576", "d3ccb7"]},
+		"skin_medium": {"name": "Peau mate", "colours": ["6e4b3b", "9a6d56", "c09576"]},
+		"skin_dark": {"name": "Peau foncée", "colours": ["3a2f27", "6e4b3b", "9a6d56"]},
+		"hair_brown": {"name": "Bruns", "colours": ["2e2822", "3a2f27", "51433a", "6b5a4c"]},
+		"hair_black": {"name": "Noirs", "colours": ["1d2a2b", "2e2822", "40372d", "54483a"]},
+		"hair_fair": {"name": "Blonds", "colours": ["6b6342", "857a54", "9e9268", "b8ac84"]},
+		"hair_grey": {"name": "Gris", "colours": ["5d5c55", "77756c", "938f84", "b0ab9e"]}
+	}
+}

@@ -1,0 +1,2 @@
+{"id": "top_tshirt", "slot": "top", "name": "T-shirt", "kind": "skinned", "glb": "res://assets/character/parts/top_tshirt.glb",
+ "hides": ["torso", "arms_upper"], "colors": ["grey", "sand", "workwear_blue", "olive"]}
