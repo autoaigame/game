@@ -57,12 +57,17 @@ static func sprite_variant(cell: Vector2i, index: int) -> int:
 	return WorldNoise.hash3(int(WorldData.gen()["seed"]), cell.x, cell.y, WorldData.object(index)["salt"]) % n
 
 
-## Wall sprites run along the grid's y axis: a wall continuing along x (is_wall says where walls are)
-## is drawn mirrored.
-static func mirror_wall(cell: Vector2i, is_wall: Callable) -> bool:
-	var along_x: bool = is_wall.call(cell + Vector2i(1, 0)) or is_wall.call(cell + Vector2i(-1, 0))
-	var along_y: bool = is_wall.call(cell + Vector2i(0, 1)) or is_wall.call(cell + Vector2i(0, -1))
+## Wall sprites run along the grid's y axis: a wall continuing along x is drawn mirrored. along_x: a
+## wall stands at x - 1 or x + 1; along_y: at y - 1 or y + 1.
+static func mirror_wall(along_x: bool, along_y: bool) -> bool:
 	return along_x and not along_y
+
+
+## Whether the wall on `cell` continues along x, and along y (MapData).
+static func wall_neighbours(cell: Vector2i, wall: int) -> Array[bool]:
+	var x := MapData.object_index_at(cell + Vector2i(1, 0)) == wall or MapData.object_index_at(cell + Vector2i(-1, 0)) == wall
+	var y := MapData.object_index_at(cell + Vector2i(0, 1)) == wall or MapData.object_index_at(cell + Vector2i(0, -1)) == wall
+	return [x, y]
 
 
 ## A sprite for an object standing on `cell`: its anchor (data/objects "anchor_px") on the cell centre.
@@ -126,9 +131,12 @@ static func build(chunk: Vector2i, tiles: Texture2D) -> Node2D:
 	node.y_sort_enabled = true
 	var obj := objects(chunk)
 	var wall := WorldData.object_index("stone_wall")
-	var is_wall := func(c: Vector2i) -> bool: return MapData.object_index_at(c) == wall
 	for cell in obj:
-		node.add_child(object_sprite(cell, obj[cell], obj[cell] == wall and mirror_wall(cell, is_wall)))
+		var mirrored := false
+		if obj[cell] == wall:
+			var n := wall_neighbours(cell, wall)
+			mirrored = mirror_wall(n[0], n[1])
+		node.add_child(object_sprite(cell, obj[cell], mirrored))
 	var decals := Node2D.new()
 	decals.name = "Decals"
 	decals.z_index = DECALS_Z
