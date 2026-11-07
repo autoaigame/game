@@ -44,3 +44,10 @@ func rejected(reason: String) -> void:
 @rpc("authority", "call_remote", "unreliable_ordered")
 func snapshot(players: Array) -> void:
 	_forward("on_snapshot", [players])
+
+
+## Creatures (dogs, animals) for clients to draw: [{id, kind, owner, pos}, ...]. Separate from
+## snapshot so clients that do not draw creatures can ignore it.
+@rpc("authority", "call_remote", "unreliable_ordered")
+func creatures(list: Array) -> void:
+	_forward("on_creatures", [list])
