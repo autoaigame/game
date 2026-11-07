@@ -512,3 +512,12 @@ tool = "drawn pixel by pixel (XPM) by an AI agent (Claude), palette terne surviv
 prompt = ""
 license = "CC0-1.0"
 source = ""
+
+[[asset]]
+path = "assets/dog.png"
+author = "vitteloil"
+origin = "original"
+tool = "drawn by script: art/dog_sheet.gd (make art), Godot 4.7.2; written with Claude Code (anthropic/claude-opus-5-5)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
