@@ -23,16 +23,26 @@ const IDLE_FPS := 4.0
 
 
 ## Next drawn position, in cells: towards the server's position, never past it, faster the farther behind.
-static func follow(shown: Vector2, server: Vector2, dt: float) -> Vector2:
+## `speed` is how fast the walker goes on the server, in cells per second (at least the walking speed):
+## the lag it follows at and the gap it snaps from grow with it, so a fast runner glides too.
+static func follow(shown: Vector2, server: Vector2, dt: float, speed := Protocol.SPEED_CELLS_PER_S) -> Vector2:
 	var to_server := server - shown
 	var dist := to_server.length()
-	if dist > SNAP_CELLS:
+	var factor := maxf(speed, Protocol.SPEED_CELLS_PER_S) / Protocol.SPEED_CELLS_PER_S
+	if dist > SNAP_CELLS * factor:
 		return server
-	var pace := clampf(1.0 + FOLLOW_GAIN * (dist - FOLLOW_LAG_CELLS) / FOLLOW_LAG_CELLS, FOLLOW_MIN, CATCH_UP)
-	var step := Protocol.SPEED_CELLS_PER_S * pace * dt
+	var lag := FOLLOW_LAG_CELLS * factor
+	var pace := clampf(1.0 + FOLLOW_GAIN * (dist - lag) / lag, FOLLOW_MIN, CATCH_UP)
+	var step := Protocol.SPEED_CELLS_PER_S * factor * pace * dt
 	if step >= dist:
 		return server
 	return shown + to_server / dist * step
+
+
+## How fast a walker went between two updates one server tick apart, in cells per second. A jump (a
+## put-back, a lost update) reads as very fast, which follow() turns into a snap.
+static func speed_between(before: Vector2, after: Vector2) -> float:
+	return before.distance_to(after) * Protocol.TICK_HZ
 
 
 ## Facings, defined on screen, in the order and with the names of PixelLab's 8 directions.

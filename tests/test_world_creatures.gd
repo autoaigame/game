@@ -113,3 +113,25 @@ func test_wild_animals_are_drawn_and_hop() -> void:
 	assert_true(highest > 0.3, "hops while moving: %f" % highest)
 	assert_false(view._creatures.has(-2), "pheasant gone")
 	view.free()
+
+
+## A dog running faster than a player (a hunt: 9 cells per second) is drawn gliding with it, close
+## behind, instead of lagging until it jumps several cells ahead at once.
+func test_fast_dog_glides_without_jumping() -> void:
+	var view := _view()
+	var pos := Vector2(0, 0)
+	view.client.creatures_received.emit([{"id": 1, "kind": "dog", "owner": 1, "pos": pos}])
+	var node: Node2D = view._creatures[1]["node"]
+	var biggest_jump := 0.0
+	var frames_per_update := 60 / Protocol.TICK_HZ
+	for tick in 2 * Protocol.TICK_HZ:
+		pos += Vector2(9.0 / Protocol.TICK_HZ, 0)
+		view.client.creatures_received.emit([{"id": 1, "kind": "dog", "owner": 1, "pos": pos, "state": "hunt"}])
+		for f in frames_per_update:
+			var before: Vector2 = view._creatures[1]["shown"]
+			view._animate_creatures(1.0 / 60.0)
+			biggest_jump = maxf(biggest_jump, before.distance_to(view._creatures[1]["shown"]))
+	assert_true(biggest_jump < 0.5, "no jump: biggest step drawn in a frame %f cells" % biggest_jump)
+	assert_true(pos.distance_to(view._creatures[1]["shown"]) < 1.5, "close behind")
+	assert_true(node.position.distance_to(IsoLayer.cell_to_local(view._creatures[1]["shown"])) < 0.01)
+	view.free()
