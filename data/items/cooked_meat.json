@@ -1,0 +1,6 @@
+{
+	"id": "cooked_meat",
+	"name": "Viande grillée",
+	"food": 30,
+	"color": [128, 74, 40]
+}
