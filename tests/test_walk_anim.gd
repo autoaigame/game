@@ -57,16 +57,80 @@ func test_bob_only_while_walking() -> void:
 	assert_almost(WalkAnim.bob(WalkAnim.STRIDE_CELLS, true), 0.0, 0.001)
 
 
-func test_facing_steady_along_a_grid_axis() -> void:
-	# One key held (D) moves exactly diagonally on screen; drawn positions land a hair either side.
-	var axis := IsoLayer.cell_to_local(Vector2(1, 0)) - IsoLayer.cell_to_local(Vector2(0, 0))
-	for wobble in [Vector2.ZERO, Vector2(0.01, 0), Vector2(0, -0.01), Vector2(-0.01, 0)]:
-		assert_eq(WalkAnim.facing(axis + wobble), 0, "wobble %s" % [wobble])
+## Screen movement of the held keys, through the real projection.
+func _key_screen_delta(up: bool, down: bool, left: bool, right: bool) -> Vector2:
+	var d := Vector2(KeyMove.direction(up, down, left, right))
+	return IsoLayer.cell_to_local(d) - IsoLayer.cell_to_local(Vector2.ZERO)
 
 
-func test_facing_four_directions() -> void:
-	assert_eq(WalkAnim.facing(Vector2(0, 40)), 0)  # down
-	assert_eq(WalkAnim.facing(Vector2(-100, 0)), 1)  # left
-	assert_eq(WalkAnim.facing(Vector2(100, 0)), 2)  # right
-	assert_eq(WalkAnim.facing(Vector2(0, -40)), 3)  # up
-	assert_eq(WalkAnim.facing(Vector2(-64, -32)), 3, "A key: up-left on screen shows the back")
+## Each key or pair of keys faces its own screen direction, in the PixelLab order.
+func test_facing_eight_screen_directions() -> void:
+	var cases := [
+		[[false, true, false, false], "south"], [[false, true, false, true], "south-east"],
+		[[false, false, false, true], "east"], [[true, false, false, true], "north-east"],
+		[[true, false, false, false], "north"], [[true, false, true, false], "north-west"],
+		[[false, false, true, false], "west"], [[false, true, true, false], "south-west"],
+	]
+	for c in cases:
+		var k: Array = c[0]
+		var f := WalkAnim.facing(_key_screen_delta(k[0], k[1], k[2], k[3]))
+		assert_eq(WalkAnim.FACINGS[f], c[1], "keys %s" % [k])
+
+
+func test_facing_names_follow_pixellab() -> void:
+	assert_eq(WalkAnim.FACINGS, ["south", "south-east", "east", "north-east", "north", "north-west", "west", "south-west"])
+
+
+## Drawn positions land a hair either side of the held direction: the facing never flickers, whatever
+## it was before (a neighbouring facing switches at once).
+func test_facing_steady_along_every_key_direction() -> void:
+	var wobbles := [Vector2.ZERO, Vector2(0.01, 0), Vector2(0, -0.01), Vector2(-0.01, 0), Vector2(0, 0.01)]
+	for k in [[true, false, false, false], [false, true, false, false], [false, false, true, false],
+			[false, false, false, true], [true, false, true, false], [true, false, false, true],
+			[false, true, true, false], [false, true, false, true]]:
+		var delta := _key_screen_delta(k[0], k[1], k[2], k[3]) * 0.05
+		var want := WalkAnim.facing(delta)
+		for prev in [-1, want, (want + 1) % 8, (want + 7) % 8]:
+			var f: int = prev
+			for wobble in wobbles:
+				f = WalkAnim.facing(delta + wobble, f)
+				assert_eq(f, want, "keys %s, before %d, wobble %s" % [k, prev, wobble])
+
+
+## Screen delta at angle deg, measured on the 2:1 view as if it were flat (grid axes at 45 degrees).
+static func _at(deg: float) -> Vector2:
+	return Vector2(cos(deg_to_rad(deg)), -sin(deg_to_rad(deg)) / 2.0)
+
+
+## Past a sector edge (22.5 degrees from east), the facing holds a few degrees more, then turns.
+func test_facing_hysteresis() -> void:
+	var east := WalkAnim.FACINGS.find("east")
+	var north_east := WalkAnim.FACINGS.find("north-east")
+	assert_eq(WalkAnim.facing(_at(27.5)), north_east, "fresh start: nearest sector")
+	assert_eq(WalkAnim.facing(_at(27.5), east), east, "holds just past the edge")
+	assert_eq(WalkAnim.facing(_at(42.5), east), north_east, "turns well past it")
+	assert_eq(WalkAnim.facing(_at(17.5), north_east), north_east, "holds on the way back too")
+	assert_eq(WalkAnim.facing(_at(2.5), north_east), east, "and turns back well past it")
+
+
+func test_facing_keeps_the_previous_one_when_still() -> void:
+	assert_eq(WalkAnim.facing(Vector2.ZERO, 5), 5)
+	assert_eq(WalkAnim.facing(Vector2.ZERO), 0, "south before any move")
+
+
+## The sheet in assets/player.png has fewer columns than facings: each facing maps to one it has.
+func test_sheet_columns_match_player_png() -> void:
+	var tex: Texture2D = load("res://assets/player.png")
+	assert_eq(WalkAnim.SHEET_COLUMNS, tex.get_width() / WalkAnim.FRAME_SIZE.x)
+	assert_eq(WalkAnim.FACING_COLUMN.size(), WalkAnim.FACINGS.size())
+	for f in WalkAnim.FACINGS.size():
+		var col := WalkAnim.sheet_column(f)
+		assert_true(col >= 0 and col < WalkAnim.SHEET_COLUMNS, "%s -> column %d" % [WalkAnim.FACINGS[f], col])
+
+
+## The 4-column sheet: 0 down, 1 left, 2 right, 3 up; diagonals show the back going up, the front going down.
+func test_four_column_sheet_mapping() -> void:
+	var want := {"south": 0, "south-east": 0, "east": 2, "north-east": 3, "north": 3, "north-west": 3,
+			"west": 1, "south-west": 0}
+	for name in want:
+		assert_eq(WalkAnim.sheet_column(WalkAnim.FACINGS.find(name)), want[name], name)
