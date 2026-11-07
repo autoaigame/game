@@ -11,7 +11,7 @@ var _builder: ChunkBuilder
 var _clock := ChunkBuilder.WallClock.new()
 var _chunk_nodes := {}  ## chunk -> Node2D
 var _actors := {}  ## peer_id -> Node2D
-var _walk := {}  ## peer_id -> {server, shown: Vector2 in cells, walked: float in cells, facing: WalkAnim.FACINGS index, still: s}
+var _walk := {}  ## peer_id -> drawing state (WalkAnim.new_state)
 var _camera := Camera2D.new()
 var _my_pos := Vector2.ZERO  ## my position in the last snapshot, in cells
 var _key_dir := Vector2i.ZERO  ## direction of the held keys at the last frame
@@ -45,7 +45,7 @@ func _on_snapshot(players: Array) -> void:
 			actor = _make_actor(p["name"], id == client.my_peer_id)
 			_actors[id] = actor
 			add_child(actor)
-			_walk[id] = {"server": p["pos"], "shown": p["pos"], "walked": 0.0, "facing": -1, "still": 0.0}
+			_walk[id] = WalkAnim.new_state(p["pos"])
 			actor.position = IsoLayer.cell_to_local(p["pos"])
 		_walk[id]["server"] = p["pos"]  # drawn there smoothly by _animate_actors
 		if id == client.my_peer_id:

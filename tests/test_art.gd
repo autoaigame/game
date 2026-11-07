@@ -92,3 +92,48 @@ func test_full_variants_are_drawn_and_leave_no_gap() -> void:
 					var b := (y + 0.5 - h / 2.0) / h - (x + 0.5 - w / 2.0) / w
 					covered[Vector2i(x - (roundi(a) - roundi(b)) * w / 2, y - (roundi(a) + roundi(b)) * h / 2)] = true
 			assert_eq(covered.size(), w * h / 2, "%s variant %d leaves gaps" % [t["id"], v])
+
+
+## Top and bottom rows with an opaque pixel (alpha over half) in one frame of the player sheet.
+static func _frame_rows(img: Image, col: int, row: int) -> Vector2i:
+	var f := WalkAnim.FRAME_SIZE
+	var top := -1
+	var bottom := -1
+	for y in f.y:
+		for x in f.x:
+			if img.get_pixel(col * f.x + x, row * f.y + y).a > 0.5:
+				if top < 0:
+					top = y
+				bottom = y
+				break
+	return Vector2i(top, bottom)
+
+
+## Same character, same size: in every facing, the head of every walk frame is within 3 px of the
+## height of the standing frames (the old sheet walked 5 px taller facing north and north-west).
+func test_player_walks_at_the_size_it_stands() -> void:
+	var img: Image = load("res://assets/player.png").get_image()
+	for col in WalkAnim.SHEET_COLUMNS:
+		var idle_top := 0.0
+		for row in WalkAnim.IDLE_FRAMES:
+			idle_top += _frame_rows(img, col, row).x
+		idle_top /= WalkAnim.IDLE_FRAMES
+		for i in WalkAnim.WALK_FRAMES:
+			var top := _frame_rows(img, col, WalkAnim.WALK_FIRST_ROW + i).x
+			assert_true(absf(top - idle_top) <= 3.0, "%s walk frame %d: head at %d, standing at %.1f" %
+					[WalkAnim.FACINGS[col], i, top, idle_top])
+
+
+## Standing, the feet are on the anchor (FOOT_PX above the frame's bottom) give or take the shape of
+## the boots, and the head is no higher than HEAD_PX above it.
+func test_player_stands_on_the_anchor() -> void:
+	var img: Image = load("res://assets/player.png").get_image()
+	var foot_y := WalkAnim.FRAME_SIZE.y - WalkAnim.FOOT_PX
+	for col in WalkAnim.SHEET_COLUMNS:
+		for row in WalkAnim.SHEET_ROWS:
+			var r := _frame_rows(img, col, row)
+			assert_true(foot_y - r.x <= WalkAnim.HEAD_PX, "%s row %d: head %d px above the feet" %
+					[WalkAnim.FACINGS[col], row, foot_y - r.x])
+			if row < WalkAnim.IDLE_FRAMES:
+				assert_true(r.y >= foot_y and r.y <= foot_y + 10, "%s idle %d: bottom at %d, feet at %d" %
+						[WalkAnim.FACINGS[col], row, r.y, foot_y])
