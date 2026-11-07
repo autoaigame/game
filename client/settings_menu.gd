@@ -59,8 +59,7 @@ func _ready() -> void:
 	layer = 15
 	_build()
 	visible = false
-	if ClientSettings.fullscreen_at_launch(OS.has_feature("web"), settings_path):
-		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	restore_fullscreen(OS.has_feature("web"))
 	if sounds != null:
 		sounds.settings_changed.connect(_show_settings)
 
@@ -101,6 +100,14 @@ func fullscreen_box() -> CheckBox:
 static func is_fullscreen() -> bool:
 	var mode := DisplayServer.window_get_mode()
 	return mode == DisplayServer.WINDOW_MODE_FULLSCREEN or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN
+
+
+## Goes fullscreen at launch if the player chose it (ClientSettings.fullscreen_at_launch); true if so.
+func restore_fullscreen(on_web: bool) -> bool:
+	if not ClientSettings.fullscreen_at_launch(on_web, settings_path):
+		return false
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	return true
 
 
 ## On the web this runs from the click on the box, which the browser requires for fullscreen.
