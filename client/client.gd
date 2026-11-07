@@ -5,6 +5,11 @@ extends Node
 signal welcomed(cell: Vector2i)
 signal join_rejected(reason: String)
 signal snapshot_received(players: Array)
+signal creatures_received(creatures: Array)
+signal marks_received(marks: Array)
+signal status_received(status: Dictionary)
+signal inventory_received(items: Dictionary)
+signal notice_received(key: String, args: Dictionary)
 signal connection_lost
 
 ## ws(s):// URL of the server. On the web it defaults to the page's own host + /ws.
@@ -39,6 +44,9 @@ func _add_views() -> void:
 	var view: Node2D = load("res://client/world_view.gd").new()
 	view.client = self
 	add_child(view)
+	var hud: CanvasLayer = load("res://client/hud.gd").new()
+	hud.client = self
+	add_child(hud)
 	var ui: CanvasLayer = load("res://client/login_ui.gd").new()
 	ui.client = self
 	add_child(ui)
@@ -60,6 +68,26 @@ func request_stop() -> void:
 	_net.stop.rpc_id(1)
 
 
+func request_gather(cell: Vector2i) -> void:
+	_net.gather.rpc_id(1, cell)
+
+
+func request_eat(item: String) -> void:
+	_net.eat.rpc_id(1, item)
+
+
+func request_build_fire() -> void:
+	_net.build_fire.rpc_id(1)
+
+
+func request_whistle() -> void:
+	_net.whistle.rpc_id(1)
+
+
+func request_pick_up(mark_id: int) -> void:
+	_net.pick_up.rpc_id(1, mark_id)
+
+
 func on_welcome(peer_id: int, cell: Vector2i) -> void:
 	my_peer_id = peer_id
 	welcomed.emit(cell)
@@ -71,6 +99,26 @@ func on_rejected(reason: String) -> void:
 
 func on_snapshot(players: Array) -> void:
 	snapshot_received.emit(players)
+
+
+func on_creatures(creatures: Array) -> void:
+	creatures_received.emit(creatures)
+
+
+func on_marks(marks: Array) -> void:
+	marks_received.emit(marks)
+
+
+func on_status(status: Dictionary) -> void:
+	status_received.emit(status)
+
+
+func on_inventory(items: Dictionary) -> void:
+	inventory_received.emit(items)
+
+
+func on_notice(key: String, args: Dictionary) -> void:
+	notice_received.emit(key, args)
 
 
 func _on_connected() -> void:

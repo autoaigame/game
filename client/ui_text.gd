@@ -7,6 +7,26 @@ const TAGLINE := "un seul monde, qui ne s'arrête jamais"
 const NAME_LABEL := "Ton nom"
 const NAME_PLACEHOLDER := "ex. Corbeau_42"
 const NAME_HINT := "Lettres, chiffres, _ et - (%d au plus)"
+## In-game HUD (client/hud.gd).
+const HUNGER := "Faim"
+const STARVING := "Affamé : tu marches plus lentement"
+const BAG := "Sac (I)"
+const BAG_EMPTY := "Ton sac est vide."
+const NOTICES := {
+	"gathered": "+%d %s",
+	"bush_empty": "Ce buisson n'a plus de baies. Reviens plus tard.",
+	"too_far": "Trop loin.",
+	"ate": "Tu manges : %s",
+	"tree_empty": "Plus de bâtons sur cet arbre pour l'instant.",
+	"fire_built": "Tu allumes un feu.",
+	"need_sticks": "Il te faut %d bâtons pour faire un feu." % Protocol.FIRE_STICKS,
+	"fire_here": "Il y a déjà un feu ici.",
+	"hunt": "Ton chien part en chasse !",
+	"no_prey": "Aucun animal à chasser près de toi.",
+}
+const KEYS_HINT := "I : sac   H : siffler le chien"
+const BUILD_FIRE := "Faire un feu (%d bâtons)" % Protocol.FIRE_STICKS
+const EAT := "Manger"
 const ENTER := "Entrer dans le monde"
 
 const CONNECTING := "Connexion au serveur…"
@@ -39,3 +59,12 @@ static func rejection(_reason: String, player_name: String) -> String:
 	if problem != "":
 		return problem
 	return NAME_TAKEN % player_name
+
+
+## The text of a server notice (shared/net.gd notice), or "" for an unknown key.
+static func notice(key: String, args: Dictionary) -> String:
+	if key == "gathered":
+		return NOTICES[key] % [int(args.get("count", 0)), ItemData.item(String(args.get("item", ""))).get("name", "?")]
+	if key == "ate":
+		return NOTICES[key] % ItemData.item(String(args.get("item", ""))).get("name", "?")
+	return NOTICES.get(key, "")
