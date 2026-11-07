@@ -7,6 +7,7 @@ const PLAYER_TEX := preload("res://assets/player.png")
 var client: Node  ## client/client.gd
 var _layer: TileMapLayer
 var _streamer := ChunkStreamer.new(2, 3, 1)
+var _builder: ChunkBuilder
 var _chunk_nodes := {}  ## chunk -> Node2D
 var _actors := {}  ## peer_id -> Node2D
 var _walk := {}  ## peer_id -> {server, shown: Vector2 in cells, walked: float in cells, facing: WalkAnim.FACINGS index, still: s}
@@ -22,6 +23,7 @@ const DRIFT_PERIOD_S := 60.0
 
 func _ready() -> void:
 	y_sort_enabled = true
+	_builder = ChunkBuilder.new(_streamer, _tiles_tex)
 	_layer = IsoLayer.new_layer(null)  # empty: only converts mouse positions to cells
 	add_child(_layer)
 	_camera.zoom = Vector2(CameraZoom.DEFAULT, CameraZoom.DEFAULT)
@@ -67,17 +69,19 @@ func _animate_actors(dt: float) -> void:
 			_camera.position = pos
 
 
-## Builds the chunks around the player (or the spawn before joining), a few per frame, and frees far ones.
+## Builds the chunks around the player (or the spawn before joining) within a time budget per frame,
+## and frees far ones.
 func _stream_chunks() -> void:
 	var at := Protocol.cell_of(_my_pos) if client.my_peer_id != 0 else MapData.spawn_cell()
-	for c in _streamer.update(at):
+	var freed := _streamer.update(at)
+	_builder.drop(freed)
+	for c in freed:
 		if _chunk_nodes.has(c):
 			_chunk_nodes[c].queue_free()
 			_chunk_nodes.erase(c)
-	for c in _streamer.take_builds():
-		var node := ChunkView.build(c, _tiles_tex)
-		_chunk_nodes[c] = node
-		add_child(node)
+	for built in _builder.run(ChunkBuilder.BUDGET_USEC, Time.get_ticks_usec):
+		_chunk_nodes[built[0]] = built[1]
+		add_child(built[1])
 
 
 ## Before joining, the camera circles slowly around the spawn behind the menu (display only).

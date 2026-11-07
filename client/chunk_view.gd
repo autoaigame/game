@@ -19,19 +19,24 @@ const DECALS_Z := -8
 ## neighbouring chunks' cells, through MapData, so separately built chunks always meet.
 static func ground_tiles(chunk: Vector2i) -> Dictionary:
 	var out := {}
+	for y in MapData.CHUNK:
+		ground_row(chunk, y, out)
+	return out
+
+
+## Adds the drawn ground tiles of row `y` of a chunk to `out` (as ground_tiles gives them).
+static func ground_row(chunk: Vector2i, y: int, out: Dictionary) -> void:
 	var o := chunk * MapData.CHUNK
 	var tiles := WorldData.tiles()
-	for y in MapData.CHUNK:
-		for x in MapData.CHUNK:
-			var d := o + Vector2i(x, y)
-			var corners := DualGrid.corner_cells(d).map(func(c): return MapData.tile_at(c))
-			for layer in DualGrid.layers(corners):
-				var t: int = layer[0]
-				if not out.has(t):
-					out[t] = {}
-				var variant := DualGrid.full_variant(d, tiles[t]["full_variants"]) if layer[1] == DualGrid.FULL else 0
-				out[t][d] = Vector2i(IsoLayer.atlas_column(layer[1], variant), tiles[t]["atlas"])
-	return out
+	for x in MapData.CHUNK:
+		var d := o + Vector2i(x, y)
+		var corners := DualGrid.corner_cells(d).map(func(c): return MapData.tile_at(c))
+		for layer in DualGrid.layers(corners):
+			var t: int = layer[0]
+			if not out.has(t):
+				out[t] = {}
+			var variant := DualGrid.full_variant(d, tiles[t]["full_variants"]) if layer[1] == DualGrid.FULL else 0
+			out[t][d] = Vector2i(IsoLayer.atlas_column(layer[1], variant), tiles[t]["atlas"])
 
 
 static var _sprites := {}  ## sprite path -> Texture2D
@@ -123,12 +128,22 @@ static func _texture(path: String) -> Texture2D:
 	return _sprites[path]
 
 
-## A node drawing the chunk. Its layers use world coordinates, so it sits at the origin. It is y-sorted
-## so its object sprites sort together with the players in the parent view.
+## A node drawing the chunk, built at once (ChunkJob builds the same node in small steps). Its layers
+## use world coordinates, so it sits at the origin. It is y-sorted so its object sprites sort together
+## with the players in the parent view.
 static func build(chunk: Vector2i, tiles: Texture2D) -> Node2D:
+	return ChunkJob.new(chunk, tiles).run_all()
+
+
+## The parts of a chunk node, used by ChunkJob step by step.
+static func new_node(chunk: Vector2i) -> Node2D:
 	var node := Node2D.new()
 	node.name = "Chunk_%d_%d" % [chunk.x, chunk.y]
 	node.y_sort_enabled = true
+	return node
+
+
+static func add_objects(node: Node2D, chunk: Vector2i) -> void:
 	var obj := objects(chunk)
 	var wall := WorldData.object_index("stone_wall")
 	for cell in obj:
@@ -137,23 +152,21 @@ static func build(chunk: Vector2i, tiles: Texture2D) -> Node2D:
 			var n := wall_neighbours(cell, wall)
 			mirrored = mirror_wall(n[0], n[1])
 		node.add_child(object_sprite(cell, obj[cell], mirrored))
+
+
+static func new_decals_node() -> Node2D:
 	var decals := Node2D.new()
 	decals.name = "Decals"
 	decals.z_index = DECALS_Z
-	for d in Decals.in_chunk(chunk):
-		decals.add_child(decal_sprite(d[0], d[1]))
-	node.add_child(decals)
-	var ground := ground_tiles(chunk)
-	var order := ground.keys()
-	order.sort()
-	for t in order:
-		var layer := IsoLayer.new_layer(tiles)
-		layer.name = "Ground_%s" % WorldData.tile(t)["id"]
-		layer.position = DualGrid.OFFSET
-		layer.z_index = GROUND_Z + t
-		layer.material = ground_tint()
-		var cells: Dictionary = ground[t]
-		for d in cells:
-			layer.set_cell(d, 0, cells[d])
-		node.add_child(layer)
-	return node
+	return decals
+
+
+static func ground_layer(t: int, cells: Dictionary, tiles: Texture2D) -> TileMapLayer:
+	var layer := IsoLayer.new_layer(tiles)
+	layer.name = "Ground_%s" % WorldData.tile(t)["id"]
+	layer.position = DualGrid.OFFSET
+	layer.z_index = GROUND_Z + t
+	layer.material = ground_tint()
+	for d in cells:
+		layer.set_cell(d, 0, cells[d])
+	return layer
