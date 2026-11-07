@@ -181,6 +181,11 @@ static func _place(rec: Dictionary) -> Dictionary:
 			"chance": float(rules["chance"]), "min_distance": float(rules["min_distance"])}
 
 
+## Every record of res://data/<folder>/*.json, in file name order (each "id" matches its file name).
+static func read_folder(folder: String) -> Array[Dictionary]:
+	return _read_dir(DATA_DIR.path_join(folder))
+
+
 ## Every *.json record of a folder, in file name order (DirAccess order differs between platforms).
 static func _read_dir(path: String) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
