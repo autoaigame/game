@@ -1338,3 +1338,103 @@ tool = "art/character/faces.py: drawn texel by texel as an index texture (zone a
 prompt = ""
 license = "CC0-1.0"
 source = ""
+
+[[asset]]
+path = "assets/sounds/whistle/whistle_01.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 300 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A person whistling loudly through two fingers to call a dog, one short sharp piercing whistle, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/whistle/whistle_02.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 300 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A person whistling through fingers to call a dog, two short sharp piercing blasts, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/whistle/whistle_03.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 300 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A person whistling a two note call for their dog, rising then falling, wheet-whoo, clear human lip whistle, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/whistle/whistle_04.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 300 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A person whistling a two note call for their dog, falling then rising, clear human lip whistle, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/whistle/whistle_05.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 300 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A person whistling with their lips two quick short chirps to call a dog, fweet fweet, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/whistle/whistle_06.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 300 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A person giving one quick upward lip whistle to call a dog, short rising tweet, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/whistle/whistle_07.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 300 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A shepherd whistling a loud rising wolf whistle to call a dog from far away, rising then falling, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/whistle/whistle_08.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 300 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A person whistling three quick short notes with their lips to call a dog, playful, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/whistle/whistle_09.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 300 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A person whistling one long high falling note to call a dog, clear human lip whistle, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/whistle/whistle_10.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 300 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A person whistling through two fingers, a short sharp upward whip whistle to call a dog, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
