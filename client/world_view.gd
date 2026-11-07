@@ -3,6 +3,7 @@ extends Node2D
 
 var _tiles_tex: Texture2D = load(IsoLayer.TILES_ATLAS)
 const PLAYER_TEX := preload("res://assets/player.png")
+const DOG_TEX := preload("res://assets/dog.png")
 
 var client: Node  ## client/client.gd
 var _layer: TileMapLayer
@@ -11,6 +12,9 @@ var _builder: ChunkBuilder
 var _clock := ChunkBuilder.WallClock.new()
 var _chunk_nodes := {}  ## chunk -> Node2D
 var _actors := {}  ## peer_id -> Node2D
+## creature id -> {node, server, shown (cells), pose (from the server, "idle" if none), walked (cells), t (s in pose)}
+var _creatures := {}
+var _marks := {}  ## mark id -> {node: MarkView, left: seconds}
 var _walk := {}  ## peer_id -> {server, shown: Vector2 in cells, walked: float in cells, facing: WalkAnim.FACINGS index, still: s}
 var _camera := Camera2D.new()
 var _my_pos := Vector2.ZERO  ## my position in the last snapshot, in cells
@@ -32,6 +36,8 @@ func _ready() -> void:
 	add_child(_camera)
 	_camera.position = IsoLayer.cell_to_local(Vector2(MapData.spawn_cell()))
 	client.snapshot_received.connect(_on_snapshot)
+	client.creatures_received.connect(_on_creatures)
+	client.marks_received.connect(_on_marks)
 	client.welcomed.connect(func(cell: Vector2i): _my_pos = Vector2(cell))
 
 
@@ -55,6 +61,85 @@ func _on_snapshot(players: Array) -> void:
 			_actors[id].queue_free()
 			_actors.erase(id)
 			_walk.erase(id)
+
+
+func _on_creatures(list: Array) -> void:
+	var seen := {}
+	for c in list:
+		var id: int = c["id"]
+		seen[id] = true
+		if not _creatures.has(id):
+			var node := _make_creature(c["kind"])
+			node.position = IsoLayer.cell_to_local(c["pos"])
+			add_child(node)
+			_creatures[id] = {"node": node, "server": c["pos"], "shown": c["pos"], "pose": "idle", "walked": 0.0, "t": 0.0}
+		var pose: String = c.get("state", "idle")
+		if pose != _creatures[id]["pose"]:
+			_creatures[id]["pose"] = pose
+			_creatures[id]["t"] = 0.0
+		_creatures[id]["server"] = c["pos"]
+	for id in _creatures.keys():
+		if not seen.has(id):
+			_creatures[id]["node"].queue_free()
+			_creatures.erase(id)
+
+
+func _on_marks(list: Array) -> void:
+	var seen := {}
+	for m in list:
+		var id: int = m["id"]
+		seen[id] = true
+		if not _marks.has(id):
+			var node := MarkView.new()
+			node.kind = m["kind"]
+			node.position = IsoLayer.cell_to_local(m["pos"])
+			add_child(node)
+			_marks[id] = {"node": node}
+		_marks[id]["left"] = float(m["left"])
+	for id in _marks.keys():
+		if not seen.has(id):
+			_marks[id]["node"].queue_free()
+			_marks.erase(id)
+	_age_marks(0.0)
+
+
+## Marks fade out over their last seconds (the server removes them when they expire).
+func _age_marks(dt: float) -> void:
+	for id in _marks:
+		var m: Dictionary = _marks[id]
+		m["left"] = maxf(m["left"] - dt, 0.0)
+		(m["node"] as Node2D).modulate.a = clampf(m["left"] / MarkView.FADE_S, 0.0, 1.0)
+
+
+func _make_creature(_kind: String) -> Node2D:
+	var node := Node2D.new()
+	var sprite := Sprite2D.new()
+	sprite.name = "Sprite"
+	sprite.texture = DOG_TEX
+	sprite.hframes = DogAnim.COLUMNS
+	sprite.vframes = DogAnim.ROWS.size()
+	sprite.centered = false
+	sprite.offset = DogAnim.sprite_offset()
+	node.add_child(sprite)
+	return node
+
+
+## Draws every creature between updates, gliding like players and facing where it walks (display only).
+func _animate_creatures(dt: float) -> void:
+	for id in _creatures:
+		var c: Dictionary = _creatures[id]
+		var before: Vector2 = c["shown"]
+		c["shown"] = WalkAnim.follow(before, c["server"], dt)
+		var node: Node2D = c["node"]
+		node.position = IsoLayer.cell_to_local(c["shown"])
+		var screen_dx := IsoLayer.cell_to_local(c["shown"]).x - IsoLayer.cell_to_local(before).x
+		if absf(screen_dx) > 0.01:
+			node.scale.x = -1.0 if screen_dx < 0.0 else 1.0
+		var moved: float = (c["shown"] - before).length()
+		c["walked"] += moved
+		c["t"] += dt
+		var speed := moved / dt if dt > 0.0 else 0.0
+		(node.get_node("Sprite") as Sprite2D).frame_coords = DogAnim.frame(c["pose"], moved > 0.0005, speed, c["walked"], c["t"])
 
 
 ## Draws every player between snapshots and animates its walk (display only).
@@ -131,6 +216,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	_animate_actors(delta)
+	_animate_creatures(delta)
+	_age_marks(delta)
 	var z := CameraZoom.approach(_camera.zoom.x, _zoom_target, delta)
 	_camera.zoom = Vector2(z, z)
 	_stream_chunks()
