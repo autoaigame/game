@@ -14,6 +14,7 @@ var _camera := Camera2D.new()
 var _my_pos := Vector2.ZERO  ## my position in the last snapshot, in cells
 var _key_dir := Vector2i.ZERO  ## direction of the held keys at the last frame
 var _key_target := Vector2i.ZERO  ## last target sent for the held keys
+var _zoom_target := CameraZoom.DEFAULT  ## the zoom the camera glides to (mouse wheel)
 var _drift_t := 0.0  ## seconds of slow camera drift behind the start menu
 const DRIFT_CELLS := 2.0  ## radius of the drift around the spawn, in cells
 const DRIFT_PERIOD_S := 60.0
@@ -113,17 +114,20 @@ func _make_actor(player_name: String, is_me: bool) -> Node2D:
 func _unhandled_input(event: InputEvent) -> void:
 	if client.my_peer_id == 0:
 		return
-	if event is InputEventMouseButton and event.pressed and CameraZoom.wheel_steps(event.button_index) != 0:
-		var z := CameraZoom.step(_camera.zoom.x, CameraZoom.wheel_steps(event.button_index))
-		_camera.zoom = Vector2(z, z)
-		get_viewport().set_input_as_handled()
-		return
+	if event is InputEventMouseButton and event.pressed:
+		var steps := CameraZoom.wheel_steps(event.button_index, event.factor)
+		if steps != 0.0:
+			_zoom_target = CameraZoom.target_after(_zoom_target, steps)
+			get_viewport().set_input_as_handled()
+			return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		client.request_move(_layer.local_to_map(_layer.get_local_mouse_position()))
 
 
 func _process(delta: float) -> void:
 	_animate_actors(delta)
+	var z := CameraZoom.approach(_camera.zoom.x, _zoom_target, delta)
+	_camera.zoom = Vector2(z, z)
 	_stream_chunks()
 	if client.my_peer_id == 0:
 		_drift_camera(delta)
