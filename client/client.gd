@@ -13,6 +13,8 @@ signal notice_received(key: String, args: Dictionary)
 signal connection_lost
 ## What a player wears (CharacterParts look), when it joins or changes.
 signal look_received(peer_id: int, look: Array)
+## A player whistled: me as soon as I ask, another when the server says so.
+signal whistled(peer_id: int)
 
 ## ws(s):// URL of the server. On the web it defaults to the page's own host + /ws.
 var server_url := ""
@@ -166,7 +168,14 @@ func request_build_fire() -> void:
 
 
 func request_whistle() -> void:
-	_net.whistle.rpc_id(1)
+	whistled.emit(my_peer_id)
+	if _net != null:
+		_net.whistle.rpc_id(1)
+
+
+func on_whistled(peer_id: int) -> void:
+	if not _stale():
+		whistled.emit(peer_id)
 
 
 func request_pick_up(mark_id: int) -> void:
