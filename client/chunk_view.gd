@@ -5,6 +5,11 @@ extends RefCounted
 
 ## Ground layers are drawn under everything else, lowest priority first.
 const GROUND_Z := -32
+## The ground tint never changes brightness by more than this (data/biomes.json "ground_tint").
+const TINT_MAX_AMOUNT := 0.15
+const TINT_SHADER := "res://client/ground_tint.gdshader"
+static var _tint: Variant = false  ## ShaderMaterial or null once built from the data; false before
+
 ## Decals: flat on the ground, above every ground layer, under objects and players (z 0).
 const DECALS_Z := -8
 
@@ -56,6 +61,28 @@ static func object_sprite(cell: Vector2i, index: int) -> Sprite2D:
 	return sprite
 
 
+## The material that tints ground layers, from settings {enabled, amount, scale (cells per feature),
+## warmth}, or null when disabled.
+static func tint_material(settings: Dictionary) -> ShaderMaterial:
+	if not settings.get("enabled", false):
+		return null
+	var m := ShaderMaterial.new()
+	m.shader = load(TINT_SHADER)
+	m.set_shader_parameter("amount", clampf(float(settings.get("amount", 0.06)), 0.0, TINT_MAX_AMOUNT))
+	m.set_shader_parameter("warmth", clampf(float(settings.get("warmth", 0.5)), 0.0, 1.0))
+	m.set_shader_parameter("scale_px", maxf(1.0, float(settings.get("scale", 40))) * IsoLayer.TILE_SIZE.x)
+	var h := WorldNoise.hash2(int(WorldData.gen()["seed"]), 0x7147, 0)
+	m.set_shader_parameter("offset", Vector2(h & 0xFFF, (h >> 12) & 0xFFF))
+	return m
+
+
+## The ground tint of this world (one material shared by every ground layer), or null.
+static func ground_tint() -> ShaderMaterial:
+	if typeof(_tint) == TYPE_BOOL:
+		_tint = tint_material(WorldData.gen().get("ground_tint", {}))
+	return _tint
+
+
 ## A flat sprite for a decal, centred on its cell centre moved by the decal's offset.
 static func decal_sprite(cell: Vector2i, d: Dictionary) -> Sprite2D:
 	var sprite := Sprite2D.new()
@@ -93,6 +120,7 @@ static func build(chunk: Vector2i, tiles: Texture2D) -> Node2D:
 		layer.name = "Ground_%s" % WorldData.tile(t)["id"]
 		layer.position = DualGrid.OFFSET
 		layer.z_index = GROUND_Z + t
+		layer.material = ground_tint()
 		var cells: Dictionary = ground[t]
 		for d in cells:
 			layer.set_cell(d, 0, cells[d])

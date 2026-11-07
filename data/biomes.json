@@ -19,6 +19,12 @@
 		"max_altitude": 0.7,
 		"fade": 0.08
 	},
+	"ground_tint": {
+		"enabled": true,
+		"amount": 0.06,
+		"scale": 40,
+		"warmth": 0.5
+	},
 	"meadow": {
 		"radius": 26,
 		"blend": 14,
