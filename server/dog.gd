@@ -1,8 +1,9 @@
 ## A player's dog: follows its owner and lives its life near them. Pure functions on a dog record, run
 ## by the server each tick (server only: the web build never loads this file). The dog moves like a
 ## player, through Protocol.step_towards, so it never stands on a non-walkable cell (invariant 2).
-## States (sent to clients as its pose): follow, idle, sniff, sit, sleep, to_pee, pee, dig.
+## States (sent to clients as its pose): follow, idle, sniff, sit, sleep, to_pee, pee, dig, hunt.
 ## update() returns events for the server: {kind: "pee" or "hole", pos} when it leaves a mark.
+## While hunting the server calls hunt() instead, which returns {kind: "catch", prey, pos}.
 extends RefCounted
 
 ## The dog starts after its owner farther than this, in cells, and stops once within FOLLOW_STOP.
@@ -46,6 +47,15 @@ const DIG_CHANCE := 0.15
 const DIG_S := 4.0
 const HOLE_MARK_S := 180.0
 
+## When its owner whistles, the dog runs after a wild animal within HUNT_RADIUS of its owner, at
+## HUNT_SPEED (faster than any prey flees). It catches it within CATCH_DIST, and gives up after
+## HUNT_MAX_S, when the prey is gone, or when it gets HUNT_LEASH far from its owner.
+const HUNT_RADIUS := 12.0
+const HUNT_SPEED := 9.0
+const HUNT_LEASH := 30.0
+const HUNT_MAX_S := 12.0
+const CATCH_DIST := 0.6
+
 const _NEIGHBOURS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(0, -1),
 		Vector2i(1, 1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(-1, -1)]
 
@@ -77,7 +87,9 @@ static func spot_near(owner: Vector2i, from: Vector2i) -> Vector2i:
 static func update(dog: Dictionary, owner_pos: Vector2, dt: float) -> Array:
 	var events: Array = []
 	var gap := (dog["pos"] as Vector2).distance_to(owner_pos)
-	if gap > LOST or dog["stuck"] >= STUCK_S:
+	if gap <= LOST:
+		dog.erase("returning")
+	if gap > (HUNT_LEASH if dog.has("returning") else LOST) or dog["stuck"] >= STUCK_S:
 		_put_back(dog, owner_pos)
 		return events
 	_track_rest(dog, owner_pos, dt)
@@ -99,6 +111,38 @@ static func update(dog: Dictionary, owner_pos: Vector2, dt: float) -> Array:
 			dog["stuck"] = 0.0
 			_awake_near(dog, owner_pos, dt)
 	return events
+
+
+## Sends the dog after the wild animal `prey_id`.
+static func start_hunt(dog: Dictionary, prey_id: int) -> void:
+	dog["state"] = "hunt"
+	dog["prey"] = prey_id
+	dog["hunt_left"] = HUNT_MAX_S
+	dog["goal"] = null
+	dog["stuck"] = 0.0
+
+
+## One step of a hunt: runs to `prey_pos` (null if the prey is gone). Returns [{kind: "catch", prey,
+## pos}] when it catches it; the dog then follows its owner again, as it does when it gives up.
+static func hunt(dog: Dictionary, owner_pos: Vector2, prey_pos: Variant, dt: float) -> Array:
+	dog["hunt_left"] -= dt
+	if prey_pos == null or dog["hunt_left"] <= 0.0 or (dog["pos"] as Vector2).distance_to(owner_pos) > HUNT_LEASH:
+		_end_hunt(dog)
+		return []
+	dog["pos"] = Protocol.step_towards(dog["pos"], Protocol.cell_of(prey_pos), dt * HUNT_SPEED / Protocol.SPEED_CELLS_PER_S)
+	if (dog["pos"] as Vector2).distance_to(prey_pos) > CATCH_DIST:
+		return []
+	var caught := {"kind": "catch", "prey": dog["prey"], "pos": prey_pos}
+	_end_hunt(dog)
+	return [caught]
+
+
+## After a hunt the dog runs back to its owner (update() lets it be up to HUNT_LEASH away until then).
+static func _end_hunt(dog: Dictionary) -> void:
+	dog["state"] = "follow"
+	dog["returning"] = true
+	dog["rest"] = 0.0
+	dog.erase("prey")
 
 
 ## The nearest tree within PEE_RADIUS of `cell` (ties in a fixed order), or null.

@@ -3,6 +3,7 @@
 extends Node
 
 const SAVE_INTERVAL_S := 10.0
+const CARCASS_S := 120.0  ## how long a caught animal lies on the ground
 const DOG := preload("res://server/dog.gd")
 const MARKS := preload("res://server/marks.gd")
 const HUNGER := preload("res://server/hunger.gd")
@@ -255,10 +256,40 @@ func _threats() -> Array:
 
 func _move_dogs(dt: float) -> void:
 	for p in _players.values():
-		_add_events(DOG.update(p["dog"], p["pos"], dt))
+		var dog: Dictionary = p["dog"]
+		if dog["state"] == "hunt":
+			var prey: Dictionary = _wild["animals"].get(dog["prey"], {})
+			_add_events(DOG.hunt(dog, p["pos"], prey.get("pos"), dt))
+		else:
+			_add_events(DOG.update(dog, p["pos"], dt))
 
 
-## Turns creature events into marks on the ground.
+## The player whistles: their dog runs after the nearest wild animal within DOG.HUNT_RADIUS of them.
+func on_whistle(peer_id: int) -> void:
+	var r := _whistle(peer_id)
+	if not r.is_empty():
+		_net.notice.rpc_id(peer_id, r["notice"], {})
+
+
+## {notice: hunt or no_prey}, or {} for an unknown player.
+func _whistle(peer_id: int) -> Dictionary:
+	if not _players.has(peer_id):
+		return {}
+	var p: Dictionary = _players[peer_id]
+	var best: Variant = null
+	var best_d := DOG.HUNT_RADIUS
+	for id in _wild["animals"]:
+		var d: float = (p["pos"] as Vector2).distance_to(_wild["animals"][id]["pos"])
+		if d <= best_d:
+			best = id
+			best_d = d
+	if best == null:
+		return {"notice": "no_prey"}
+	DOG.start_hunt(p["dog"], best)
+	return {"notice": "hunt"}
+
+
+## Turns creature events into marks on the ground; a caught animal becomes a carcass.
 func _add_events(events: Array) -> void:
 	for e in events:
 		match e["kind"]:
@@ -266,6 +297,12 @@ func _add_events(events: Array) -> void:
 				MARKS.add(_marks, "pee", e["pos"], DOG.PEE_MARK_S)
 			"hole":
 				MARKS.add(_marks, "hole", e["pos"], DOG.HOLE_MARK_S)
+			"catch":
+				var prey: Dictionary = _wild["animals"].get(e["prey"], {})
+				if prey.is_empty():
+					continue
+				_wild["animals"].erase(e["prey"])
+				MARKS.add(_marks, "carcass_" + String(prey["kind"]), e["pos"], CARCASS_S)
 			_:
 				continue
 		_marks_changed = true

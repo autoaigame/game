@@ -45,6 +45,11 @@ func build_fire() -> void:
 	_forward("on_build_fire", [multiplayer.get_remote_sender_id()])
 
 
+@rpc("any_peer", "call_remote", "reliable")
+func whistle() -> void:
+	_forward("on_whistle", [multiplayer.get_remote_sender_id()])
+
+
 # server -> client
 @rpc("authority", "call_remote", "reliable")
 func welcome(peer_id: int, cell: Vector2i) -> void:
