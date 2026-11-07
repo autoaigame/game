@@ -1,4 +1,4 @@
-## Draws the isometric map and the players; turns clicks and WASD into move requests.
+## Draws the isometric map and the players; turns clicks and WASD into move requests, the mouse wheel into zoom.
 extends Node2D
 
 var _tiles_tex: Texture2D = load(IsoLayer.TILES_ATLAS)
@@ -23,7 +23,7 @@ func _ready() -> void:
 	y_sort_enabled = true
 	_layer = IsoLayer.new_layer(null)  # empty: only converts mouse positions to cells
 	add_child(_layer)
-	_camera.zoom = Vector2(IsoLayer.CAMERA_ZOOM, IsoLayer.CAMERA_ZOOM)
+	_camera.zoom = Vector2(CameraZoom.DEFAULT, CameraZoom.DEFAULT)
 	_camera.position_smoothing_enabled = true
 	add_child(_camera)
 	_camera.position = IsoLayer.cell_to_local(Vector2(MapData.spawn_cell()))
@@ -112,6 +112,11 @@ func _make_actor(player_name: String, is_me: bool) -> Node2D:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if client.my_peer_id == 0:
+		return
+	if event is InputEventMouseButton and event.pressed and CameraZoom.wheel_steps(event.button_index) != 0:
+		var z := CameraZoom.step(_camera.zoom.x, CameraZoom.wheel_steps(event.button_index))
+		_camera.zoom = Vector2(z, z)
+		get_viewport().set_input_as_handled()
 		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		client.request_move(_layer.local_to_map(_layer.get_local_mouse_position()))
