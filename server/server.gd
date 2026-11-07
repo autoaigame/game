@@ -6,19 +6,24 @@ const SAVE_INTERVAL_S := 10.0
 const DOG := preload("res://server/dog.gd")
 const MARKS := preload("res://server/marks.gd")
 const HUNGER := preload("res://server/hunger.gd")
+const INV := preload("res://server/inventory.gd")
+const GATHER := preload("res://server/gather.gd")
 
 var _db: RefCounted
 var _net: Node
 ## peer_id -> {name, pos: Vector2, target: Vector2i, stopped: bool, dog: server/dog.gd record,
-## hunger: float, sent: what the client was last told of its status}
+## hunger: float, sent: what the client was last told of its status, inventory: item id -> count}
 var _players := {}
 var _marks: Dictionary = MARKS.new_marks()
 var _marks_changed := false
+var _picked := {}  ## gathered object cell -> seconds until it regrows
+var _rng := RandomNumberGenerator.new()
 var _tick_acc := 0.0
 var _save_acc := 0.0
 
 
 func _ready() -> void:
+	_rng.randomize()
 	var args := _parse_args()
 	_db = load("res://server/db.gd").new()
 	if not _db.open(args.get("db", "user://game.db")):
@@ -61,24 +66,64 @@ func on_join(peer_id: int, player_name: String) -> void:
 		_net.rejected.rpc_id(peer_id, problem)
 		return
 	var cell := join_cell(_db.load_player(player_name))
-	_players[peer_id] = _new_player(player_name, cell, _db.load_stats(player_name))
+	_players[peer_id] = _new_player(player_name, cell, _db.load_stats(player_name), _db.load_inventory(player_name))
 	_net.welcome.rpc_id(peer_id, peer_id, cell)
 	_net.marks.rpc_id(peer_id, MARKS.snapshot(_marks))
 	_net.status.rpc_id(peer_id, _status_to_send(_players[peer_id]))
+	_net.inventory.rpc_id(peer_id, _players[peer_id]["inventory"])
 	print("server: %s joined at %s" % [player_name, cell])
 
 
 ## A joined player's record at `cell`, with their dog and their saved stats (hunger: full if none).
-func _new_player(player_name: String, cell: Vector2i, stats: Dictionary) -> Dictionary:
+func _new_player(player_name: String, cell: Vector2i, stats: Dictionary, inventory := {}) -> Dictionary:
 	var dog_pos := Vector2(DOG.spot_near(cell, cell + Vector2i(1, 1)))
 	return {"name": player_name, "pos": Vector2(cell), "target": Vector2(cell), "stopped": false,
 			"dog": DOG.new_dog(dog_pos, hash(player_name)), "hunger": float(stats.get("hunger", HUNGER.MAX)),
-			"sent": {}}
+			"sent": {}, "inventory": inventory.duplicate()}
 
 
 func _save(p: Dictionary) -> void:
 	_db.save_player(p["name"], Protocol.cell_of(p["pos"]))
 	_db.save_stats(p["name"], {"hunger": p["hunger"]})
+	_db.save_inventory(p["name"], p.get("inventory", {}))
+
+
+## The player asks to gather from the object on `cell` (a bush).
+func on_gather(peer_id: int, cell: Vector2i) -> void:
+	var r := _gather(peer_id, cell)
+	if r.is_empty():
+		return
+	if r["notice"] == "gathered":
+		_net.inventory.rpc_id(peer_id, _players[peer_id]["inventory"])
+	var args := r.duplicate()
+	args.erase("notice")
+	_net.notice.rpc_id(peer_id, r["notice"], args)
+
+
+## Gathers for a player from the object on `cell`: {notice: gathered (with item, count), bush_empty or
+## too_far}, or {} for a request to ignore (unknown player, nothing gatherable there).
+func _gather(peer_id: int, cell: Vector2i) -> Dictionary:
+	if not _players.has(peer_id):
+		return {}
+	var rule: Dictionary = GATHER.RULES.get(MapData.object_at(cell), {})
+	if rule.is_empty():
+		return {}
+	var p: Dictionary = _players[peer_id]
+	if (p["pos"] as Vector2).distance_to(Vector2(cell)) > GATHER.REACH:
+		return {"notice": "too_far"}
+	if _picked.has(cell):
+		return {"notice": "bush_empty"}
+	var n := INV.add(p["inventory"], rule["item"], _rng.randi_range(rule["min"], rule["max"]))
+	_picked[cell] = rule["regrow_s"]
+	return {"notice": "gathered", "item": rule["item"], "count": n}
+
+
+## Picked objects regrow.
+func _tick_gathering(dt: float) -> void:
+	for cell in _picked.keys():
+		_picked[cell] -= dt
+		if _picked[cell] <= 0.0:
+			_picked.erase(cell)
 
 
 ## Where a joining player appears: its saved cell, or the walkable cell nearest to it if the map
@@ -116,6 +161,7 @@ func _on_peer_disconnected(peer_id: int) -> void:
 
 func _step(dt: float) -> void:
 	_tick_hunger(dt)
+	_tick_gathering(dt)
 	_move_players(dt)
 	_move_dogs(dt)
 	if MARKS.tick(_marks, dt):
