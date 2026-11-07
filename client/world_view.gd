@@ -20,6 +20,7 @@ var _camera := Camera2D.new()
 var _my_pos := Vector2.ZERO  ## my position in the last snapshot, in cells
 var _key_dir := Vector2i.ZERO  ## direction of the held keys at the last frame
 var _gather_at: Variant = null  ## the bush the player walks to, to gather from it
+var _pick_up_id := -1  ## the caught animal (mark id) the player walks to, to pick it up
 var _key_target := Vector2.ZERO  ## last target sent for the held keys
 var _zoom_target := CameraZoom.DEFAULT  ## the zoom the camera glides to (mouse wheel)
 var _drift_t := 0.0  ## seconds of slow camera drift behind the start menu
@@ -95,7 +96,7 @@ func _on_marks(list: Array) -> void:
 			node.kind = m["kind"]
 			node.position = IsoLayer.cell_to_local(m["pos"])
 			add_child(node)
-			_marks[id] = {"node": node}
+			_marks[id] = {"node": node, "kind": m["kind"], "pos": m["pos"]}
 		_marks[id]["left"] = float(m["left"])
 	for id in _marks.keys():
 		if not seen.has(id):
@@ -220,8 +221,36 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		var cell := _layer.local_to_map(_layer.get_local_mouse_position())
-		_gather_at = Interact.gatherable_at(cell)
-		client.request_move(Vector2(Interact.walk_target(_gather_at)) if _gather_at != null else Vector2(cell))
+		_pick_up_id = _carcass_at(cell)
+		_gather_at = Interact.gatherable_at(cell) if _pick_up_id < 0 else null
+		if _pick_up_id >= 0:
+			client.request_move(Vector2(Interact.walk_target(Protocol.cell_of(_marks[_pick_up_id]["pos"]))))
+		elif _gather_at != null:
+			client.request_move(Vector2(Interact.walk_target(_gather_at)))
+		else:
+			client.request_move(Vector2(cell))
+
+
+## The caught animal (mark id) a click on `cell` means, on it or just above it on screen; -1 if none.
+func _carcass_at(cell: Vector2i) -> int:
+	for id in _marks:
+		var m: Dictionary = _marks[id]
+		if String(m["kind"]).begins_with("carcass_"):
+			var d: Vector2 = m["pos"] - Vector2(cell)
+			if d.length() <= 1.0 or (d - Vector2(1, 1)).length() <= 0.8:
+				return id
+	return -1
+
+
+## Runs what the player walked somewhere to do, once there: gather, or pick up a catch.
+func _errand_if_reached() -> void:
+	_gather_if_reached()
+	if _pick_up_id >= 0:
+		if not _marks.has(_pick_up_id):
+			_pick_up_id = -1
+		elif _my_pos.distance_to(_marks[_pick_up_id]["pos"]) <= Protocol.GATHER_REACH - 0.1:
+			client.request_pick_up(_pick_up_id)
+			_pick_up_id = -1
 
 
 ## Asks the server to gather once the player has walked up to the bush they clicked.
@@ -241,7 +270,7 @@ func _process(delta: float) -> void:
 	if client.my_peer_id == 0:
 		_drift_camera(delta)
 		return
-	_gather_if_reached()
+	_errand_if_reached()
 	var dir := KeyMove.direction(
 			Input.is_physical_key_pressed(KEY_W), Input.is_physical_key_pressed(KEY_S),
 			Input.is_physical_key_pressed(KEY_A), Input.is_physical_key_pressed(KEY_D))
@@ -251,6 +280,7 @@ func _process(delta: float) -> void:
 		_key_dir = dir
 		return
 	_gather_at = null
+	_pick_up_id = -1
 	var target := KeyMove.held_target(_my_pos, dir)
 	if dir != _key_dir or not target.is_equal_approx(_key_target):
 		client.request_move(target)

@@ -49,3 +49,13 @@ func test_server_adds_dog_marks() -> void:
 	assert_eq(list[0]["kind"], "pee")
 	assert_true(server._marks_changed)
 	server.free()
+
+
+func test_find_and_remove() -> void:
+	var marks := MARKS.new_marks()
+	MARKS.add(marks, "hole", Vector2(1, 1), 10.0)
+	MARKS.add(marks, "pee", Vector2(2, 2), 10.0)
+	assert_eq(MARKS.find(marks, 2)["kind"], "pee")
+	assert_eq(MARKS.find(marks, 9), {})
+	MARKS.remove(marks, 1)
+	assert_eq(MARKS.snapshot(marks).map(func(m): return m["id"]), [2])
