@@ -30,6 +30,11 @@ func stop() -> void:
 	_forward("on_stop", [multiplayer.get_remote_sender_id()])
 
 
+@rpc("any_peer", "call_remote", "reliable")
+func gather(cell: Vector2i) -> void:
+	_forward("on_gather", [multiplayer.get_remote_sender_id(), cell])
+
+
 # server -> client
 @rpc("authority", "call_remote", "reliable")
 func welcome(peer_id: int, cell: Vector2i) -> void:
@@ -64,3 +69,15 @@ func marks(list: Array) -> void:
 @rpc("authority", "call_remote", "reliable")
 func status(values: Dictionary) -> void:
 	_forward("on_status", [values])
+
+
+## The player's inventory: item id -> count. Sent on join and when it changes.
+@rpc("authority", "call_remote", "reliable")
+func inventory(items: Dictionary) -> void:
+	_forward("on_inventory", [items])
+
+
+## A short message for the player (client/ui_text.gd notice): key and its values.
+@rpc("authority", "call_remote", "reliable")
+func notice(key: String, args: Dictionary) -> void:
+	_forward("on_notice", [key, args])

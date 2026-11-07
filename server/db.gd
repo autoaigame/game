@@ -12,7 +12,8 @@ func open(path: String) -> bool:
 		push_error("db: cannot open %s: %s" % [path, _db.error_message])
 		return false
 	return _db.query("CREATE TABLE IF NOT EXISTS players (name TEXT PRIMARY KEY, x INTEGER NOT NULL, y INTEGER NOT NULL, updated_at INTEGER NOT NULL);") \
-			and _db.query("CREATE TABLE IF NOT EXISTS stats (name TEXT NOT NULL, key TEXT NOT NULL, value REAL NOT NULL, PRIMARY KEY (name, key));")
+			and _db.query("CREATE TABLE IF NOT EXISTS stats (name TEXT NOT NULL, key TEXT NOT NULL, value REAL NOT NULL, PRIMARY KEY (name, key));") \
+			and _db.query("CREATE TABLE IF NOT EXISTS inventory (name TEXT NOT NULL, item TEXT NOT NULL, count INTEGER NOT NULL, PRIMARY KEY (name, item));")
 
 
 ## Returns the saved cell (Vector2i) or null if the player is unknown.
@@ -50,6 +51,24 @@ func save_stats(player_name: String, stats: Dictionary) -> void:
 			[player_name, String(key), float(stats[key])])
 		if not ok:
 			push_error("db: save stats failed: %s" % _db.error_message)
+
+
+## A player's saved inventory: item id -> count. {} if none.
+func load_inventory(player_name: String) -> Dictionary:
+	_db.query_with_bindings("SELECT item, count FROM inventory WHERE name = ?;", [player_name])
+	var out := {}
+	for row in _db.query_result:
+		out[String(row["item"])] = int(row["count"])
+	return out
+
+
+## Replaces a player's saved inventory.
+func save_inventory(player_name: String, items: Dictionary) -> void:
+	_db.query_with_bindings("DELETE FROM inventory WHERE name = ?;", [player_name])
+	for id in items:
+		if not _db.query_with_bindings("INSERT INTO inventory (name, item, count) VALUES (?, ?, ?);",
+				[player_name, String(id), int(items[id])]):
+			push_error("db: save inventory failed: %s" % _db.error_message)
 
 
 func close() -> void:
