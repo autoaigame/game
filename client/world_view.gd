@@ -25,7 +25,7 @@ func _ready() -> void:
 	_layer = IsoLayer.new_layer(null)  # empty: only converts mouse positions to cells
 	add_child(_layer)
 	_camera.zoom = Vector2(CameraZoom.DEFAULT, CameraZoom.DEFAULT)
-	_camera.position_smoothing_enabled = true
+	_camera.position_smoothing_enabled = false  # locked on the player: smoothing made it trail behind
 	add_child(_camera)
 	_camera.position = IsoLayer.cell_to_local(Vector2(MapData.spawn_cell()))
 	client.snapshot_received.connect(_on_snapshot)
