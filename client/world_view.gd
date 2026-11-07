@@ -3,10 +3,12 @@ extends Node2D
 
 const TILES_TEX := preload("res://assets/tiles.png")
 const PLAYER_TEX := preload("res://assets/player.png")
+const SPRITE_OFFSET_Y := -40.0
 
 var client: Node  ## client/client.gd
 var _layer: TileMapLayer
 var _actors := {}  ## peer_id -> Node2D
+var _walk := {}  ## peer_id -> {server, shown: Vector2 in cells, walked: float in cells}
 var _camera := Camera2D.new()
 var _my_pos := Vector2.ZERO  ## my position in the last snapshot, in cells
 var _key_dir := Vector2i.ZERO  ## direction of the held keys at the last frame
@@ -38,19 +40,39 @@ func _on_snapshot(players: Array) -> void:
 			actor = _make_actor(p["name"], id == client.my_peer_id)
 			_actors[id] = actor
 			add_child(actor)
-		var target := IsoLayer.cell_to_local(p["pos"])
-		var sprite: Sprite2D = actor.get_node("Sprite")
-		var delta := target - actor.position
-		if delta.length() > 2.0:
-			sprite.frame_coords = Vector2i(_dir_column(delta), (sprite.frame_coords.y + 1) % 2)
-		actor.position = target
+			_walk[id] = {"server": p["pos"], "shown": p["pos"], "walked": 0.0}
+			actor.position = IsoLayer.cell_to_local(p["pos"])
+		_walk[id]["server"] = p["pos"]  # drawn there smoothly by _animate_actors
 		if id == client.my_peer_id:
 			_my_pos = p["pos"]
-			_camera.position = target
 	for id in _actors.keys():
 		if not seen.has(id):
 			_actors[id].queue_free()
 			_actors.erase(id)
+			_walk.erase(id)
+
+
+## Draws every player between snapshots and animates its walk (display only).
+func _animate_actors(dt: float) -> void:
+	for id in _actors:
+		var w: Dictionary = _walk[id]
+		var before: Vector2 = w["shown"]
+		w["shown"] = WalkAnim.follow(before, w["server"], dt)
+		var moved: float = (w["shown"] - before).length()
+		var walking := moved > 0.0
+		if walking:
+			w["walked"] += moved
+		var actor: Node2D = _actors[id]
+		var pos := IsoLayer.cell_to_local(w["shown"])
+		var sprite: Sprite2D = actor.get_node("Sprite")
+		var column := sprite.frame_coords.x
+		if walking:
+			column = WalkAnim.facing(pos - actor.position)
+		sprite.frame_coords = Vector2i(column, WalkAnim.walk_row(w["walked"]) if walking else 0)
+		sprite.offset.y = SPRITE_OFFSET_Y + WalkAnim.bob(w["walked"], walking)
+		actor.position = pos
+		if id == client.my_peer_id:
+			_camera.position = pos
 
 
 func _make_actor(player_name: String, is_me: bool) -> Node2D:
@@ -60,7 +82,7 @@ func _make_actor(player_name: String, is_me: bool) -> Node2D:
 	sprite.texture = PLAYER_TEX
 	sprite.hframes = 4
 	sprite.vframes = 2
-	sprite.offset = Vector2(0, -40)
+	sprite.offset = Vector2(0, SPRITE_OFFSET_Y)
 	actor.add_child(sprite)
 	var label := Label.new()
 	label.text = player_name
@@ -75,13 +97,6 @@ func _make_actor(player_name: String, is_me: bool) -> Node2D:
 	return actor
 
 
-## Sprite column from screen movement: 0 down, 1 left, 2 right, 3 up.
-func _dir_column(delta: Vector2) -> int:
-	if absf(delta.x) > absf(delta.y) * 2.0:
-		return 1 if delta.x < 0 else 2
-	return 3 if delta.y < 0 else 0
-
-
 func _unhandled_input(event: InputEvent) -> void:
 	if client.my_peer_id == 0:
 		return
@@ -89,7 +104,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		client.request_move(_layer.local_to_map(_layer.get_local_mouse_position()))
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_animate_actors(delta)
 	if client.my_peer_id == 0:
 		return
 	var dir := KeyMove.direction(
