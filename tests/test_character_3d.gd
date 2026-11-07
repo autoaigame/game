@@ -118,7 +118,7 @@ func test_scale_puts_the_head_under_the_name() -> void:
 ## The shaders get the palette from data/palette.json; the darker tone of the inner lines is darker.
 func test_palette_and_dark_tones() -> void:
 	var pal := Character3D.palette()
-	assert_eq(pal.size(), 40, "the kit's 40 colours")
+	assert_eq(pal.size(), 52, "the kit's 40 colours and 12 for characters")
 	assert_true(pal.size() <= Character3D.MAX_COLOURS, "fits the shaders' uniform arrays")
 	assert_eq(Character3D.palette_uniform().size(), Character3D.MAX_COLOURS)
 	var dark := Character3D.dark_of()
@@ -144,3 +144,27 @@ func test_body_colours_are_in_the_palette() -> void:
 				found = found or (absf(p.r - c.r) < 0.003 and absf(p.g - c.g) < 0.003 and absf(p.b - c.b) < 0.003)
 			assert_true(found, "%s: %s" % [mi.name, c.to_html(false)])
 	scene.free()
+
+
+## The palette starts with the kit's 40 colours, unchanged (the world's art uses only those), then the
+## characters' colours: four skin tones from deep to fair, and faded reds.
+func test_palette_keeps_the_kit_and_adds_skin_and_reds() -> void:
+	var rec: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(Character3D.PALETTE_JSON))
+	var kit := ["olive_grass", "dry_grass", "dirt_mud", "sand", "water", "bark_wood", "stone", "skin", "denim", "khaki_cloth"]
+	assert_eq(rec["ramps"].keys().slice(0, kit.size()), kit, "the kit's ramps first, in order")
+	var pal := Character3D.palette()
+	assert_eq(pal[0], Color.html("2c3324"))
+	assert_eq(pal[39], Color.html("8f8a63"), "the kit's last colour stays at 39")
+	for i in range(40, pal.size()):
+		var c := pal[i]
+		assert_true(c.s < 0.6, "%s: muted" % c.to_html(false))
+		assert_true(pal.find(c) == i, "%s: added once" % c.to_html(false))
+	var skins := ["skin_deep", "skin_dark", "skin_medium", "skin_light"]
+	var lum := -1.0
+	for s in skins:
+		var r := CharacterParts.ramp(s)
+		assert_true(r["colours"].size() >= 3, s)
+		var l: float = r["colours"][1].get_luminance()
+		assert_true(l > lum, s + ": lighter than the one before")
+		lum = l
+	assert_true(CharacterParts.ramp("hair_red")["colours"][1].r > CharacterParts.ramp("hair_red")["colours"][1].g * 1.3, "red hair is red")

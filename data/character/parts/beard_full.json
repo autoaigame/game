@@ -1,2 +1,2 @@
 {"id": "beard_full", "slot": "beard", "name": "Barbe", "kind": "rigid", "glb": "res://assets/character/parts/beard_full.glb",
- "bone": "DEF-head", "colors": ["hair_brown", "hair_black", "hair_fair", "hair_grey"]}
+ "bone": "DEF-head", "colors": ["hair_brown", "hair_black", "hair_red", "hair_fair", "hair_grey"]}

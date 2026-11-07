@@ -7,7 +7,8 @@ const SERVER_SCRIPT := "res://server/server.gd"
 
 
 func _jacket_look(body_colour: String) -> Array:
-	return [{"id": "body_standard", "color": body_colour}, {"id": "top_tshirt", "color": "grey"},
+	return [{"id": "body_standard", "color": body_colour}, {"id": "face_adult", "color": "hair_brown"},
+			{"id": "top_tshirt", "color": "grey"},
 			{"id": "bottom_jeans", "color": "workwear_blue"}]
 
 

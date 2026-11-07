@@ -4,10 +4,11 @@
 ## The standard for contributors is docs/character-parts.md.
 ##
 ## A look is an Array of {"id": String, "color": String}: at most one part per slot, the colour one of the
-## part's "colors" (names of ramps.json). A part record: {id, slot, name, kind ("body", "skinned" or
-## "rigid"), glb, bone (rigid only: the bone it hangs from), regions (body only: its meshes body_<region>),
-## morph (body only: its body shape, data/character/morphs.json), covers (regions it draws, for other parts
-## to hide), hides (regions it hides), when_hidden ({glb,
+## part's "colors" (names of ramps.json). A part record: {id, slot, name, kind ("body", "skinned", "rigid"
+## or "texture"), glb, bone (rigid only: the bone it hangs from), texture (texture only: an index texture
+## drawn on the face zone of the head), regions (body only: its meshes body_<region>), morph (body only:
+## its body shape, data/character/morphs.json), covers (regions it draws, for other parts to hide), hides
+## (regions it hides), when_hidden ({glb,
 ## covers, hides}: what is drawn instead when something hides one of its regions; without it the part is
 ## not drawn), colors}.
 class_name CharacterParts
@@ -162,7 +163,8 @@ static func normalize(raw: Variant) -> Array:
 	return out if validate(out) == "" else default_look()
 
 
-## What to draw for a valid look: {"parts": [{id, slot, kind, glb, bone, color: Color}] in slot order,
+## What to draw for a valid look: {"parts": [{id, slot, kind, glb, bone, texture, ramp, color: Color}] in
+## slot order,
 ## "hidden": {region: true}}. A part whose covered regions are hidden is drawn with its when_hidden mesh if
 ## that one is clear, or not at all; a part not drawn hides nothing (hiding is not transitive).
 static func resolve(look: Array) -> Dictionary:
@@ -194,7 +196,7 @@ static func resolve(look: Array) -> Dictionary:
 		for r in hides:
 			hidden[r] = true
 		out.append({"id": p["id"], "slot": p["slot"], "kind": p["kind"], "glb": glb, "bone": p["bone"],
-				"morph": p["morph"], "color": base_colour(e["color"])})
+				"morph": p["morph"], "texture": p["texture"], "ramp": e["color"], "color": base_colour(e["color"])})
 	return {"parts": out, "hidden": hidden}
 
 
@@ -284,9 +286,9 @@ static func _ensure() -> void:
 			var w: Dictionary = rec["when_hidden"]
 			alt = {"glb": String(w["glb"]), "covers": Array(w.get("covers", [])), "hides": Array(w.get("hides", []))}
 		_parts[rec["id"]] = {"id": String(rec["id"]), "slot": String(rec["slot"]), "name": String(rec.get("name", rec["id"])),
-				"kind": String(rec["kind"]), "glb": String(rec["glb"]), "bone": String(rec.get("bone", "")),
-				"morph": String(rec.get("morph", "standard")), "regions": Array(rec.get("regions", [])),
-				"covers": Array(rec.get("covers", [])),
+				"kind": String(rec["kind"]), "glb": String(rec.get("glb", "")), "bone": String(rec.get("bone", "")),
+				"texture": String(rec.get("texture", "")), "morph": String(rec.get("morph", "standard")),
+				"regions": Array(rec.get("regions", [])), "covers": Array(rec.get("covers", [])),
 				"hides": Array(rec.get("hides", [])), "when_hidden": alt, "colors": Array(rec["colors"])}
 	_ids.assign(_parts.keys())
 	_ids.sort()
@@ -304,11 +306,18 @@ static func check_record(rec: Variant, file: String) -> String:
 	if slot(String(rec.get("slot", ""))).is_empty():
 		return "unknown slot %s" % rec.get("slot")
 	var kind: Variant = rec.get("kind")
-	if not kind in ["body", "skinned", "rigid"]:
-		return "kind must be body, skinned or rigid"
+	if not kind in ["body", "skinned", "rigid", "texture"]:
+		return "kind must be body, skinned, rigid or texture"
 	if (kind == "body") != (rec["slot"] == "body"):
 		return "only the body slot holds body parts"
-	if typeof(rec.get("glb")) != TYPE_STRING or not ResourceLoader.exists(rec["glb"]):
+	if rec["slot"] == "face" and kind != "texture":
+		return "a face is a texture"
+	if kind == "texture":
+		if not rec["slot"] in ["face", "beard"]:
+			return "only faces and beards can be textures"
+		if typeof(rec.get("texture")) != TYPE_STRING or not ResourceLoader.exists(rec["texture"]):
+			return "texture missing"
+	elif typeof(rec.get("glb")) != TYPE_STRING or not ResourceLoader.exists(rec["glb"]):
 		return "glb missing"
 	if kind == "rigid" and (typeof(rec.get("bone")) != TYPE_STRING or rec["bone"] == ""):
 		return "a rigid part needs a bone"

@@ -1,17 +1,19 @@
 # Character parts
 
 Players are drawn as a 3D model rendered as pixel art (`client/character_3d.gd`). The model is built
-from interchangeable parts: a body (one of several body shapes), then hair, a beard, a hat, a top, a
-jacket, a bottom, shoes and a bag. This page
+from interchangeable parts: a body (one of several body shapes) and a face, then hair, a beard, a hat, a
+top, a jacket, a bottom, shoes and a bag. This page
 is the standard a new part must follow. Anyone can add one by pull request, with or without an AI agent.
 
 ## In short
 
 - One skeleton and one rest pose for everyone. Body shapes (standard, stocky, lean) are made from the base
   body in game, and every part follows them. A part never changes the skeleton.
-- Two kinds of part: **rigid** parts (hair, beards, hats, bags) hang from one bone; **skinned** parts
-  (tops, trousers, shoes) are weighted to the skeleton and bend with it.
-- A part is a `.glb` in `assets/character/parts/` and a record in `data/character/parts/<id>.json`.
+- Three kinds of part: **rigid** parts (hair, beards, hats, bags) hang from one bone; **skinned** parts
+  (tops, trousers, shoes) are weighted to the skeleton and bend with it; **texture** parts (faces, flat
+  beards) are a small index texture drawn on the front of the head.
+- A part is a `.glb` in `assets/character/parts/` (or a `.png` in `assets/character/faces/`) and a record
+  in `data/character/parts/<id>.json`.
 - Ids are strings, never renamed or reused: saved looks refer to them.
 - Colours come from named ramps of the game's palette. The renderer keeps every pixel in the palette.
 - Every part file is CC0, with an `ASSETS.toml` entry.
@@ -64,8 +66,9 @@ shape.
 | Slot | Kind | Required | Default |
 |---|---|---|---|
 | `body` | body | yes | `body_standard` |
+| `face` | texture | yes | `face_adult` |
 | `hair` | rigid on `DEF-head` | no | `hair_short` |
-| `beard` | rigid on `DEF-head` | no | `beard_short` |
+| `beard` | rigid on `DEF-head`, or texture | no | `beard_short` |
 | `hat` | rigid on `DEF-head` | no | none |
 | `top` | skinned | yes | `top_tshirt` |
 | `jacket` | skinned, over the top | no | `jacket_field` |
@@ -98,14 +101,15 @@ issue.
 | `id` | The file name, `[a-z0-9_]`, starting with the slot (`hat_…`). Unique, never renamed or reused. |
 | `slot` | One of the slots above. |
 | `name` | Shown to the player (French for now). |
-| `kind` | `rigid`, `skinned`, or `body` (body slot only). |
+| `kind` | `rigid`, `skinned`, `texture` (face and beard slots), or `body` (body slot only). |
 | `morph` | Body parts only: the body shape (`standard` or one of `morphs.json`). |
-| `glb` | The mesh. |
+| `glb` | The mesh (not for a texture part). |
+| `texture` | Texture parts only: the index texture. |
 | `bone` | Rigid parts only: the bone it hangs from. |
 | `covers` | Hair surfaces it draws (`hair_top`, `hair_back`), so a hat can hide them. |
 | `hides` | Regions and hair surfaces it hides while it is drawn. |
 | `when_hidden` | Optional `{glb, covers, hides}`: what to draw when something hides what the part covers (long hair under a hat keeps its back). Without it, the part is not drawn then. |
-| `colors` | Ramp names from `data/character/ramps.json` the player may choose; the first is the default. |
+| `colors` | Ramp names from `data/character/ramps.json` the player may choose; the first is the default. On a face, the colour of the brows. |
 
 Hiding is not transitive: a part that is not drawn hides nothing.
 
@@ -122,13 +126,35 @@ Hiding is not transitive: a part that is not drawn hides nothing.
   which must be a palette colour.
 - Shapes: simple volumes with clear edges. At about 100 px, small details only add noise. Keep a part under
   about 2 000 triangles.
-- No textures yet: flat colours per material.
+- Flat colours per material: no texture on a mesh, no gradient, no baked shadow.
+- Volume for what changes the silhouette (hair, full beards, hats); a texture for what stays flat (eyes,
+  brows, mouth, scars, stubble, a moustache). No modelled nose or ears.
+
+## Faces and flat beards
+
+A face is a 24×16 PNG: the face zone of the head's texture (`FACE_RECT` in `art/character/body.py` and
+`client/character_3d.gd`), about one texel per screen pixel at the front of the head. Its texels are
+indices, not colours: red = zone × 64, green = (shade + 2) × 50, alpha 255; a transparent texel leaves
+the skin. Zones: 0 the skin, 1 the part's own colour (brows on a face, the beard on a flat beard), 2 the
+eyes. The shader draws the colour `ramp[band + shade]` of the zone's ramp, so one face works with every
+skin and hair colour. Shade −2 is always the ramp's darkest colour, +2 always its lightest.
+
+- Eyes at least 2 texels wide, with an empty row between brows and eyes.
+- Four or five zone and shade pairs per face at most; at this size more is noise.
+- No compression on import: the `.import` file of the PNG has `detect_3d/compress_to=0`.
+- `art/character/faces.py` draws the faces and flat beards of the repository texel by texel (plain
+  Python, no library); a new one can be added there or drawn by hand with the same encoding.
 
 ## Colours
 
 `data/palette.json` holds the palette, `data/character/ramps.json` the named ramps: 3 or 4 palette colours
-from dark to light. A part is drawn in the second colour of its ramp; the light picks the others. A new
-ramp may use only palette colours.
+from dark to light. The light falls in three bands (shade, plain, full light); a surface takes
+`ramp[band + shade]`, shade 0 on a mesh. Every pixel of a character is a palette colour, and a part keeps
+its hue in shade and in light. A new ramp may use only palette colours, from dark to light.
+
+The palette is the kit's 40 colours, which the world's art uses, and 12 colours for characters only
+(`docs/art-guide.md`): skin tones from deep to fair and faded reds for hair and cloth. Adding a colour
+changes the art direction: ask first in an issue.
 
 ## Building a part
 
@@ -152,6 +178,8 @@ AI agent), or modelled by hand in Blender on the body and exported as glTF with 
   slot, existing files, known regions and ramps; looks are validated and repaired.
 - `tests/test_character_rig.gd`: every part builds on the body, rigid parts hang from their bone,
   skinned parts bind to the body's bones by name, hidden regions are off.
+- `tests/test_character_looks.gd`: faces and flat beards are exact index textures with eyes 2 texels
+  wide; ramps are palette colours from dark to light.
 - `tests/test_character_head_parts.gd`: on every body shape, no vertex of the head or of the hair a hat
   leaves drawn pokes through the hat, in 16 poses of the four animations.
 - `tests/test_character_garments.gd`: on every body shape, the skin under a garment and a garment under

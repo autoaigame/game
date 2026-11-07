@@ -88,6 +88,9 @@ from `DEF-hand.*`.
   (the back of the head below it; hair covers both), `torso`, `arms_upper` (to 45 % of the upper arm, a short sleeve), `arms_lower`, `hands`,
   `hips` (waist to mid-thigh), `legs_upper` (to the knee), `legs_lower` (to a quarter up the shin, a
   boot top), `feet`. A garment can hide the regions it covers instead of fighting the skin.
+- UV: only the head, scalp and nape, a cylinder around the head's vertical axis (u = 0.5 at the front, v
+  from the top of the head to the chin), 48×22 texels. The face zone is the 24×16 texels at (12, 6):
+  faces and flat beards are drawn there (`docs/character-parts.md`). Other faces have no UV.
 - Default outfit, flat colours of the kit palette: skin `c09576` (head, hands), hair `3a2f27` (scalp, nape),
   jacket `8f8a63` (torso, arms), jeans `455466` (hips, legs), boots `51433a` (feet).
 - Lighting and palette are applied in game (`client/pixel_3d_lit.gdshader`): 3 light bands, the colours

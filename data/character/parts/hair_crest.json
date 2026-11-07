@@ -1,0 +1,2 @@
+{"id": "hair_crest", "slot": "hair", "name": "Crête", "kind": "rigid", "glb": "res://assets/character/parts/hair_crest.glb",
+ "bone": "DEF-head", "covers": ["hair_top"], "colors": ["hair_brown", "hair_black", "hair_red", "hair_fair", "hair_grey"]}

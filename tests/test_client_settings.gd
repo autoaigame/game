@@ -76,7 +76,8 @@ func test_bad_stored_volume_is_fixed() -> void:
 func test_look_is_kept_and_repaired() -> void:
 	_clean()
 	assert_eq(ClientSettings.load_look(PATH), CharacterParts.default_look())
-	var look := [{"id": "body_standard", "color": "skin_dark"}, {"id": "top_tshirt", "color": "olive"},
+	var look := [{"id": "body_standard", "color": "skin_dark"}, {"id": "face_young", "color": "hair_red"},
+			{"id": "top_tshirt", "color": "olive"},
 			{"id": "bottom_shorts", "color": "grey"}]
 	ClientSettings.save_look(look, PATH)
 	assert_eq(ClientSettings.load_look(PATH), look)

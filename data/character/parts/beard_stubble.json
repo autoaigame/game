@@ -1,0 +1,2 @@
+{"id": "beard_stubble", "slot": "beard", "name": "Barbe de trois jours", "kind": "texture", "texture": "res://assets/character/faces/beard_stubble.png",
+ "colors": ["hair_brown", "hair_black", "hair_red", "hair_fair", "hair_grey"]}

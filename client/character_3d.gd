@@ -44,6 +44,14 @@ const LIGHT_DIR := Vector3(-0.17, 0.766, 0.62)
 const SHADOW_SIZE := Vector2(38.0, 14.0)
 const SHADOW_SHIFT := Vector2(5.0, 2.0)
 const SHADOW_COLOR := Color8(20, 22, 16, 97)  ## the objects' shadow colour and opacity
+## The head is raised this much over the clips (which look down a little), so the face shows under the
+## camera's 30 degrees from above.
+const HEAD_LIFT_DEG := 12.0
+## The head's texture and the face zone in it, in texels (art/character/body.py, HEAD_TEXTURE, FACE_RECT).
+const HEAD_TEXTURE := Vector2(48, 22)
+const FACE_RECT := Vector4(12, 6, 24, 16)
+## The eyes' ramp on a face (data/character/ramps.json).
+const EYE_RAMP := "eyes"
 
 static var _clips := {}
 static var _palette := PackedColorArray()
@@ -319,6 +327,16 @@ func _build_model() -> void:
 	_tree.active = true
 
 
+## Turns the head up by HEAD_LIFT_DEG, around the skeleton's left-right axis, after an animation update.
+static func lift_head(sk: Skeleton3D) -> void:
+	var b := sk.find_bone("DEF-head")
+	if b < 0:
+		return
+	var pb := sk.get_bone_global_rest(sk.get_bone_parent(b)).basis
+	var up := Basis(Vector3(1, 0, 0), deg_to_rad(-HEAD_LIFT_DEG))
+	sk.set_bone_pose_rotation(b, (pb.inverse() * up * pb).get_rotation_quaternion() * sk.get_bone_pose_rotation(b))
+
+
 ## Wears another look: the model is rebuilt from its parts, keeping facing, phase and speed.
 func set_look(new_look: Array) -> void:
 	if new_look == look:
@@ -333,7 +351,8 @@ func set_look(new_look: Array) -> void:
 	_pose()
 
 
-## Each surface drawn by pixel_3d_lit.gdshader with its colour (CharacterRig's override, or the glTF's).
+## Each surface drawn by pixel_3d_lit.gdshader: in the ramp the player chose (CharacterRig's override
+## material says which), with the face and beard textures on the head; or in its own glTF colour.
 func _matte(root: Node) -> void:
 	for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
 		for s in mi.mesh.get_surface_count():
@@ -341,7 +360,38 @@ func _matte(root: Node) -> void:
 			if m == null:
 				m = mi.mesh.surface_get_material(s)
 			var c: Color = m.albedo_color if m is BaseMaterial3D else Color.WHITE
-			mi.set_surface_override_material(s, lit_material(c))
+			var sm := lit_material(c)
+			if m != null and m.has_meta("ramp"):
+				_set_ramp(sm, "ramp", m.get_meta("ramp"))
+				_set_ramp(sm, "eye_ramp", EYE_RAMP)
+				for slot in ["face", "beard"]:
+					if mi.has_meta(slot):
+						var t: Dictionary = mi.get_meta(slot)
+						sm.set_shader_parameter("use_" + slot, true)
+						sm.set_shader_parameter(slot + "_tex", load(t["texture"]))
+						_set_ramp(sm, slot + "_ramp", t["ramp"])
+				sm.set_shader_parameter("face_rect", FACE_RECT)
+				sm.set_shader_parameter("head_tex", HEAD_TEXTURE)
+			mi.set_surface_override_material(s, sm)
+
+
+## A ramp of data/character/ramps.json as palette indices, into the shader's `param` and `param`_len.
+static func _set_ramp(sm: ShaderMaterial, param: String, ramp_name: String) -> void:
+	var idx := ramp_indices(ramp_name)
+	var len := idx.size()
+	idx.resize(8)
+	sm.set_shader_parameter(param, idx)
+	sm.set_shader_parameter(param + "_len", len)
+
+
+## The palette indices of a ramp's colours (data/character/ramps.json), dark to light.
+static func ramp_indices(ramp_name: String) -> PackedInt32Array:
+	var out := PackedInt32Array()
+	var pal := palette()
+	for c in CharacterParts.ramp(ramp_name).get("colours", []):
+		var i := pal.find(c)
+		out.append(i if i >= 0 else 0)
+	return out
 
 
 ## A material of pixel_3d_lit.gdshader in a colour (sRGB, as in the glTF material), with the render look.
@@ -440,4 +490,5 @@ func _pose() -> void:
 		_tree.set("parameters/seek_%s/seek_request" % g, minf(clip_time(g, phase), _lengths[g] - 0.0001))
 	_tree.advance(0.0)
 	_morph.apply(_skeleton)
+	lift_head(_skeleton)
 	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE

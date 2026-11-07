@@ -1,5 +1,5 @@
 {
-	"comment": "Named colours for character parts: each a ramp of palette colours (data/palette.json), dark to light. A part lists the ramps a player may choose for it (\"colors\"); the first is its default. The second colour of a ramp is the colour the part is.",
+	"comment": "Named colours for character parts: each a ramp of palette colours (data/palette.json), dark to light. A part lists the ramps a player may choose for it (\"colors\"); the first is its default. The light picks the colour: ramp[band + shade], band 0 in shade, 1 in plain light, 2 in full light, shade from the part's index texture (0 without one). eyes is the fixed ramp of the eyes on a face.",
 	"ramps": {
 		"khaki": {"name": "Kaki", "colours": ["4e4a33", "6e6948", "8f8a63", "9e9268"]},
 		"olive": {"name": "Olive", "colours": ["3b4530", "4d5638", "616a43", "767d52"]},
@@ -11,12 +11,17 @@
 		"brown": {"name": "Marron", "colours": ["2e2822", "40372d", "54483a", "6a5c49"]},
 		"leather": {"name": "Cuir", "colours": ["2e2822", "3a2f27", "51433a", "6b5a4c"]},
 		"teal": {"name": "Sarcelle", "colours": ["283a3b", "34494a", "45605d", "5f7a74"]},
-		"skin_light": {"name": "Peau claire", "colours": ["9a6d56", "c09576", "d3ccb7"]},
+		"rust": {"name": "Rouille", "colours": ["4a2d24", "6b3f30", "8a5640", "a46c52"]},
+		"brick": {"name": "Brique", "colours": ["4a2d24", "5a2f2a", "7a3f36", "96564a"]},
+		"skin_deep": {"name": "Peau très foncée", "colours": ["2e221c", "47322a", "5f4434"]},
+		"skin_dark": {"name": "Peau foncée", "colours": ["47322a", "6e4b3b", "8a6149"]},
 		"skin_medium": {"name": "Peau mate", "colours": ["6e4b3b", "9a6d56", "c09576"]},
-		"skin_dark": {"name": "Peau foncée", "colours": ["3a2f27", "6e4b3b", "9a6d56"]},
+		"skin_light": {"name": "Peau claire", "colours": ["9a6d56", "c09576", "d6b49b"]},
 		"hair_brown": {"name": "Bruns", "colours": ["2e2822", "3a2f27", "51433a", "6b5a4c"]},
 		"hair_black": {"name": "Noirs", "colours": ["1d2a2b", "2e2822", "40372d", "54483a"]},
+		"hair_red": {"name": "Roux", "colours": ["4a2d24", "6b3f30", "8a5640", "a46c52"]},
 		"hair_fair": {"name": "Blonds", "colours": ["6b6342", "857a54", "9e9268", "b8ac84"]},
-		"hair_grey": {"name": "Gris", "colours": ["5d5c55", "77756c", "938f84", "b0ab9e"]}
+		"hair_grey": {"name": "Gris", "colours": ["5d5c55", "77756c", "938f84", "b0ab9e"]},
+		"eyes": {"name": "Yeux", "colours": ["2e2822", "40372d", "d3ccb7"]}
 	}
 }

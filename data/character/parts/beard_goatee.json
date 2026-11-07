@@ -1,0 +1,2 @@
+{"id": "beard_goatee", "slot": "beard", "name": "Bouc", "kind": "rigid", "glb": "res://assets/character/parts/beard_goatee.glb",
+ "bone": "DEF-head", "colors": ["hair_brown", "hair_black", "hair_red", "hair_fair", "hair_grey"]}

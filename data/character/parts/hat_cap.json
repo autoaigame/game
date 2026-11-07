@@ -1,2 +1,2 @@
 {"id": "hat_cap", "slot": "hat", "name": "Casquette", "kind": "rigid", "glb": "res://assets/character/parts/hat_cap.glb",
- "bone": "DEF-head", "hides": ["scalp", "hair_top"], "colors": ["khaki", "workwear_blue", "brown"]}
+ "bone": "DEF-head", "hides": ["scalp", "hair_top"], "colors": ["khaki", "workwear_blue", "brown", "rust"]}

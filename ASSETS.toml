@@ -1176,14 +1176,6 @@ prompt = ""
 license = "CC0-1.0"
 source = "https://opengameart.org/content/universal-animation-library"
 
-[[asset]]
-path = "assets/character/parts/beard_moustache.glb"
-author = "M3t4Data"
-origin = "original"
-tool = "art/character/parts.py (Blender 5.2.3 LTS): a bevelled box under the nose, in the head bone's space, one flat kit-palette colour"
-prompt = ""
-license = "CC0-1.0"
-source = ""
 
 [[asset]]
 path = "assets/character/parts/hat_cap.glb"
@@ -1213,6 +1205,33 @@ license = "CC0-1.0"
 source = ""
 
 [[asset]]
+path = "assets/character/parts/hair_bowl.glb"
+author = "Quaternius (the body mesh it is cut from); M3t4Data (the part)"
+origin = "third-party"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): the body's scalp, nape and side-of-head faces pushed out 18 mm, in the head bone's space, one flat kit-palette colour"
+prompt = ""
+license = "CC0-1.0"
+source = "https://opengameart.org/content/universal-animation-library"
+
+[[asset]]
+path = "assets/character/parts/hair_crest.glb"
+author = "Quaternius (the body mesh it is cut from); M3t4Data (the part)"
+origin = "third-party"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): a strip of the body's scalp faces pushed out 50 mm, in the head bone's space, one flat kit-palette colour"
+prompt = ""
+license = "CC0-1.0"
+source = "https://opengameart.org/content/universal-animation-library"
+
+[[asset]]
+path = "assets/character/parts/hair_bun.glb"
+author = "Quaternius (the body mesh it is cut from); M3t4Data (the part)"
+origin = "third-party"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): the body's scalp and nape faces pushed out 12 mm and an ellipsoid at the back of the head, in the head bone's space, one flat kit-palette colour"
+prompt = ""
+license = "CC0-1.0"
+source = "https://opengameart.org/content/universal-animation-library"
+
+[[asset]]
 path = "assets/character/parts/beard_short.glb"
 author = "Quaternius (the body mesh it is cut from); M3t4Data (the part)"
 origin = "third-party"
@@ -1220,3 +1239,102 @@ tool = "art/character/parts.py (Blender 5.2.3 LTS): the body's chin and jaw face
 prompt = ""
 license = "CC0-1.0"
 source = "https://opengameart.org/content/universal-animation-library"
+
+[[asset]]
+path = "assets/character/parts/beard_goatee.glb"
+author = "Quaternius (the body mesh it is cut from); M3t4Data (the part)"
+origin = "third-party"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): the body's chin faces pushed out 12 mm, in the head bone's space, one flat kit-palette colour"
+prompt = ""
+license = "CC0-1.0"
+source = "https://opengameart.org/content/universal-animation-library"
+
+[[asset]]
+path = "assets/character/faces/face_young.png"
+author = "M3t4Data"
+origin = "original"
+tool = "art/character/faces.py: drawn texel by texel as an index texture (zone and shade per texel), 24x16"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/character/faces/face_adult.png"
+author = "M3t4Data"
+origin = "original"
+tool = "art/character/faces.py: drawn texel by texel as an index texture (zone and shade per texel), 24x16"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/character/faces/face_old.png"
+author = "M3t4Data"
+origin = "original"
+tool = "art/character/faces.py: drawn texel by texel as an index texture (zone and shade per texel), 24x16"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/character/faces/face_scar.png"
+author = "M3t4Data"
+origin = "original"
+tool = "art/character/faces.py: drawn texel by texel as an index texture (zone and shade per texel), 24x16"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/character/faces/face_tired.png"
+author = "M3t4Data"
+origin = "original"
+tool = "art/character/faces.py: drawn texel by texel as an index texture (zone and shade per texel), 24x16"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/character/faces/face_stern.png"
+author = "M3t4Data"
+origin = "original"
+tool = "art/character/faces.py: drawn texel by texel as an index texture (zone and shade per texel), 24x16"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/character/faces/face_round_eyes.png"
+author = "M3t4Data"
+origin = "original"
+tool = "art/character/faces.py: drawn texel by texel as an index texture (zone and shade per texel), 24x16"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/character/faces/face_freckles.png"
+author = "M3t4Data"
+origin = "original"
+tool = "art/character/faces.py: drawn texel by texel as an index texture (zone and shade per texel), 24x16"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/character/faces/beard_stubble.png"
+author = "M3t4Data"
+origin = "original"
+tool = "art/character/faces.py: drawn texel by texel as an index texture (zone and shade per texel), 24x16"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/character/faces/beard_moustache.png"
+author = "M3t4Data"
+origin = "original"
+tool = "art/character/faces.py: drawn texel by texel as an index texture (zone and shade per texel), 24x16"
+prompt = ""
+license = "CC0-1.0"
+source = ""

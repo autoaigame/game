@@ -18,7 +18,7 @@ static func part(root: Node, id: String) -> Node3D:
 
 
 ## Puts the skeleton in the pose of `anim` at `t` (bone tracks only, no AnimationPlayer needed), then the
-## body shape's bone changes, like Character3D does after each animation update.
+## body shape's bone changes and the raised head, like Character3D does after each animation update.
 static func pose_at(sk: Skeleton3D, anim: Animation, t: float, morph: CharacterMorph) -> void:
 	sk.reset_bone_poses()
 	for k in anim.get_track_count():
@@ -33,6 +33,7 @@ static func pose_at(sk: Skeleton3D, anim: Animation, t: float, morph: CharacterM
 			Animation.TYPE_SCALE_3D:
 				sk.set_bone_pose_scale(bone, anim.scale_track_interpolate(k, t))
 	morph.apply(sk)
+	Character3D.lift_head(sk)
 
 
 ## Each bone's skeleton-space transform in the current pose, chained from the local poses. The skeleton's

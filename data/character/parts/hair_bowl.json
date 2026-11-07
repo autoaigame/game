@@ -1,0 +1,2 @@
+{"id": "hair_bowl", "slot": "hair", "name": "Bol", "kind": "rigid", "glb": "res://assets/character/parts/hair_bowl.glb",
+ "bone": "DEF-head", "covers": ["hair_top"], "hides": ["scalp", "nape"], "colors": ["hair_brown", "hair_black", "hair_red", "hair_fair", "hair_grey"]}

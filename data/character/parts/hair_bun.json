@@ -1,0 +1,2 @@
+{"id": "hair_bun", "slot": "hair", "name": "Chignon", "kind": "rigid", "glb": "res://assets/character/parts/hair_bun.glb",
+ "bone": "DEF-head", "covers": ["hair_top"], "hides": ["scalp", "nape"], "colors": ["hair_brown", "hair_black", "hair_red", "hair_fair", "hair_grey"]}
