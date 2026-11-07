@@ -215,13 +215,26 @@ func _lum(n: Vector2) -> float:
 # --- Characters --------------------------------------------------------------
 
 
+## Poses, one per row of player.png: standing, then a walk cycle of two steps (WalkAnim.WALK_FRAMES).
+## Facing the camera or away: l, r = how far each leg is lifted (px, negative = reaching forward,
+## nearer the viewer), arm = arm swing. Side view: fx, bx = front and back leg moved forward (px),
+## fl, bl = front and back foot lifted, arm = front arm swing. bob = body raised (passing frames).
+const POSES := [
+	{"l": 0, "r": 0, "arm": 0, "fx": 0, "bx": 0, "fl": 0, "bl": 0, "bob": 0},  # standing
+	{"l": -2, "r": 2, "arm": 3, "fx": 6, "bx": -5, "fl": 0, "bl": 2, "bob": 0},  # left foot forward
+	{"l": 0, "r": 5, "arm": 1, "fx": 1, "bx": 1, "fl": 0, "bl": 5, "bob": 1},  # right leg passes
+	{"l": 2, "r": -2, "arm": -3, "fx": -5, "bx": 6, "fl": 2, "bl": 0, "bob": 0},  # right foot forward
+	{"l": 5, "r": 0, "arm": -1, "fx": -1, "bx": -1, "fl": 5, "bl": 0, "bob": 1},  # left leg passes
+]
+
+
 func _player() -> Image:
-	# 4 directions (columns: down, left, right, up) x 2 walk frames (rows)
-	var img := Image.create_empty(SPRITE.x * 4, SPRITE.y * 2, false, Image.FORMAT_RGBA8)
-	for frame in 2:
+	# 4 directions (columns: down, left, right, up) x POSES (rows)
+	var img := Image.create_empty(SPRITE.x * 4, SPRITE.y * POSES.size(), false, Image.FORMAT_RGBA8)
+	for row in POSES.size():
 		for dir in [0, 1, 3]:
-			_draw_char(img, Vector2i(dir * SPRITE.x, frame * SPRITE.y), dir, frame)
-		_mirror(img, Vector2i(SPRITE.x, frame * SPRITE.y), Vector2i(2 * SPRITE.x, frame * SPRITE.y))
+			_draw_char(img, Vector2i(dir * SPRITE.x, row * SPRITE.y), dir, POSES[row])
+		_mirror(img, Vector2i(SPRITE.x, row * SPRITE.y), Vector2i(2 * SPRITE.x, row * SPRITE.y))
 	return img
 
 
@@ -257,28 +270,30 @@ func _px(img: Image, o: Vector2i, x: int, y: int, col: Color) -> void:
 	img.set_pixel(o.x + x, o.y + y, col)
 
 
-func _draw_char(img: Image, o: Vector2i, dir: int, frame: int) -> void:
-	var step := 4 if frame == 1 else 0
-	var bob := 1 if frame == 1 else 0
+func _draw_char(img: Image, o: Vector2i, dir: int, pose: Dictionary) -> void:
 	if dir == 1:
-		_draw_side(img, o, step, bob)
+		_draw_side(img, o, pose)
 	else:
-		_draw_front_back(img, o, dir == 3, step, bob)
+		_draw_front_back(img, o, dir == 3, pose)
 	_outline(img, o)
 	_shadow(img, o)
 
 
-func _draw_front_back(img: Image, o: Vector2i, back: bool, step: int, bob: int) -> void:
-	# legs and boots: in the walk frame one leg lifts
-	_limb(img, o, 23, 64, 8, 20 - step, PANTS)
-	_limb(img, o, 33, 64, 8, 20, PANTS, -0.1)
-	_blob(img, o, 27, 85 - step, 5.5, 4, BOOTS, 3.0)
-	_blob(img, o, 37, 85, 5.5, 4, BOOTS, 3.0, -0.1)
+func _draw_front_back(img: Image, o: Vector2i, back: bool, pose: Dictionary) -> void:
+	var bob: int = pose["bob"]
+	var l: int = pose["l"]
+	var r: int = pose["r"]
+	var arm: int = pose["arm"]
+	# legs and boots: a lifted leg is shorter, a leg reaching forward a little longer
+	_limb(img, o, 23, 64, 8, 20 - l, PANTS)
+	_limb(img, o, 33, 64, 8, 20 - r, PANTS, -0.1)
+	_blob(img, o, 27, 85 - l, 5.5, 4, BOOTS, 3.0)
+	_blob(img, o, 37, 85 - r, 5.5, 4, BOOTS, 3.0, -0.1)
 	# arms swing opposite to the legs, behind the torso edges
-	_limb(img, o, 12, 43 - bob + step, 7, 17, TUNIC, 0.05)
-	_limb(img, o, 45, 43 - bob - step + 3, 7, 17, TUNIC, -0.15)
-	_blob(img, o, 15.5, 62 - bob + step, 3.6, 3.4, SKIN)
-	_blob(img, o, 48.5, 65 - bob - step, 3.6, 3.4, SKIN, 2.0, -0.1)
+	_limb(img, o, 12, 43 - bob + arm, 7, 17, TUNIC, 0.05)
+	_limb(img, o, 45, 46 - bob - arm, 7, 17, TUNIC, -0.15)
+	_blob(img, o, 15.5, 62 - bob + arm, 3.6, 3.4, SKIN)
+	_blob(img, o, 48.5, 65 - bob - arm, 3.6, 3.4, SKIN, 2.0, -0.1)
 	# torso with a hem, belt and buckle
 	_blob(img, o, 32, 53 - bob, 14, 15, TUNIC, 3.5)
 	for x in range(19, 46):
@@ -332,11 +347,15 @@ func _eye(img: Image, o: Vector2i, x: int, y: int) -> void:
 		_px(img, o, x + dx, y - 2, _c(HAIR, 1))
 
 
-func _draw_side(img: Image, o: Vector2i, step: int, bob: int) -> void:
-	# facing left. back leg and arm first, darker
-	_limb(img, o, 30, 64, 8, 20, PANTS, -0.2)
-	_blob(img, o, 32 + step, 85, 6, 4, BOOTS, 3.0, -0.15)
-	_limb(img, o, 36, 43 - bob, 7, 16, TUNIC, -0.25)
+func _draw_side(img: Image, o: Vector2i, pose: Dictionary) -> void:
+	var bob: int = pose["bob"]
+	var fx: int = pose["fx"]
+	var bx: int = pose["bx"]
+	var arm: int = pose["arm"]
+	# facing left (forward = towards smaller x). back leg and arm first, darker
+	_limb(img, o, 30 - bx, 64, 8, 20 - pose["bl"], PANTS, -0.2)
+	_blob(img, o, 32 - bx, 85 - pose["bl"], 6, 4, BOOTS, 3.0, -0.15)
+	_limb(img, o, 36 - arm, 43 - bob, 7, 16, TUNIC, -0.25)
 	# torso
 	_blob(img, o, 33, 53 - bob, 11, 15, TUNIC, 3.5)
 	for x in range(23, 44):
@@ -344,12 +363,11 @@ func _draw_side(img: Image, o: Vector2i, step: int, bob: int) -> void:
 		_px(img, o, x, 60 - bob, _c(BOOTS, 2))
 		_px(img, o, x, 61 - bob, _c(BOOTS, 1))
 	_blob(img, o, 24.5, 60.5 - bob, 2.2, 2.5, GOLD, 4.0)
-	# front leg strides forward in the walk frame
-	_limb(img, o, 26 - step, 64, 8, 20, PANTS)
-	_blob(img, o, 28 - step, 85, 6.5, 4, BOOTS, 3.0)
-	# front arm swings
-	_limb(img, o, 30 + step / 3, 43 - bob, 7, 16, TUNIC, 0.1)
-	_blob(img, o, 33.5 + step / 3, 61 - bob, 3.6, 3.4, SKIN)
+	# front leg, and the front arm swinging opposite to it
+	_limb(img, o, 26 - fx, 64, 8, 20 - pose["fl"], PANTS)
+	_blob(img, o, 28 - fx, 85 - pose["fl"], 6.5, 4, BOOTS, 3.0)
+	_limb(img, o, 30 + arm, 43 - bob, 7, 16, TUNIC, 0.1)
+	_blob(img, o, 33.5 + arm, 61 - bob, 3.6, 3.4, SKIN)
 	# neck, head, nose
 	_limb(img, o, 29, 35 - bob, 8, 6, SKIN, -0.2)
 	_blob(img, o, 31, 25 - bob, 12.5, 13, SKIN, 2.0, 0.34)

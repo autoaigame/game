@@ -37,11 +37,17 @@ func test_follow_still_when_there() -> void:
 	assert_eq(WalkAnim.follow(Vector2(3, 4), Vector2(3, 4), 1.0 / 60.0), Vector2(3, 4))
 
 
-func test_walk_frame_changes_each_stride() -> void:
-	assert_eq(WalkAnim.walk_row(0.0), 0)
-	assert_eq(WalkAnim.walk_row(WalkAnim.STRIDE_CELLS * 0.99), 0)
-	assert_eq(WalkAnim.walk_row(WalkAnim.STRIDE_CELLS), 1)
-	assert_eq(WalkAnim.walk_row(WalkAnim.STRIDE_CELLS * 2.0), 0)
+## Row 0 is standing; rows 1..WALK_FRAMES are one walk cycle: two steps (left foot, then right foot).
+func test_walk_cycle_plays_every_frame_over_two_steps() -> void:
+	var per_frame := WalkAnim.STRIDE_CELLS * 2.0 / WalkAnim.WALK_FRAMES
+	for i in WalkAnim.WALK_FRAMES:
+		assert_eq(WalkAnim.walk_row(per_frame * (i + 0.5)), 1 + i, "frame %d" % i)
+	assert_eq(WalkAnim.walk_row(0.0), 1)
+	assert_eq(WalkAnim.walk_row(WalkAnim.STRIDE_CELLS * 2.0), 1, "the cycle starts over")
+
+
+func test_walk_cycle_has_more_than_two_frames() -> void:
+	assert_true(WalkAnim.WALK_FRAMES >= 4, "WALK_FRAMES = %d" % WalkAnim.WALK_FRAMES)
 
 
 func test_bob_only_while_walking() -> void:
