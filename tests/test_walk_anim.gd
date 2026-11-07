@@ -134,3 +134,19 @@ func test_four_column_sheet_mapping() -> void:
 			"west": 1, "south-west": 0}
 	for name in want:
 		assert_eq(WalkAnim.sheet_column(WalkAnim.FACINGS.find(name)), want[name], name)
+
+
+## The sprite stands on the player's position: its feet (FOOT_PX above the frame's bottom) on the
+## cell, horizontally centred, whatever the frame size.
+func test_sprite_feet_on_the_position() -> void:
+	var o := WalkAnim.sprite_offset()
+	assert_eq(o.x, -WalkAnim.FRAME_SIZE.x / 2.0)
+	assert_eq(o.y + WalkAnim.FRAME_SIZE.y - WalkAnim.FOOT_PX, 0.0)
+
+
+## The name sits just above the head, centred.
+func test_name_above_the_head() -> void:
+	var r := WalkAnim.name_rect()
+	assert_almost(r.position.x + r.size.x / 2.0, 0.0, 0.01)
+	assert_true(r.end.y <= -WalkAnim.HEAD_PX, "name bottom %f, head %d" % [r.end.y, WalkAnim.HEAD_PX])
+	assert_true(r.end.y >= -WalkAnim.HEAD_PX - 24, "name too far above the head")

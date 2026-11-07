@@ -1,10 +1,12 @@
 extends TestCase
 
-## The art is drawn at 4x the original 32x16 tile / 16x24 character size.
+## The ground atlas, the player sheet and the generated sprites.
 
 
-func test_tiles_are_high_resolution() -> void:
-	assert_eq(IsoLayer.TILE_SIZE, Vector2i(128, 64))
+func test_tiles_are_96_by_48() -> void:
+	# PixelLab's isometric tiles are 96x48, drawn at 1 texel per pixel (integer camera zoom).
+	assert_eq(IsoLayer.TILE_SIZE, Vector2i(96, 48))
+	assert_eq(IsoLayer.CAMERA_ZOOM, float(int(IsoLayer.CAMERA_ZOOM)), "the camera zoom must be an integer")
 
 
 ## One row per ground (data/tiles "atlas"), one column per DualGrid corner mask, then full variants.

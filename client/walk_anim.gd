@@ -39,6 +39,22 @@ const FACING_HYSTERESIS_DEG := 10.0
 ## to change for a new sheet: SHEET_COLUMNS columns, and the column drawn for each facing. An 8-column
 ## sheet in FACINGS order (docs/art-guide.md) takes SHEET_COLUMNS = 8 and FACING_COLUMN = [0, 1, ... 7].
 const FRAME_SIZE := Vector2i(64, 96)
+## The feet stand this many px above the bottom of a frame, horizontally centred.
+const FOOT_PX := 8
+## The top of the head is this many px above the feet: the name is drawn just above it.
+const HEAD_PX := 80
+const NAME_GAP_PX := 6
+const NAME_SIZE := Vector2(240, 24)
+
+
+## Offset of a non-centred sprite that puts the feet on the node's position.
+static func sprite_offset() -> Vector2:
+	return Vector2(-FRAME_SIZE.x / 2.0, FOOT_PX - FRAME_SIZE.y)
+
+
+## Where the name label goes, relative to the feet.
+static func name_rect() -> Rect2:
+	return Rect2(Vector2(-NAME_SIZE.x / 2.0, -HEAD_PX - NAME_GAP_PX - NAME_SIZE.y), NAME_SIZE)
 const SHEET_COLUMNS := 4
 ## Today's sheet: 0 down, 1 left, 2 right, 3 up. Diagonals show the back going up, the front going down.
 const FACING_COLUMN: Array[int] = [0, 0, 2, 3, 3, 3, 1, 0]

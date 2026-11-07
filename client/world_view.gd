@@ -3,7 +3,6 @@ extends Node2D
 
 var _tiles_tex: Texture2D = load(IsoLayer.TILES_ATLAS)
 const PLAYER_TEX := preload("res://assets/player.png")
-const SPRITE_OFFSET_Y := -40.0
 
 var client: Node  ## client/client.gd
 var _layer: TileMapLayer
@@ -67,7 +66,7 @@ func _animate_actors(dt: float) -> void:
 		if walking:
 			w["facing"] = WalkAnim.facing(pos - actor.position, w["facing"])
 		sprite.frame_coords = Vector2i(WalkAnim.sheet_column(maxi(w["facing"], 0)), WalkAnim.walk_row(w["walked"]) if walking else 0)
-		sprite.offset.y = SPRITE_OFFSET_Y + WalkAnim.bob(w["walked"], walking)
+		sprite.offset.y = WalkAnim.sprite_offset().y + WalkAnim.bob(w["walked"], walking)
 		actor.position = pos
 		if id == client.my_peer_id:
 			_camera.position = pos
@@ -93,17 +92,19 @@ func _make_actor(player_name: String, is_me: bool) -> Node2D:
 	sprite.texture = PLAYER_TEX
 	sprite.hframes = WalkAnim.SHEET_COLUMNS
 	sprite.vframes = 1 + WalkAnim.WALK_FRAMES
-	sprite.offset = Vector2(0, SPRITE_OFFSET_Y)
+	sprite.centered = false
+	sprite.offset = WalkAnim.sprite_offset()
 	actor.add_child(sprite)
 	var label := Label.new()
 	label.text = player_name
-	label.add_theme_font_size_override("font_size", 32)
+	label.add_theme_font_size_override("font_size", 16)
 	label.add_theme_color_override("font_color", Color.WHITE if not is_me else Color8(0xe8, 0xc4, 0x4a))
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
-	label.add_theme_constant_override("outline_size", 8)
+	label.add_theme_constant_override("outline_size", 5)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.size = Vector2(320, 40)
-	label.position = Vector2(-160, -144)
+	var r := WalkAnim.name_rect()
+	label.size = r.size
+	label.position = r.position
 	actor.add_child(label)
 	return actor
 
