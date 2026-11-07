@@ -14,6 +14,8 @@ const INTEREST_RADIUS := 32.0
 ## A campfire costs FIRE_STICKS sticks and burns FIRE_S seconds.
 const FIRE_STICKS := 3
 const FIRE_S := 300.0
+## A player cooks on a campfire at most this far away, in cells.
+const COOK_REACH := 2.0
 
 static var _name_re: RegEx
 

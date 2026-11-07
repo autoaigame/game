@@ -17,6 +17,10 @@ class FakeClient:
 
 	var fires := 0
 	var whistles := 0
+	var cooked: Array = []
+
+	func request_cook(item: String) -> void:
+		cooked.append(item)
 
 	func request_whistle() -> void:
 		whistles += 1
@@ -122,4 +126,14 @@ func test_h_whistles() -> void:
 	hud.client.welcomed.emit(Vector2i.ZERO)
 	hud._unhandled_input(key)
 	assert_eq(hud.client.whistles, 1)
+	hud.free()
+
+
+## Raw meat has a "cook" button; berries do not.
+func test_cook_button() -> void:
+	var hud := _hud()
+	hud.client.inventory_received.emit({"raw_meat": 1, "berries": 2})
+	assert_true(hud.cook_button("berries") == null, "berries do not cook")
+	hud.cook_button("raw_meat").pressed.emit()
+	assert_eq(hud.client.cooked, ["raw_meat"])
 	hud.free()

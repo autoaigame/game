@@ -2,5 +2,6 @@
 	"id": "raw_meat",
 	"name": "Viande crue",
 	"food": 4,
+	"cooks_into": "cooked_meat",
 	"color": [176, 72, 72]
 }

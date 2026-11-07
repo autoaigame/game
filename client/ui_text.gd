@@ -23,7 +23,11 @@ const NOTICES := {
 	"fire_here": "Il y a déjà un feu ici.",
 	"hunt": "Ton chien part en chasse !",
 	"no_prey": "Aucun animal à chasser près de toi.",
+	"cooked": "Cuit : %s",
+	"no_fire": "Il te faut un feu tout près pour cuire.",
+	"bag_full": "Ton sac est plein.",
 }
+const COOK := "Cuire"
 const KEYS_HINT := "I : sac   H : siffler le chien"
 const BUILD_FIRE := "Faire un feu (%d bâtons)" % Protocol.FIRE_STICKS
 const EAT := "Manger"
@@ -74,6 +78,6 @@ static func rejection(_reason: String, player_name: String) -> String:
 static func notice(key: String, args: Dictionary) -> String:
 	if key == "gathered":
 		return NOTICES[key] % [int(args.get("count", 0)), ItemData.item(String(args.get("item", ""))).get("name", "?")]
-	if key == "ate":
+	if key == "ate" or key == "cooked":
 		return NOTICES[key] % ItemData.item(String(args.get("item", ""))).get("name", "?")
 	return NOTICES.get(key, "")
