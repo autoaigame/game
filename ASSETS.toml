@@ -10,15 +10,6 @@ license = "CC0-1.0"
 source = ""
 
 [[asset]]
-path = "assets/player.png"
-author = "vitteloil"
-origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
-license = "CC0-1.0"
-source = ""
-
-[[asset]]
 path = "assets/objects/oak.png"
 author = "M3t4Data"
 origin = "generated"
@@ -402,5 +393,14 @@ author = "M3t4Data"
 origin = "generated"
 tool = "PixelLab create_1_direction_object, candidate chosen by hand and trimmed"
 prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas (+ 24 item_descriptions, see 6-terne/3-decals/params.txt)"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/player.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_character v3: 8 directions, idle 4 frames and walk 6 frames, assembled and retouched by script"
+prompt = "ordinary adult male survivor, realistic proportions, faded washed-out blue jeans, muted khaki field jacket over a grey shirt, worn brown boots, short dark brown hair, stubble, dark grey backpack with straps, dull desaturated colours, soft light from the top-left, fine detail, no thick black cartoon outline"
 license = "CC0-1.0"
 source = ""

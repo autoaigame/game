@@ -8,12 +8,11 @@ extends RefCounted
 const CATCH_UP := 1.5
 ## Farther than this from the snapshot (spawn, reconnect, lost snapshots): jump there at once.
 const SNAP_CELLS := 3.0
-## Distance walked per walk frame.
-const STRIDE_CELLS := 0.5
-## Height of the step bob, in pixels.
-const BOB_PX := 3.0  ## the drawn walk frames already move the body; this only softens the steps
-## Walk frames in assets/player.png (rows 1..WALK_FRAMES, row 0 is standing): one cycle is two steps.
-const WALK_FRAMES := 4
+## Walk rows of the sheet play one cycle (two steps) over this distance, so the feet keep pace with
+## the ground at Protocol.SPEED_CELLS_PER_S.
+const WALK_CYCLE_CELLS := 1.25
+## Standing still, the idle rows play at this many frames per second.
+const IDLE_FPS := 4.0
 
 
 ## Next drawn position, in cells: towards the server's position, never past it.
@@ -35,15 +34,21 @@ const FACINGS: Array[String] = ["south", "south-east", "east", "north-east", "no
 ## hair either side of a direction never flicker between two facings.
 const FACING_HYSTERESIS_DEG := 10.0
 
-## Player sprite sheet (assets/player.png): one frame of FRAME_SIZE px per column and row. The one place
-## to change for a new sheet: SHEET_COLUMNS columns, and the column drawn for each facing. An 8-column
-## sheet in FACINGS order (docs/art-guide.md) takes SHEET_COLUMNS = 8 and FACING_COLUMN = [0, 1, ... 7].
-const FRAME_SIZE := Vector2i(64, 96)
+## Player sprite sheet (assets/player.png, from the PixelLab kit): one FRAME_SIZE frame per column and
+## row. Columns: the 8 facings in FACINGS order. Rows: IDLE_FRAMES idle frames, then WALK_FRAMES walk
+## frames (one cycle of two steps).
+const FRAME_SIZE := Vector2i(112, 112)
+const SHEET_COLUMNS := 8
+const FACING_COLUMN: Array[int] = [0, 1, 2, 3, 4, 5, 6, 7]
+const IDLE_FRAMES := 4
+const WALK_FRAMES := 6
+const WALK_FIRST_ROW := IDLE_FRAMES
+const SHEET_ROWS := IDLE_FRAMES + WALK_FRAMES
 ## The feet stand this many px above the bottom of a frame, horizontally centred.
-const FOOT_PX := 8
+const FOOT_PX := 2
 ## The top of the head is this many px above the feet: the name is drawn just above it.
-const HEAD_PX := 80
-const NAME_GAP_PX := 6
+const HEAD_PX := 100
+const NAME_GAP_PX := 4
 const NAME_SIZE := Vector2(240, 24)
 
 
@@ -55,9 +60,6 @@ static func sprite_offset() -> Vector2:
 ## Where the name label goes, relative to the feet.
 static func name_rect() -> Rect2:
 	return Rect2(Vector2(-NAME_SIZE.x / 2.0, -HEAD_PX - NAME_GAP_PX - NAME_SIZE.y), NAME_SIZE)
-const SHEET_COLUMNS := 4
-## Today's sheet: 0 down, 1 left, 2 right, 3 up. Diagonals show the back going up, the front going down.
-const FACING_COLUMN: Array[int] = [0, 0, 2, 3, 3, 3, 1, 0]
 
 
 ## Facing (index in FACINGS) from a screen movement. Angles are measured with the screen's height doubled,
@@ -86,11 +88,9 @@ static func sheet_column(f: int) -> int:
 
 ## Sprite row (walk frame) after walking this many cells.
 static func walk_row(walked: float) -> int:
-	return 1 + int(walked / (STRIDE_CELLS * 2.0) * WALK_FRAMES) % WALK_FRAMES
+	return WALK_FIRST_ROW + int(walked / WALK_CYCLE_CELLS * WALK_FRAMES) % WALK_FRAMES
 
 
-## Vertical offset of the sprite, in pixels: a small hop each stride while walking, none when still.
-static func bob(walked: float, walking: bool) -> float:
-	if not walking:
-		return 0.0
-	return -absf(sin(walked / STRIDE_CELLS * PI)) * BOB_PX
+## Sprite row (idle frame) after standing still for this many seconds.
+static func idle_row(still_s: float) -> int:
+	return int(still_s * IDLE_FPS) % IDLE_FRAMES

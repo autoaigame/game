@@ -9,7 +9,7 @@ var _layer: TileMapLayer
 var _streamer := ChunkStreamer.new(2, 3, 1)
 var _chunk_nodes := {}  ## chunk -> Node2D
 var _actors := {}  ## peer_id -> Node2D
-var _walk := {}  ## peer_id -> {server, shown: Vector2 in cells, walked: float in cells, facing: WalkAnim.FACINGS index}
+var _walk := {}  ## peer_id -> {server, shown: Vector2 in cells, walked: float in cells, facing: WalkAnim.FACINGS index, still: s}
 var _camera := Camera2D.new()
 var _my_pos := Vector2.ZERO  ## my position in the last snapshot, in cells
 var _key_dir := Vector2i.ZERO  ## direction of the held keys at the last frame
@@ -38,7 +38,7 @@ func _on_snapshot(players: Array) -> void:
 			actor = _make_actor(p["name"], id == client.my_peer_id)
 			_actors[id] = actor
 			add_child(actor)
-			_walk[id] = {"server": p["pos"], "shown": p["pos"], "walked": 0.0, "facing": -1}
+			_walk[id] = {"server": p["pos"], "shown": p["pos"], "walked": 0.0, "facing": -1, "still": 0.0}
 			actor.position = IsoLayer.cell_to_local(p["pos"])
 		_walk[id]["server"] = p["pos"]  # drawn there smoothly by _animate_actors
 		if id == client.my_peer_id:
@@ -65,8 +65,9 @@ func _animate_actors(dt: float) -> void:
 		var sprite: Sprite2D = actor.get_node("Sprite")
 		if walking:
 			w["facing"] = WalkAnim.facing(pos - actor.position, w["facing"])
-		sprite.frame_coords = Vector2i(WalkAnim.sheet_column(maxi(w["facing"], 0)), WalkAnim.walk_row(w["walked"]) if walking else 0)
-		sprite.offset.y = WalkAnim.sprite_offset().y + WalkAnim.bob(w["walked"], walking)
+		w["still"] = 0.0 if walking else w["still"] + dt
+		var row := WalkAnim.walk_row(w["walked"]) if walking else WalkAnim.idle_row(w["still"])
+		sprite.frame_coords = Vector2i(WalkAnim.sheet_column(maxi(w["facing"], 0)), row)
 		actor.position = pos
 		if id == client.my_peer_id:
 			_camera.position = pos
@@ -91,7 +92,7 @@ func _make_actor(player_name: String, is_me: bool) -> Node2D:
 	sprite.name = "Sprite"
 	sprite.texture = PLAYER_TEX
 	sprite.hframes = WalkAnim.SHEET_COLUMNS
-	sprite.vframes = 1 + WalkAnim.WALK_FRAMES
+	sprite.vframes = WalkAnim.SHEET_ROWS
 	sprite.centered = false
 	sprite.offset = WalkAnim.sprite_offset()
 	actor.add_child(sprite)

@@ -42,23 +42,24 @@ func test_mask_tiles_follow_the_corner_bits() -> void:
 				assert_eq(opaque, mask & bits[i] != 0, "row %d mask %d corner %d" % [row, mask, i])
 
 
-func test_player_frames_are_high_resolution() -> void:
+## The player sheet: SHEET_COLUMNS facings x (idle frames + walk frames) of FRAME_SIZE.
+func test_player_sheet_layout() -> void:
 	var tex: Texture2D = load("res://assets/player.png")
-	# 4 directions x (standing + the walk cycle) of 64x96
-	assert_eq(Vector2i(tex.get_width(), tex.get_height()), Vector2i(64 * 4, 96 * (1 + WalkAnim.WALK_FRAMES)))
+	assert_eq(Vector2i(tex.get_width(), tex.get_height()),
+			Vector2i(WalkAnim.FRAME_SIZE.x * WalkAnim.SHEET_COLUMNS, WalkAnim.FRAME_SIZE.y * WalkAnim.SHEET_ROWS))
 
 
-## Every walk frame of every direction is drawn, and differs from the standing pose and from each other.
-func test_walk_frames_are_all_different() -> void:
+## Every frame of every facing is drawn, and differs from the others of its facing.
+func test_player_frames_are_all_different() -> void:
 	var img: Image = load("res://assets/player.png").get_image()
-	var rows := img.get_height() / 96
-	for dir in 4:
+	var f := WalkAnim.FRAME_SIZE
+	for col in WalkAnim.SHEET_COLUMNS:
 		var seen := {}
-		for row in rows:
-			var frame := img.get_region(Rect2i(dir * 64, row * 96, 64, 96))
-			assert_false(frame.is_invisible(), "direction %d row %d is empty" % [dir, row])
+		for row in WalkAnim.SHEET_ROWS:
+			var frame := img.get_region(Rect2i(col * f.x, row * f.y, f.x, f.y))
+			assert_false(frame.is_invisible(), "column %d row %d is empty" % [col, row])
 			var key := frame.get_data()
-			assert_false(seen.has(key), "direction %d row %d repeats an earlier frame" % [dir, row])
+			assert_false(seen.has(key), "column %d row %d repeats an earlier frame" % [col, row])
 			seen[key] = true
 
 

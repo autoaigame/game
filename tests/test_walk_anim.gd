@@ -37,24 +37,35 @@ func test_follow_still_when_there() -> void:
 	assert_eq(WalkAnim.follow(Vector2(3, 4), Vector2(3, 4), 1.0 / 60.0), Vector2(3, 4))
 
 
-## Row 0 is standing; rows 1..WALK_FRAMES are one walk cycle: two steps (left foot, then right foot).
-func test_walk_cycle_plays_every_frame_over_two_steps() -> void:
-	var per_frame := WalkAnim.STRIDE_CELLS * 2.0 / WalkAnim.WALK_FRAMES
+## The walk rows (WALK_FIRST_ROW onwards) play one cycle, two steps, every WALK_CYCLE_CELLS walked.
+func test_walk_cycle_plays_every_frame_by_distance() -> void:
+	var per_frame := WalkAnim.WALK_CYCLE_CELLS / WalkAnim.WALK_FRAMES
 	for i in WalkAnim.WALK_FRAMES:
-		assert_eq(WalkAnim.walk_row(per_frame * (i + 0.5)), 1 + i, "frame %d" % i)
-	assert_eq(WalkAnim.walk_row(0.0), 1)
-	assert_eq(WalkAnim.walk_row(WalkAnim.STRIDE_CELLS * 2.0), 1, "the cycle starts over")
+		assert_eq(WalkAnim.walk_row(per_frame * (i + 0.5)), WalkAnim.WALK_FIRST_ROW + i, "frame %d" % i)
+	assert_eq(WalkAnim.walk_row(0.0), WalkAnim.WALK_FIRST_ROW)
+	assert_eq(WalkAnim.walk_row(WalkAnim.WALK_CYCLE_CELLS), WalkAnim.WALK_FIRST_ROW, "the cycle starts over")
 
 
-func test_walk_cycle_has_more_than_two_frames() -> void:
-	assert_true(WalkAnim.WALK_FRAMES >= 4, "WALK_FRAMES = %d" % WalkAnim.WALK_FRAMES)
+## Standing still, the idle rows (0..IDLE_FRAMES-1) play in time, looping.
+func test_idle_plays_in_time() -> void:
+	var per_frame := 1.0 / WalkAnim.IDLE_FPS
+	for i in WalkAnim.IDLE_FRAMES:
+		assert_eq(WalkAnim.idle_row(per_frame * (i + 0.5)), i, "frame %d" % i)
+	assert_eq(WalkAnim.idle_row(per_frame * WalkAnim.IDLE_FRAMES), 0, "loops")
 
 
-func test_bob_only_while_walking() -> void:
-	assert_eq(WalkAnim.bob(WalkAnim.STRIDE_CELLS * 0.5, false), 0.0)
-	assert_almost(WalkAnim.bob(0.0, true), 0.0, 0.001)
-	assert_almost(WalkAnim.bob(WalkAnim.STRIDE_CELLS * 0.5, true), -WalkAnim.BOB_PX, 0.001)
-	assert_almost(WalkAnim.bob(WalkAnim.STRIDE_CELLS, true), 0.0, 0.001)
+func test_sheet_rows_are_idle_then_walk() -> void:
+	assert_eq(WalkAnim.IDLE_FRAMES, 4)
+	assert_eq(WalkAnim.WALK_FRAMES, 6)
+	assert_eq(WalkAnim.WALK_FIRST_ROW, WalkAnim.IDLE_FRAMES)
+	assert_eq(WalkAnim.SHEET_ROWS, WalkAnim.IDLE_FRAMES + WalkAnim.WALK_FRAMES)
+
+
+## The 8-column sheet is in FACINGS order: each facing draws its own column.
+func test_eight_column_sheet() -> void:
+	assert_eq(WalkAnim.SHEET_COLUMNS, 8)
+	for f in 8:
+		assert_eq(WalkAnim.sheet_column(f), f)
 
 
 ## Screen movement of the held keys, through the real projection.
@@ -126,14 +137,6 @@ func test_sheet_columns_match_player_png() -> void:
 	for f in WalkAnim.FACINGS.size():
 		var col := WalkAnim.sheet_column(f)
 		assert_true(col >= 0 and col < WalkAnim.SHEET_COLUMNS, "%s -> column %d" % [WalkAnim.FACINGS[f], col])
-
-
-## The 4-column sheet: 0 down, 1 left, 2 right, 3 up; diagonals show the back going up, the front going down.
-func test_four_column_sheet_mapping() -> void:
-	var want := {"south": 0, "south-east": 0, "east": 2, "north-east": 3, "north": 3, "north-west": 3,
-			"west": 1, "south-west": 0}
-	for name in want:
-		assert_eq(WalkAnim.sheet_column(WalkAnim.FACINGS.find(name)), want[name], name)
 
 
 ## The sprite stands on the player's position: its feet (FOOT_PX above the frame's bottom) on the
