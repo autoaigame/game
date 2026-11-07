@@ -263,3 +263,27 @@ func test_runs_around_an_obstacle() -> void:
 			break
 	assert_eq(events.size(), 1, "caught it within 2 s")
 	assert_eq(dog["state"], "fetch")
+
+
+## A whistle is heard by the other players near the one who whistled (those who see them), not by
+## the ones far away nor by the whistler (it hears its own at once); whether or not the dog finds prey.
+func test_whistle_heard_by_players_near() -> void:
+	var server := _server_with_rabbit(Vector2i(DOG.HUNT_RADIUS + 3, 0))
+	var at: Vector2i = Protocol.cell_of(server._players[1]["pos"])
+	server._players[2] = server._new_player("bob", at - Vector2i(3, 0), {})
+	server._players[3] = server._new_player("cid", at + Vector2i(int(Protocol.INTEREST_RADIUS) + 5, 0), {})
+	assert_eq(server._whistle_messages(1), [["notice", 1, ["no_prey"]], ["whistled", 2, [1]]])
+	assert_eq(server._whistle_messages(2), [["notice", 2, ["no_prey"]], ["whistled", 1, [2]]])
+	server._players[1]["dog"]["carry"] = "carcass_rabbit"
+	assert_eq(server._whistle_messages(1), [["notice", 1, ["dog_busy"]], ["whistled", 2, [1]]])
+	assert_eq(server._whistle_messages(9), [], "unknown player")
+	server.free()
+
+
+## With prey near, the whistle sends the dog off and is still heard.
+func test_whistle_heard_when_the_dog_hunts() -> void:
+	var server := _server_with_rabbit(Vector2i(3, 0))
+	var at: Vector2i = Protocol.cell_of(server._players[1]["pos"])
+	server._players[2] = server._new_player("bob", at + Vector2i(0, 4), {})
+	assert_eq(server._whistle_messages(1), [["notice", 1, ["hunt"]], ["whistled", 2, [1]]])
+	server.free()

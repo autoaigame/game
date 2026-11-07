@@ -49,6 +49,8 @@ func _ready() -> void:
 	client.welcomed.connect(func(cell: Vector2i): _my_pos = Vector2(cell))
 	if client.has_signal("look_received"):
 		client.look_received.connect(_on_look)
+	if client.has_signal("whistled"):
+		client.whistled.connect(_on_whistled)
 
 
 func _on_snapshot(players: Array) -> void:
@@ -253,6 +255,13 @@ func _on_look(id: int, look: Array) -> void:
 	var actor: Node2D = _actors.get(id)
 	if actor != null:
 		actor.get_node("Model3D").set_look(_looks[id])
+
+
+## A player whistled: heard from where it is drawn (not at all if it is not).
+func _on_whistled(id: int) -> void:
+	var actor: Node2D = _actors.get(id)
+	if actor != null and sounds != null:
+		sounds.whistle(id, id == client.my_peer_id, actor)
 
 
 func _unhandled_input(event: InputEvent) -> void:

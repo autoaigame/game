@@ -12,6 +12,7 @@ signal settings_changed(settings: Dictionary)
 
 const BUSES: Array[String] = ["Musique", "Ambiance", "Effets", "UI"]
 const UI_DIR := "res://assets/sounds/ui"
+const WHISTLE_DIR := "res://assets/sounds/whistle"
 const MUSIC_DIR := "res://assets/sounds/music"
 const MUSIC_BUS := "Musique"
 ## How often the grounds around the player are counted again, in seconds.
@@ -21,6 +22,9 @@ const VOLUME_STEP := 0.1
 const SAVE_DELAY_S := 0.5
 ## Another player's footsteps fade out over this distance, in px.
 const OTHERS_STEP_RANGE_PX := 900.0
+## Another player's whistle fades out over this distance, in px: Protocol.INTEREST_RADIUS cells across the
+## screen (96 px a cell), so every player told of a whistle hears it.
+const OTHERS_WHISTLE_RANGE_PX := 2200.0
 ## One-shots play this far either side of the screen centre at full pan, in px of the screen.
 const PAN_PX := 600.0
 
@@ -39,6 +43,7 @@ var _pick_t := 0.0
 var _rng := RandomNumberGenerator.new()
 var _steps := {}  ## tile index -> [sound names]
 var _step_last := {}  ## peer id -> last variant
+var _whistle_last := {}  ## peer id -> last whistle variant
 var _sounds_cfg := {}
 var _streams := {}  ## path -> AudioStream
 var _settings := AudioSettings.defaults()
@@ -276,6 +281,37 @@ func footstep(peer_id: int, tile: int, is_me: bool, at: Node2D) -> void:
 	at.add_child(p2)
 	p2.finished.connect(p2.queue_free)
 	p2.play()
+
+
+## The whistles' files, from `cfg` (data/sounds.json) "whistle".
+static func whistle_paths(cfg: Dictionary) -> Array:
+	return Array(cfg.get("whistle", [])).map(func(s): return WHISTLE_DIR.path_join(s + ".ogg"))
+
+
+## Player `peer_id` whistles: one of the whistles, never the one it whistled last. Mine plays flat; another's
+## from `at` (the node on that player's feet), fading with distance. Returns the player node, or null.
+func whistle(peer_id: int, is_me: bool, at: Node2D) -> Node:
+	var paths := whistle_paths(_sounds_cfg)
+	if not started or paths.is_empty():
+		return null
+	var v := Footsteps.pick_variant(_rng, paths.size(), _whistle_last.get(peer_id, -1))
+	_whistle_last[peer_id] = v
+	var q: float = _sounds_cfg.get("whistle_pitch", 0.0)
+	var p: Node
+	if is_me:
+		p = AudioStreamPlayer.new()
+		p.volume_db = _sounds_cfg.get("whistle_volume_db", 0.0)
+	else:
+		p = AudioStreamPlayer2D.new()
+		p.volume_db = _sounds_cfg.get("whistle_others_volume_db", 0.0)
+		p.max_distance = OTHERS_WHISTLE_RANGE_PX
+	p.stream = _stream(paths[v], false)
+	p.bus = "Effets"
+	p.pitch_scale = 1.0 + _rng.randf_range(-q, q)
+	p.autoplay = true  # starts as it enters the tree
+	p.finished.connect(p.queue_free)
+	(self if is_me else at).add_child(p)
+	return p
 
 
 ## A menu sound: "hover", "click" or "enter" (data/sounds.json "ui").

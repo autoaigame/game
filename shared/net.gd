@@ -128,6 +128,12 @@ func resynced() -> void:
 	_forward("on_resynced", [])
 
 
+## Player `peer_id` whistled near this one (not sent to the one who whistled: it hears its own at once).
+@rpc("authority", "call_remote", "reliable")
+func whistled(peer_id: int) -> void:
+	_forward("on_whistled", [peer_id])
+
+
 ## What a player wears, sent when it joins or changes (not in every snapshot).
 @rpc("authority", "call_remote", "reliable")
 func look(peer_id: int, parts: Array) -> void:
