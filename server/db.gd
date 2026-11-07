@@ -11,7 +11,8 @@ func open(path: String) -> bool:
 	if not _db.open_db():
 		push_error("db: cannot open %s: %s" % [path, _db.error_message])
 		return false
-	return _db.query("CREATE TABLE IF NOT EXISTS players (name TEXT PRIMARY KEY, x INTEGER NOT NULL, y INTEGER NOT NULL, updated_at INTEGER NOT NULL);")
+	return _db.query("CREATE TABLE IF NOT EXISTS players (name TEXT PRIMARY KEY, x INTEGER NOT NULL, y INTEGER NOT NULL, updated_at INTEGER NOT NULL);") \
+			and _db.query("CREATE TABLE IF NOT EXISTS stats (name TEXT NOT NULL, key TEXT NOT NULL, value REAL NOT NULL, PRIMARY KEY (name, key));")
 
 
 ## Returns the saved cell (Vector2i) or null if the player is unknown.
@@ -30,6 +31,25 @@ func save_player(player_name: String, cell: Vector2i) -> void:
 		[player_name, cell.x, cell.y, int(Time.get_unix_time_from_system())])
 	if not ok:
 		push_error("db: save failed: %s" % _db.error_message)
+
+
+## A player's saved numbers (hunger, ...): key -> float. {} if none.
+func load_stats(player_name: String) -> Dictionary:
+	_db.query_with_bindings("SELECT key, value FROM stats WHERE name = ?;", [player_name])
+	var out := {}
+	for row in _db.query_result:
+		out[String(row["key"])] = float(row["value"])
+	return out
+
+
+func save_stats(player_name: String, stats: Dictionary) -> void:
+	for key in stats:
+		var ok := _db.query_with_bindings(
+			"INSERT INTO stats (name, key, value) VALUES (?, ?, ?) "
+			+ "ON CONFLICT(name, key) DO UPDATE SET value = excluded.value;",
+			[player_name, String(key), float(stats[key])])
+		if not ok:
+			push_error("db: save stats failed: %s" % _db.error_message)
 
 
 func close() -> void:
