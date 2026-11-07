@@ -7,6 +7,9 @@ const TAGLINE := "un seul monde, qui ne s'arrête jamais"
 const NAME_LABEL := "Ton nom"
 const NAME_PLACEHOLDER := "ex. Corbeau_42"
 const NAME_HINT := "Lettres, chiffres, _ et - (%d au plus)"
+## In-game HUD (client/hud.gd).
+const HUNGER := "Faim"
+const STARVING := "Affamé : tu marches plus lentement"
 const ENTER := "Entrer dans le monde"
 const SETTINGS := "Paramètres"
 

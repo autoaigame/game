@@ -58,3 +58,9 @@ func creatures(list: Array) -> void:
 @rpc("authority", "call_remote", "reliable")
 func marks(list: Array) -> void:
 	_forward("on_marks", [list])
+
+
+## The player's own status ({hunger: int}): sent on join and when it changes.
+@rpc("authority", "call_remote", "reliable")
+func status(values: Dictionary) -> void:
+	_forward("on_status", [values])

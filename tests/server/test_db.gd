@@ -49,3 +49,16 @@ func test_injection_name_round_trips() -> void:
 	assert_eq(db.load_player(evil), Vector2i(1, 2))
 	assert_eq(db.load_player("bob"), Vector2i(7, 7))
 	db.close()
+
+
+func test_stats_round_trip() -> void:
+	var db := _db()
+	db.open(_tmp_path())
+	assert_eq(db.load_stats("ann"), {})
+	db.save_stats("ann", {"hunger": 42.5})
+	assert_eq(db.load_stats("ann"), {"hunger": 42.5})
+	db.save_stats("ann", {"hunger": 10.0})
+	assert_eq(db.load_stats("ann"), {"hunger": 10.0})
+	db.save_stats("x'); DROP TABLE stats;--", {"hunger": 1.0})
+	assert_eq(db.load_stats("ann"), {"hunger": 10.0})
+	db.close()

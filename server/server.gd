@@ -5,10 +5,12 @@ extends Node
 const SAVE_INTERVAL_S := 10.0
 const DOG := preload("res://server/dog.gd")
 const MARKS := preload("res://server/marks.gd")
+const HUNGER := preload("res://server/hunger.gd")
 
 var _db: RefCounted
 var _net: Node
-## peer_id -> {name: String, pos: Vector2, target: Vector2, stopped: bool, dog: server/dog.gd record}
+## peer_id -> {name, pos: Vector2, target: Vector2i, stopped: bool, dog: server/dog.gd record,
+## hunger: float, sent: what the client was last told of its status}
 var _players := {}
 var _marks: Dictionary = MARKS.new_marks()
 var _marks_changed := false
@@ -46,7 +48,7 @@ func _process(delta: float) -> void:
 	if _save_acc >= SAVE_INTERVAL_S:
 		_save_acc = 0.0
 		for p in _players.values():
-			_db.save_player(p["name"], Protocol.cell_of(p["pos"]))
+			_save(p)
 
 
 func on_join(peer_id: int, player_name: String) -> void:
@@ -59,12 +61,24 @@ func on_join(peer_id: int, player_name: String) -> void:
 		_net.rejected.rpc_id(peer_id, problem)
 		return
 	var cell := join_cell(_db.load_player(player_name))
-	var dog_pos := Vector2(DOG.spot_near(cell, cell + Vector2i(1, 1)))
-	_players[peer_id] = {"name": player_name, "pos": Vector2(cell), "target": Vector2(cell), "stopped": false,
-			"dog": DOG.new_dog(dog_pos, hash(player_name))}
+	_players[peer_id] = _new_player(player_name, cell, _db.load_stats(player_name))
 	_net.welcome.rpc_id(peer_id, peer_id, cell)
 	_net.marks.rpc_id(peer_id, MARKS.snapshot(_marks))
+	_net.status.rpc_id(peer_id, _status_to_send(_players[peer_id]))
 	print("server: %s joined at %s" % [player_name, cell])
+
+
+## A joined player's record at `cell`, with their dog and their saved stats (hunger: full if none).
+func _new_player(player_name: String, cell: Vector2i, stats: Dictionary) -> Dictionary:
+	var dog_pos := Vector2(DOG.spot_near(cell, cell + Vector2i(1, 1)))
+	return {"name": player_name, "pos": Vector2(cell), "target": Vector2(cell), "stopped": false,
+			"dog": DOG.new_dog(dog_pos, hash(player_name)), "hunger": float(stats.get("hunger", HUNGER.MAX)),
+			"sent": {}}
+
+
+func _save(p: Dictionary) -> void:
+	_db.save_player(p["name"], Protocol.cell_of(p["pos"]))
+	_db.save_stats(p["name"], {"hunger": p["hunger"]})
 
 
 ## Where a joining player appears: its saved cell, or the walkable cell nearest to it if the map
@@ -95,12 +109,13 @@ func _on_peer_disconnected(peer_id: int) -> void:
 	if not _players.has(peer_id):
 		return
 	var p: Dictionary = _players[peer_id]
-	_db.save_player(p["name"], Protocol.cell_of(p["pos"]))
+	_save(p)
 	_players.erase(peer_id)
 	print("server: %s left" % p["name"])
 
 
 func _step(dt: float) -> void:
+	_tick_hunger(dt)
 	_move_players(dt)
 	_move_dogs(dt)
 	if MARKS.tick(_marks, dt):
@@ -113,6 +128,9 @@ func _step(dt: float) -> void:
 	for id in _players:
 		_net.snapshot.rpc_id(id, snap)
 		_net.creatures.rpc_id(id, creatures)
+		var status := _status_to_send(_players[id])
+		if not status.is_empty():
+			_net.status.rpc_id(id, status)
 	if _marks_changed:
 		_marks_changed = false
 		var marks := MARKS.snapshot(_marks)
@@ -150,13 +168,28 @@ func _creature_snapshot() -> Array:
 func _move_players(dt: float) -> void:
 	for p in _players.values():
 		if not p["stopped"]:
-			p["pos"] = Protocol.step_towards(p["pos"], p["target"], dt)
+			p["pos"] = Protocol.step_towards(p["pos"], p["target"], dt * HUNGER.speed_factor(p.get("hunger", HUNGER.MAX)))
+
+
+func _tick_hunger(dt: float) -> void:
+	for p in _players.values():
+		p["hunger"] = HUNGER.tick(p.get("hunger", HUNGER.MAX), dt)
+
+
+## What the player's client should be told of their own status ({hunger: int}), or {} if it already
+## shows it. Remembers what was sent.
+func _status_to_send(p: Dictionary) -> Dictionary:
+	var now := {"hunger": roundi(p["hunger"])}
+	if now == p["sent"]:
+		return {}
+	p["sent"] = now
+	return now
 
 
 func _exit_tree() -> void:
 	if _db != null:
 		for p in _players.values():
-			_db.save_player(p["name"], Protocol.cell_of(p["pos"]))
+			_save(p)
 		_db.close()
 
 
