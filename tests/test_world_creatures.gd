@@ -54,3 +54,16 @@ func test_creature_faces_its_way() -> void:
 		view._animate_creatures(0.1)
 	assert_true(node.scale.x > 0.0, "faces right")
 	view.free()
+
+
+## The dog is drawn from its sprite sheet, and walks while it moves.
+func test_dog_uses_its_sprite_sheet() -> void:
+	var view := _view()
+	view.client.creatures_received.emit([{"id": 1, "kind": "dog", "owner": 1, "pos": Vector2(5, 5)}])
+	var sprite: Sprite2D = view._creatures[1]["node"].get_node("Sprite")
+	assert_eq(sprite.texture.resource_path, "res://assets/dog.png")
+	assert_eq(sprite.frame_coords.y, DogAnim.row_of("idle"))
+	view.client.creatures_received.emit([{"id": 1, "kind": "dog", "owner": 1, "pos": Vector2(7, 5)}])
+	view._animate_creatures(0.1)
+	assert_true(sprite.frame_coords.y in [DogAnim.row_of("walk"), DogAnim.row_of("run")], "walking")
+	view.free()

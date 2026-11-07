@@ -1004,3 +1004,12 @@ prompt = "Style: Dark ambient instrumental for a post-apocalyptic title screen. 
 license = "LicenseRef-Suno-in-game-only"
 note = "Generated with Suno; may be used only inside this game, not on its own or in a music library."
 source = ""
+
+[[asset]]
+path = "assets/dog.png"
+author = "vitteloil"
+origin = "original"
+tool = "drawn by script: art/dog_sheet.gd (make art), Godot 4.7.2; written with Claude Code (anthropic/claude-opus-5-5)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
