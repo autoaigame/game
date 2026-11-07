@@ -17,6 +17,27 @@
 				36,
 				47
 			]
+		},
+		{
+			"file": "res://assets/objects/stump_2.png",
+			"anchor_px": [
+				33,
+				54
+			]
+		},
+		{
+			"file": "res://assets/objects/stump_3.png",
+			"anchor_px": [
+				32,
+				43
+			]
+		},
+		{
+			"file": "res://assets/objects/stump_4.png",
+			"anchor_px": [
+				33,
+				43
+			]
 		}
 	],
 	"densities": {

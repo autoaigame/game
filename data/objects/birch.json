@@ -10,6 +10,34 @@
 				73,
 				236
 			]
+		},
+		{
+			"file": "res://assets/objects/birch_1.png",
+			"anchor_px": [
+				76,
+				237
+			]
+		},
+		{
+			"file": "res://assets/objects/birch_2.png",
+			"anchor_px": [
+				95,
+				244
+			]
+		},
+		{
+			"file": "res://assets/objects/birch_3.png",
+			"anchor_px": [
+				104,
+				240
+			]
+		},
+		{
+			"file": "res://assets/objects/birch_4.png",
+			"anchor_px": [
+				54,
+				158
+			]
 		}
 	],
 	"densities": {

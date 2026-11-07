@@ -512,3 +512,165 @@ tool = "drawn pixel by pixel (XPM) by an AI agent (Claude), palette terne surviv
 prompt = ""
 license = "CC0-1.0"
 source = ""
+
+[[asset]]
+path = "assets/objects/oak_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (256 px, top-down view, 40-colour muted palette, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped"
+prompt = "large realistic old gnarled oak tree filling the canvas, wide spreading crown with gaps, one broken dead bare branch sticking out on the left, uneven muted olive-green foliage in soft clumps, thick twisted grey-brown bark trunk with roots at the base, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/oak_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (256 px, top-down view, 40-colour muted palette, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped"
+prompt = "tall realistic oak tree filling the canvas height, tall oval crown made of a few large separate clumps of muted olive-green foliage, trunk forking into two main limbs halfway up with visible branches between the clumps, grey-brown bark, small roots at the base, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/oak_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (256 px, top-down view, 40-colour muted palette, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped"
+prompt = "realistic oak tree leaning slightly to the right, broad asymmetric crown heavier on one side, low long horizontal branches, dense dark muted olive-green foliage, thick grey-brown bark trunk with roots at the base, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/oak_4.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (192 px, top-down view, 40-colour muted palette, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped"
+prompt = "young realistic oak tree filling the canvas, slender straight grey-brown trunk, small rounded crown of muted olive-green foliage in soft clumps, thin branches, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/fir_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (256 px, top-down view, 40-colour muted palette, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped"
+prompt = "tall realistic scots pine tree filling the canvas height, long bare straight orange-brown upper trunk, flat irregular umbrella crown of dark muted green needle clumps at the top, a few short dead branch stubs lower down, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/fir_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (256 px, top-down view, 40-colour muted palette, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped"
+prompt = "tall realistic old spruce fir tree filling the canvas height, ragged asymmetric uneven cone with gaps, lower branches dead and bare grey, dark muted green needle branches higher up, slightly crooked top, grey-brown trunk visible at the base, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/fir_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (256 px, top-down view, 40-colour muted palette, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped; the bluish water-ramp colours recoloured to the matching olive-ramp colours of the same palette (283a3b>3b4530, 34494a>4d5638, 45605d>616a43, 5f7a74>767d52); foot set by hand at the centre of the branch skirt (no trunk visible), 6 px above its lowest tip"
+prompt = "realistic dense wide spruce tree filling the canvas, broad full cone with heavy drooping branches sweeping down to the ground hiding the trunk, dark blue-green muted needles, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/fir_4.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (192 px, top-down view, 40-colour muted palette, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped"
+prompt = "young realistic fir tree filling the canvas, narrow slim cone of layered dark muted green needle branches, sparse with gaps showing the thin grey-brown trunk, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/birch_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (256 px, top-down view, 40-colour muted palette, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped"
+prompt = "realistic birch tree filling the canvas height, two slender pale grey-white trunks growing from one base and parting in a V, dark bark marks, light airy muted olive-yellow foliage in loose clumps on both stems, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/birch_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (256 px, top-down view, 40-colour muted palette, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped"
+prompt = "tall realistic weeping birch tree filling the canvas height, slender pale grey-white trunk with dark bark marks, long thin drooping hanging branches with curtains of small muted olive-green leaves, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/birch_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (256 px, top-down view, 40-colour muted palette, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped"
+prompt = "tall realistic old birch tree filling the canvas height, pale grey-white trunk with many dark bark marks, slightly leaning, broken dead top, half bare with thin dead twigs and only a few sparse clumps of muted olive-yellow foliage, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/birch_4.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (192 px, top-down view, 40-colour muted palette, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped"
+prompt = "young realistic birch sapling tree filling the canvas, thin pale grey-white trunk with dark bark marks, small light airy crown of muted olive-yellow foliage in loose clumps, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/bush_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (64 px, top-down view, 40-colour muted palette, 16 candidates from per-item descriptions, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background Item: low wide spreading wild shrub bush, loose irregular muted olive-green leaves, a few bare twigs"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/bush_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (64 px, top-down view, 40-colour muted palette, 16 candidates from per-item descriptions, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background Item: dry half-bare shrub, thin brown twigs with sparse dull yellow-olive leaves"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/bush_4.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (64 px, top-down view, 40-colour muted palette, 16 candidates from per-item descriptions, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background Item: tall upright wild bush with a few muted olive-green leafy stems"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/stump_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (64 px, top-down view, 40-colour muted palette, 16 candidates from per-item descriptions, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background Item: old broken tree stump with a jagged splintered top, grey-brown bark, small roots, low"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/stump_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (64 px, top-down view, 40-colour muted palette, 16 candidates from per-item descriptions, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background Item: old rotting tree stump covered with dull green moss, grey-brown bark, small roots, low"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/stump_4.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (64 px, top-down view, 40-colour muted palette, 16 candidates from per-item descriptions, seed not returned by the tool); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse rgba(20,22,16,0.38) drawn under it (radius 0.42 x width x species factor, kept within 0.6-1.15 x the first sprite's), text and time chunks stripped"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background Item: hollow decayed tree stump, dark hollow top, grey-brown bark, small roots, low"
+license = "CC0-1.0"
+source = ""
