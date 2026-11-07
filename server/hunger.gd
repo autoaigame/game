@@ -14,3 +14,8 @@ static func tick(hunger: float, dt: float) -> float:
 ## Multiplier of the walking speed (1 unless starving).
 static func speed_factor(hunger: float) -> float:
 	return STARVING_SPEED if hunger <= 0.0 else 1.0
+
+
+## Hunger after eating something worth `food` points, at most MAX.
+static func fed(hunger: float, food: int) -> float:
+	return minf(hunger + food, MAX)

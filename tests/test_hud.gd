@@ -10,6 +10,10 @@ class FakeClient:
 	signal inventory_received(items: Dictionary)
 	signal notice_received(key: String, args: Dictionary)
 	var my_peer_id := 0
+	var eaten: Array = []
+
+	func request_eat(item: String) -> void:
+		eaten.append(item)
 
 
 func _hud() -> CanvasLayer:
@@ -72,4 +76,15 @@ func test_notice_shows_then_fades() -> void:
 	assert_true(hud.notice_label().text.contains("2"), hud.notice_label().text)
 	hud._age_notice(hud.NOTICE_S + 0.1)
 	assert_false(hud.notice_label().visible)
+	hud.free()
+
+
+## Food rows have an "eat" button that asks the server; other items do not.
+func test_eat_button_on_food() -> void:
+	var hud := _hud()
+	hud.client.inventory_received.emit({"berries": 3})
+	var btn: Button = hud.eat_button("berries")
+	assert_true(btn != null, "berries can be eaten")
+	btn.pressed.emit()
+	assert_eq(hud.client.eaten, ["berries"])
 	hud.free()
