@@ -1,8 +1,8 @@
 ## A player's dog: follows its owner and lives its life near them. Pure functions on a dog record, run
 ## by the server each tick (server only: the web build never loads this file). The dog moves like a
 ## player, through Protocol.step_towards, so it never stands on a non-walkable cell (invariant 2).
-## States (sent to clients as its pose): follow, idle, sniff, sit, sleep, to_pee, pee.
-## update() returns events for the server: {kind: "pee", pos} when it leaves a mark.
+## States (sent to clients as its pose): follow, idle, sniff, sit, sleep, to_pee, pee, dig.
+## update() returns events for the server: {kind: "pee" or "hole", pos} when it leaves a mark.
 extends RefCounted
 
 ## The dog starts after its owner farther than this, in cells, and stops once within FOLLOW_STOP.
@@ -38,6 +38,13 @@ const PEE_RADIUS := 4
 const PEE_CHANCE := 0.3
 const PEE_S := 2.0
 const PEE_MARK_S := 60.0
+
+## Now and then, instead of sniffing, the dog digs where it stands for DIG_S seconds, on natural
+## ground (DIG_GROUNDS) with no object. The hole lasts HOLE_MARK_S.
+const DIG_GROUNDS: Array[String] = ["grass", "dry_grass", "forest_floor", "packed_dirt", "sand"]
+const DIG_CHANCE := 0.15
+const DIG_S := 4.0
+const HOLE_MARK_S := 180.0
 
 const _NEIGHBOURS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(0, -1),
 		Vector2i(1, 1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(-1, -1)]
@@ -85,6 +92,9 @@ static func update(dog: Dictionary, owner_pos: Vector2, dt: float) -> Array:
 		"to_pee", "pee":
 			dog["stuck"] = 0.0
 			_pee(dog, dt, events)
+		"dig":
+			dog["stuck"] = 0.0
+			_dig(dog, dt, events)
 		_:
 			dog["stuck"] = 0.0
 			_awake_near(dog, owner_pos, dt)
@@ -119,6 +129,30 @@ static func start_pee(dog: Dictionary, owner_pos: Vector2) -> bool:
 	dog["tree"] = tree
 	dog["goal"] = spot
 	return true
+
+
+## Whether the dog may dig on `cell`: natural ground (DIG_GROUNDS) with no object on it.
+static func can_dig(cell: Vector2i) -> bool:
+	return WorldData.tile(MapData.tile_at(cell))["id"] in DIG_GROUNDS and MapData.object_at(cell) == ""
+
+
+## Starts digging where the dog stands; false if the ground there cannot be dug.
+static func start_dig(dog: Dictionary) -> bool:
+	if not can_dig(Protocol.cell_of(dog["pos"])):
+		return false
+	dog["state"] = "dig"
+	dog["dig_left"] = DIG_S
+	dog["goal"] = null
+	return true
+
+
+static func _dig(dog: Dictionary, dt: float, events: Array) -> void:
+	dog["dig_left"] -= dt
+	if dog["dig_left"] > 0.0:
+		return
+	events.append({"kind": "hole", "pos": dog["pos"]})
+	dog["state"] = "idle"
+	dog["wander_in"] = (dog["rng"] as RandomNumberGenerator).randf_range(WANDER_MIN_S, WANDER_MAX_S)
 
 
 ## Walks next to the tree, then lifts its leg for PEE_S and leaves a mark between it and the tree.
@@ -158,7 +192,7 @@ static func _choose_state(dog: Dictionary, gap: float) -> void:
 		"sit", "sleep":
 			if gap > WAKE_GAP or dog["rest"] == 0.0:
 				dog["state"] = "follow" if gap > FOLLOW_START else "idle"
-		"to_pee", "pee":
+		"to_pee", "pee", "dig":
 			if gap > WAKE_GAP:
 				dog["state"] = "follow"
 				dog["goal"] = null
@@ -199,7 +233,10 @@ static func _awake_near(dog: Dictionary, owner_pos: Vector2, dt: float) -> void:
 	if dog["wander_in"] > 0.0:
 		return
 	dog["wander_in"] = rng.randf_range(WANDER_MIN_S, WANDER_MAX_S)
-	if rng.randf() < PEE_CHANCE and start_pee(dog, owner_pos):
+	var roll := rng.randf()
+	if roll < PEE_CHANCE and start_pee(dog, owner_pos):
+		return
+	if roll >= 1.0 - DIG_CHANCE and start_dig(dog):
 		return
 	var owner_cell := Protocol.cell_of(owner_pos)
 	for i in 8:
