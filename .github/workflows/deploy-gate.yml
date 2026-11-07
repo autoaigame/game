@@ -4,7 +4,10 @@
 # it reads the PR's file list and patches through the API, as data.
 # The OpenRouter key is only exposed to the single step that calls the model,
 # and the model never sees it (it is sent as an HTTP header, not in the prompt).
-name: deploy-gate
+# The workflow name marks runs of this version: every copy named "deploy-gate (main)" refuses PRs
+# to other branches, so the deployer can trust a fork's run (which GitHub lists without its PR)
+# by name. Keep the name and the base check below together.
+name: deploy-gate (main)
 
 on:
   pull_request_target:
@@ -44,6 +47,9 @@ jobs:
               const { data } = await github.rest.repos.getContent({ owner, repo, path, ref: context.sha });
               return Buffer.from(data.content, 'base64').toString('utf8');
             };
+            // Only PRs to main get a preview. A PR to another branch runs that branch's copy of this
+            // gate; refusing here keeps every run named "deploy-gate (main)" a run for a PR to main.
+            if (pr.base.ref !== 'main') return refuse([`base is \`${pr.base.ref}\`: only PRs to \`main\` get a preview`]);
             const rules = JSON.parse(await fromBase('.github/deploy-gate/rules.json'));
             const prompt = await fromBase('.github/deploy-gate/prompt.md');
 
