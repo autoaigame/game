@@ -22,7 +22,7 @@ func test_a_long_frame_gap_is_a_pause() -> void:
 func test_stale_updates_are_dropped_until_resynced() -> void:
 	var c := _client()
 	var asked := [0]
-	c.send_resync = func(): asked[0] += 1
+	c.resync_requested.connect(func(): asked[0] += 1)
 	var got := []
 	c.snapshot_received.connect(func(p): got.append("snapshot"))
 	c.creatures_received.connect(func(p): got.append("creatures"))
@@ -51,7 +51,6 @@ func test_stale_updates_are_dropped_until_resynced() -> void:
 ## If the marker never comes (lost connection, old server), updates show again after a while.
 func test_resync_gives_up_after_a_while() -> void:
 	var c := _client()
-	c.send_resync = func(): pass
 	var got := []
 	c.snapshot_received.connect(func(p): got.append(1))
 	c.begin_resync()
@@ -69,7 +68,7 @@ func test_no_resync_before_joining() -> void:
 	var c := _client()
 	c.my_peer_id = 0
 	var asked := [0]
-	c.send_resync = func(): asked[0] += 1
+	c.resync_requested.connect(func(): asked[0] += 1)
 	c.begin_resync()
 	assert_eq(asked[0], 0)
 	c.free()

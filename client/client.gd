@@ -31,8 +31,8 @@ const RESYNC_TIMEOUT_S := 3.0
 const INBOUND_BUFFER := 1 << 21
 const MAX_QUEUED_PACKETS := 8192
 
-## Asks the server for a resync (set in _ready; tests replace it).
-var send_resync: Callable
+## Emitted to ask the server for a resync (connected to the RPC in _ready).
+signal resync_requested
 
 var _net: Node
 var _resync_left := 0.0  ## > 0 while waiting for "resynced": updates received meanwhile are stale
@@ -46,7 +46,7 @@ func _ready() -> void:
 	if server_url == "":
 		server_url = _default_url()
 	get_tree().multiplayer_poll = false  # polled in _process, after checking for a pause
-	send_resync = func(): _net.resync.rpc_id(1)
+	resync_requested.connect(func(): _net.resync.rpc_id(1))
 	var peer := new_peer()
 	var err := peer.create_client(server_url)
 	if err != OK:
@@ -118,7 +118,7 @@ func begin_resync() -> void:
 	if my_peer_id == 0:
 		return
 	_resync_left = RESYNC_TIMEOUT_S
-	send_resync.call()
+	resync_requested.emit()
 
 
 func tick_resync(dt: float) -> void:

@@ -102,7 +102,18 @@ func on_resync(peer_id: int) -> void:
 	if _net == null:
 		return
 	for m in _resync_messages(peer_id):
-		_net.callv("rpc_id", [peer_id, m[0]] + m[1])
+		var args: Array = m[1]
+		match m[0]:
+			"resynced":
+				_net.resynced.rpc_id(peer_id)
+			"marks":
+				_net.marks.rpc_id(peer_id, args[0])
+			"status":
+				_net.status.rpc_id(peer_id, args[0])
+			"inventory":
+				_net.inventory.rpc_id(peer_id, args[0])
+			"look":
+				_net.look.rpc_id(peer_id, args[0], args[1])
 
 
 ## What a resync sends a player, in order, as [rpc name, args]: first the "resynced" marker (the
