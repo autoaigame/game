@@ -21,8 +21,8 @@ func join(player_name: String) -> void:
 
 
 @rpc("any_peer", "call_remote", "unreliable_ordered")
-func move_to(cell: Vector2i) -> void:
-	_forward("on_move_to", [multiplayer.get_remote_sender_id(), cell])
+func move_to(target: Vector2) -> void:
+	_forward("on_move_to", [multiplayer.get_remote_sender_id(), target])
 
 
 @rpc("any_peer", "call_remote", "reliable")

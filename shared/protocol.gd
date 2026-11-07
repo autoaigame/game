@@ -28,13 +28,13 @@ static func cell_of(pos: Vector2) -> Vector2i:
 	return Vector2i(roundi(pos.x), roundi(pos.y))
 
 
-## Moves pos towards target at SPEED_CELLS_PER_S for dt seconds, in small sub-steps,
-## stopping at the last position whose cell is walkable. A sub-step that changes cell diagonally also
+## Moves pos towards target (any point, not only a cell center) at SPEED_CELLS_PER_S for dt seconds,
+## in small sub-steps, stopping at the last position whose cell is walkable. A sub-step that changes cell diagonally also
 ## needs both cells beside it walkable, so nobody slips through the corner of a water cell. Never
 ## overshoots the target.
-static func step_towards(pos: Vector2, target: Vector2i, dt: float) -> Vector2:
+static func step_towards(pos: Vector2, target: Vector2, dt: float) -> Vector2:
 	const SUBSTEP := 0.1
-	var goal := Vector2(target)
+	var goal := target
 	var budget := SPEED_CELLS_PER_S * dt
 	while budget > 0.0:
 		var to_goal := goal - pos
@@ -43,7 +43,7 @@ static func step_towards(pos: Vector2, target: Vector2i, dt: float) -> Vector2:
 			return goal
 		var step := minf(minf(budget, SUBSTEP), dist)
 		var next := pos + to_goal / dist * step
-		if not _can_enter(cell_of(pos), cell_of(next)):
+		if not can_enter(cell_of(pos), cell_of(next)):
 			return pos
 		pos = goal if is_equal_approx(step, dist) else next
 		budget -= step
@@ -51,7 +51,7 @@ static func step_towards(pos: Vector2, target: Vector2i, dt: float) -> Vector2:
 
 
 ## Whether a sub-step may go from cell `from` into cell `to` (equal or neighbours).
-static func _can_enter(from: Vector2i, to: Vector2i) -> bool:
+static func can_enter(from: Vector2i, to: Vector2i) -> bool:
 	if not MapData.is_walkable(to):
 		return false
 	if from.x != to.x and from.y != to.y:

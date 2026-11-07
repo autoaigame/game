@@ -6,7 +6,7 @@ const SAVE_INTERVAL_S := 10.0
 
 var _db: RefCounted
 var _net: Node
-## peer_id -> {name: String, pos: Vector2, target: Vector2i, stopped: bool}
+## peer_id -> {name: String, pos: Vector2, target: Vector2, stopped: bool}
 var _players := {}
 var _tick_acc := 0.0
 var _save_acc := 0.0
@@ -55,7 +55,7 @@ func on_join(peer_id: int, player_name: String) -> void:
 		_net.rejected.rpc_id(peer_id, problem)
 		return
 	var cell := join_cell(_db.load_player(player_name))
-	_players[peer_id] = {"name": player_name, "pos": Vector2(cell), "target": cell, "stopped": false}
+	_players[peer_id] = {"name": player_name, "pos": Vector2(cell), "target": Vector2(cell), "stopped": false}
 	_net.welcome.rpc_id(peer_id, peer_id, cell)
 	print("server: %s joined at %s" % [player_name, cell])
 
@@ -71,9 +71,10 @@ static func join_cell(saved: Variant) -> Vector2i:
 	return near if near != null else MapData.spawn_cell()
 
 
-func on_move_to(peer_id: int, cell: Vector2i) -> void:
-	if _players.has(peer_id) and MapData.is_walkable(cell):
-		_players[peer_id]["target"] = cell
+## target is any point in cell units. Refused unless it is a real number on a walkable cell.
+func on_move_to(peer_id: int, target: Vector2) -> void:
+	if _players.has(peer_id) and target.is_finite() and MapData.is_walkable(Protocol.cell_of(target)):
+		_players[peer_id]["target"] = target
 		_players[peer_id]["stopped"] = false
 
 
