@@ -147,4 +147,4 @@ func test_tiles_declare_variants() -> void:
 	for t in WorldData.tiles():
 		assert_true(t["full_variants"] >= 1 and t["full_variants"] <= IsoLayer.MAX_FULL_VARIANTS, t["id"])
 		assert_eq(t["mask_variants"], 1, "variants per mask are not implemented yet: " + t["id"])
-	assert_eq(WorldData.tile(WorldData.tile_index("grass"))["full_variants"], 4)
+	assert_eq(WorldData.tile(WorldData.tile_index("grass"))["full_variants"], 15)

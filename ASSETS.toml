@@ -2,10 +2,10 @@
 
 [[asset]]
 path = "assets/tiles.png"
-author = "vitteloil, M3t4Data"
+author = "M3t4Data"
 origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
+tool = "PixelLab create_tiles_pro (isometric tilesets of ground pairs, then style variations), assembled and cut into per-ground alpha masks by script"
+prompt = "<A> to <B> transition: ..., irregular organic curving border (no straight edges), <band>. Realistic muted natural colours, fine subtle detail, soft light from the top-left, no outlines, no cartoon look. Flat ground. / 8 variations of the same <soil>: ... Seamless flat ground texture, no border, no rim, texture continues past the tile edges, subtle variation only, same colours and brightness as the reference."
 license = "CC0-1.0"
 source = ""
 

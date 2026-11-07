@@ -8,7 +8,7 @@ const TILE_SIZE := Vector2i(96, 48)
 ## (column 15 = full tile, variant 0). Columns 16 and up: the other variants of the full tile.
 const TILES_ATLAS := "res://assets/tiles.png"
 const MASK_COLUMNS := 16
-const MAX_FULL_VARIANTS := 8  ## data/tiles "full_variants" at most
+const MAX_FULL_VARIANTS := 17  ## data/tiles "full_variants" at most
 const ATLAS_COLUMNS := MASK_COLUMNS + MAX_FULL_VARIANTS - 1
 ## Object sprites (data/objects "sprite"): the object's cell centre is this many px above the bottom
 ## edge of its image, horizontally centred.
