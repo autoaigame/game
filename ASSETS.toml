@@ -1081,7 +1081,7 @@ source = ""
 path = "assets/character/body.glb"
 author = "Quaternius (mannequin, skeleton and animations); M3t4Data (proportions, regions, colours)"
 origin = "third-party"
-tool = "Universal Animation Library (Standard) by Quaternius, AnimationLibrary_Godot_Standard.glb, modified by script (art/character/body.py, Blender 5.2.3 LTS): rest pose reshaped into a sturdy adult on the same skeleton (bone lengths and widths, head a quarter of the height, hands and feet), mesh moved by its own skin weights, clips idle, walk, jog and sprint adapted (hips location scaled, upper arms rotated outwards, hips lifted where a foot would sink), mesh cut along straight lines into body regions coloured in flat kit-palette colours"
+tool = "Universal Animation Library (Standard) by Quaternius, AnimationLibrary_Godot_Standard.glb, modified by script (art/character/body.py, Blender 5.2.3 LTS): rest pose reshaped into a sturdy adult on the same skeleton (bone lengths and widths, head a quarter of the height, hands and feet), mesh moved by its own skin weights, clips idle, walk, jog and sprint adapted (hips location scaled, upper arms rotated outwards, hips lifted where a foot would sink), mesh cut along straight lines into body regions coloured in flat kit-palette colours; shape keys for the stocky and lean body shapes, from the same mannequin reshaped with other proportions"
 prompt = ""
 license = "CC0-1.0"
 source = "https://opengameart.org/content/universal-animation-library (also https://quaternius.com/packs/universalanimationlibrary.html)"
@@ -1094,3 +1094,129 @@ tool = "art/character/body.py (Blender 5.2.3 LTS): clip durations, ground speed 
 prompt = ""
 license = "CC0-1.0"
 source = ""
+
+[[asset]]
+path = "assets/character/parts/top_tshirt.glb"
+author = "Quaternius (the body mesh it is cut from); M3t4Data (the part)"
+origin = "third-party"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): the body's torso and upper-arm faces pushed out 16 mm along the normals, with their skin weights and the body shapes' shape keys, one flat kit-palette colour"
+prompt = ""
+license = "CC0-1.0"
+source = "https://opengameart.org/content/universal-animation-library"
+
+[[asset]]
+path = "assets/character/parts/jacket_field.glb"
+author = "Quaternius (the body mesh it is cut from); M3t4Data (the part)"
+origin = "third-party"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): the body's torso and arm faces, open down the front, pushed out 30 mm along the normals, with their skin weights and the body shapes' shape keys, one flat kit-palette colour"
+prompt = ""
+license = "CC0-1.0"
+source = "https://opengameart.org/content/universal-animation-library"
+
+[[asset]]
+path = "assets/character/parts/bottom_jeans.glb"
+author = "Quaternius (the body mesh it is cut from); M3t4Data (the part)"
+origin = "third-party"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): the body's hip and leg faces pushed out 14 mm along the normals, with their skin weights and the body shapes' shape keys, one flat kit-palette colour"
+prompt = ""
+license = "CC0-1.0"
+source = "https://opengameart.org/content/universal-animation-library"
+
+[[asset]]
+path = "assets/character/parts/bottom_shorts.glb"
+author = "Quaternius (the body mesh it is cut from); M3t4Data (the part)"
+origin = "third-party"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): the body's hip and thigh faces pushed out 12 mm along the normals, with their skin weights and the body shapes' shape keys, one flat kit-palette colour"
+prompt = ""
+license = "CC0-1.0"
+source = "https://opengameart.org/content/universal-animation-library"
+
+[[asset]]
+path = "assets/character/parts/feet_boots.glb"
+author = "Quaternius (the body mesh it is cut from); M3t4Data (the part)"
+origin = "third-party"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): the body's foot faces pushed out 17 mm along the normals, with their skin weights and the body shapes' shape keys, one flat kit-palette colour"
+prompt = ""
+license = "CC0-1.0"
+source = "https://opengameart.org/content/universal-animation-library"
+
+[[asset]]
+path = "assets/character/parts/hair_short.glb"
+author = "Quaternius (the body mesh it is cut from); M3t4Data (the part)"
+origin = "third-party"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): the body's scalp and nape faces pushed out 12 mm, in the head bone's space, one flat kit-palette colour"
+prompt = ""
+license = "CC0-1.0"
+source = "https://opengameart.org/content/universal-animation-library"
+
+[[asset]]
+path = "assets/character/parts/hair_long.glb"
+author = "Quaternius (the body mesh it is cut from); M3t4Data (the part)"
+origin = "third-party"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): the body's scalp and nape faces pushed out 14 mm and a bevelled box down the back of the head, in the head bone's space, one flat kit-palette colour"
+prompt = ""
+license = "CC0-1.0"
+source = "https://opengameart.org/content/universal-animation-library"
+
+[[asset]]
+path = "assets/character/parts/hair_long_under.glb"
+author = "M3t4Data"
+origin = "original"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): the back box of hair_long, below a hat's rim, in the head bone's space"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/character/parts/beard_full.glb"
+author = "Quaternius (the body mesh it is cut from); M3t4Data (the part)"
+origin = "third-party"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): the body's chin and jaw faces pushed out 14 mm, in the head bone's space, one flat kit-palette colour"
+prompt = ""
+license = "CC0-1.0"
+source = "https://opengameart.org/content/universal-animation-library"
+
+[[asset]]
+path = "assets/character/parts/beard_moustache.glb"
+author = "M3t4Data"
+origin = "original"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): a bevelled box under the nose, in the head bone's space, one flat kit-palette colour"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/character/parts/hat_cap.glb"
+author = "M3t4Data"
+origin = "original"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): a half ellipsoid fitted to the skull above the rim and a bevelled visor, in the head bone's space, one flat kit-palette colour"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/character/parts/hat_beanie.glb"
+author = "M3t4Data"
+origin = "original"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): a half ellipsoid fitted to the skull above the rim and a folded band, in the head bone's space, one flat kit-palette colour"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/character/parts/back_bag.glb"
+author = "M3t4Data"
+origin = "original"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): bevelled boxes and a cylinder (bag, pocket, bedroll) on the upper spine, in that bone's space, three flat kit-palette colours"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/character/parts/beard_short.glb"
+author = "Quaternius (the body mesh it is cut from); M3t4Data (the part)"
+origin = "third-party"
+tool = "art/character/parts.py (Blender 5.2.3 LTS): the body's chin and jaw faces pushed out 7 mm, in the head bone's space, one flat kit-palette colour"
+prompt = ""
+license = "CC0-1.0"
+source = "https://opengameart.org/content/universal-animation-library"

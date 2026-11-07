@@ -1,0 +1,2 @@
+{"id": "bottom_shorts", "slot": "bottom", "name": "Short", "kind": "skinned", "glb": "res://assets/character/parts/bottom_shorts.glb",
+ "hides": ["hips", "legs_upper"], "colors": ["khaki", "olive", "grey", "workwear_blue"]}

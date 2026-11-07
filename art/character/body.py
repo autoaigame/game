@@ -5,7 +5,8 @@
 #   blender -b --python art/character/body.py -- <AnimationLibrary_Godot_Standard.glb> <repo root>
 #
 # Writes assets/character/body.glb (rig, mesh, clips idle, walk, jog, sprint) and
-# assets/character/body_clips.json (what client/character_3d.gd reads). See art/character/BODY.md.
+# assets/character/body_clips.json (what client/character_3d.gd reads), then runs art/character/parts.py
+# (the character parts, on this body). See art/character/BODY.md.
 #
 # How the body is made, without touching the animations' rotations:
 # - every bone gets a 3x3 shape matrix M (length along the bone, width/depth across it, or a uniform scale
@@ -21,7 +22,7 @@
 # Then the mesh is cut along straight lines into one mesh per body region (so a garment can hide the
 # skin it covers), each coloured with the default outfit in flat kit-palette colours, checked (feet on
 # the ground, arms in the torso, legs in each other: printed) and exported.
-import bpy, bmesh, json, math, os, sys
+import bpy, bmesh, json, math, os, re, sys
 import numpy as np
 from mathutils import Vector, Matrix, Quaternion
 from mathutils.bvhtree import BVHTree
@@ -36,6 +37,16 @@ CLIPS = {"Idle_Loop": "idle", "Walk_Loop": "walk", "Jog_Fwd_Loop": "jog", "Sprin
 # clavicle: shoulder bone length (shoulder width); arm_out: outward offset of the upper arms, degrees.
 BODY = dict(head=1 / 5, legs=0.8, spine=0.9, neck=0.65, clavicle=1.06, arms=0.9, arm_thick=1.05,
         leg_thick=1.06, torso=(1.08, 1.04), hips=(1.06, 1.02), hands=1.12, feet=1.1, feet_len=1.0, arm_out=5.0)
+
+# Body shapes (morphologies). BODY ("standard") is the rest pose every part is modelled on; the others are
+# made from it in game, on the same skeleton and rest pose: bones moved and scaled (morphs.json) plus one
+# shape key per body shape ("morph_<id>") on the body and on every skinned part, so clothes follow.
+MORPHS = {
+    "stocky": dict(head=1 / 4, legs=0.62, spine=0.82, neck=0.45, clavicle=1.15, arms=0.78, arm_thick=1.35,
+            leg_thick=1.35, torso=(1.3, 1.2), hips=(1.3, 1.2), hands=1.45, feet=1.3, feet_len=1.0, arm_out=9.0),
+    "lean": dict(head=1 / 6, legs=0.88, spine=0.95, neck=0.8, clavicle=0.98, arms=0.96, arm_thick=0.92,
+            leg_thick=0.93, torso=(0.94, 0.92), hips=(0.93, 0.92), hands=1.05, feet=1.1, feet_len=1.0, arm_out=3.0),
+}
 
 # Body regions, top to bottom, and the default outfit: flat colours of the kit palette (sRGB). A region
 # is one mesh of the glb, named "body_<region>", with one material named after the region.
@@ -272,6 +283,82 @@ def plant(me, rig, dom):
     return lifts
 
 
+def morph_capture(p):
+    """Builds a body shape from the source and returns what the base needs to reach it: the reshaped rest
+    positions of the mesh's vertices (same order as the base's), each bone's new head, and the uniform
+    scales of the head, hands and feet."""
+    me, rig, head_s, dom = build("morph", p)
+    co = np.array([v.co for v in me.data.vertices])
+    heads = {b.name: np.array(b.head_local) for b in rig.data.bones}
+    return {"co": co, "heads": heads, "head_s": head_s, "hands": p["hands"], "feet": p["feet"],
+            "arm_out": p["arm_out"], "height": float(co[:, 2].max())}
+
+
+def bone_scales(m, base_head_s):
+    """Uniform scale of each bone of a body shape relative to the base (children inherit it in game)."""
+    s = {}
+    for side in "LR":
+        s["DEF-hand." + side] = m["hands"] / BODY["hands"]
+        s["DEF-foot." + side] = m["feet"] / BODY["feet"]
+    s["DEF-head"] = m["head_s"] / base_head_s
+    return s
+
+
+MORPH_RIG = {}  ## body shape -> {"base": bone heads, "heads": its bone heads, "cum": scales}, for parts.py
+
+
+def add_morph_keys(me, rig, base_head_s, captured):
+    """One shape key per body shape (first as a point attribute, see keys_from_attributes): where each
+    vertex must start so that the game's bone changes (heads
+    moved, head, hands and feet scaled) carry it onto the reshaped body. With linear blend skinning at rest
+    a bone b moves x to head'_b + c_b (x - head_b) (c_b: its scale times its parents'), so a vertex with
+    weights w lands at C (x + k) + H, C = sum w_b c_b, H = sum w_b (head'_b - c_b head_b); solved for k.
+    Returns morphs.json's data, in glTF axes (+Y up, facing +Z)."""
+    names = {g.index: g.name for g in me.vertex_groups}
+    bones = rig.data.bones
+    base_heads = {b.name: np.array(b.head_local) for b in bones}
+    co = np.array([v.co for v in me.data.vertices])
+    # The game keeps the 4 strongest weights, normalized (glTF).
+    weights = []
+    for v in me.data.vertices:
+        ws = sorted(((g.weight, names[g.group]) for g in v.groups if g.weight > 0), reverse=True)[:4]
+        tot = sum(w for w, _ in ws)
+        weights.append([(w / tot, n) for w, n in ws])
+    gl = lambda a: [round(float(a[0]), 5), round(float(a[2]), 5), round(float(-a[1]), 5)]
+    out = {}
+    for mid, m in captured.items():
+        sc = bone_scales(m, base_head_s)
+        cum = {}
+        for b in bones:  # parents before children
+            cum[b.name] = sc.get(b.name, 1.0) * (cum[b.parent.name] if b.parent else 1.0)
+        MORPH_RIG[mid] = {"base": base_heads, "heads": m["heads"], "cum": cum}
+        # Kept as a point attribute until the mesh is cut into regions: cutting interpolates attributes
+        # on the new vertices, but not shape keys.
+        attr = me.data.attributes.new("morph_" + mid, "FLOAT_VECTOR", "POINT")
+        for i, ws in enumerate(weights):
+            C = sum(w * cum[n] for w, n in ws)
+            H = sum((w * (m["heads"][n] - cum[n] * base_heads[n]) for w, n in ws), np.zeros(3))
+            attr.data[i].vector = Vector((m["co"][i] - H) / C)
+        out[mid] = {"height_m": round(m["height"], 4),
+                "stride_scale": round(float(m["heads"]["DEF-thigh.L"][2] / base_heads["DEF-thigh.L"][2]), 4),
+                "arm_out_deg": round(m["arm_out"] - BODY["arm_out"], 2),
+                "heads": {n: gl(h) for n, h in m["heads"].items()},
+                "scales": {n: round(v, 5) for n, v in sc.items() if abs(v - 1.0) > 1e-6}}
+    return out
+
+
+def keys_from_attributes(me):
+    """The morph_<id> point attributes become shape keys of the same name."""
+    names = [a.name for a in me.data.attributes if a.name.startswith("morph_")]
+    me.shape_key_add(name="Basis", from_mix=False)
+    for n in sorted(names):
+        key = me.shape_key_add(name=n, from_mix=False)
+        attr = me.data.attributes[n]
+        for i in range(len(me.data.vertices)):
+            key.data[i].co = attr.data[i].vector
+        me.data.attributes.remove(me.data.attributes[n])
+
+
 def cut_regions(me, rig, dom):
     """Cuts the mesh along straight planes of the rest pose (clean edges for clothes to cover) and gives
     each face the material of its region. The bone decides only which part of the body a face is on
@@ -486,9 +573,12 @@ def rest_check(rig, ref):
 
 _, rig0 = load()
 ref = {b.name: b.matrix_local.to_quaternion() for b in rig0.data.bones}
+captured = {mid: morph_capture(p) for mid, p in MORPHS.items()}
 me, rig, head_s, dom = build("body", BODY)
+morphs = add_morph_keys(me, rig, head_s, captured)
 lifts = plant(me, rig, dom)
 dom = cut_regions(me, rig, dom)
+keys_from_attributes(me)
 co = [v.co for v in me.data.vertices]
 height = max(c.z for c in co)
 hz = [c.z for c, n in zip(co, dom) if n == "DEF-head"]
@@ -497,6 +587,13 @@ print("## body", json.dumps({"head_scale": round(head_s, 4), "height_m": round(h
         "head_fraction": round((max(hz) - min(hz)) / height, 4),
         "rest_orientation_change_deg": round(rest_check(rig, ref), 4), "checks": checks, "plant_lift_max_m": lifts,
         "verts": len(me.data.vertices), "tris": sum(len(p.vertices) - 2 for p in me.data.polygons)}))
+# The character parts, built on this body before it is split (art/character/parts.py).
+parts_py = os.path.join(os.path.dirname(os.path.abspath(__file__)), "parts.py")
+if os.path.exists(parts_py):
+    import runpy
+    runpy.run_path(parts_py, init_globals={"me": me, "rig": rig, "ROOT": ROOT, "REGIONS": REGIONS,
+            "SCALP": SCALP, "lin": lin, "MORPH_RIG": MORPH_RIG})
+    rig.animation_data.action = None
 parts = split_regions(me)
 out = os.path.join(ROOT, "assets/character")
 os.makedirs(out, exist_ok=True)
@@ -505,7 +602,15 @@ for o in parts + [rig]:
     o.select_set(True)
 bpy.ops.export_scene.gltf(filepath=os.path.join(out, "body.glb"), export_format="GLB", use_selection=True,
         export_animation_mode="ACTIONS", export_force_sampling=True, export_frame_step=1,
-        export_apply=False, export_extras=False, export_yup=True)
+        export_apply=False, export_extras=False, export_yup=True,
+        export_morph_normal=False)  # the keys are not the final shapes (the bones move too): keep the base normals
+with open(os.path.join(ROOT, "data/character/morphs.json"), "w") as f:
+    text = json.dumps({"comment": "Written by art/character/body.py. Per body shape: the rest heads of the "
+            "bones (skeleton space, metres) and the scales of the head, hands and feet the game gives the base "
+            "skeleton, the extra outward turn of the upper arms, how much longer the stride is, and the "
+            "height. The body and every skinned part carry a shape key morph_<id>.", "morphs": morphs},
+            indent="\t", sort_keys=True)
+    f.write(re.sub(r"\[\s+([-0-9.]+),\s+([-0-9.]+),\s+([-0-9.]+)\s+\]", r"[\1, \2, \3]", text) + "\n")
 with open(os.path.join(out, "body_clips.json"), "w") as f:
     json.dump({"height_m": round(height, 4), "forward": "+z", "clips": clips}, f, indent=1, sort_keys=True)
     f.write("\n")

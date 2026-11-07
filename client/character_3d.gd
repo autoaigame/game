@@ -50,6 +50,8 @@ static var _palette := PackedColorArray()
 static var _dark_of := PackedInt32Array()
 static var _models := {}  ## path -> PackedScene
 
+## The parts worn (CharacterParts look); [] draws the bare body glb. Change it with set_look().
+var look: Array = []
 var px_per_m := 0.0  ## texels per metre, so the head lands HEAD_PX above the feet
 var cell_m := 0.0  ## metres per game cell at that scale
 var phase := 0.0  ## locomotion cycle, 0..1, 0 = left foot under the hips in every gait
@@ -64,6 +66,8 @@ var camera: Camera3D
 var _pivot: Node3D
 var _model: Node3D
 var _tree: AnimationTree
+var _skeleton: Skeleton3D
+var _morph: CharacterMorph  ## the body shape's bone changes, after each animation update
 var _lengths := {}
 var _materials: Array[ShaderMaterial] = []
 var _shadow: Polygon2D
@@ -123,9 +127,9 @@ static func stride_at(v: float) -> float:
 	return s / moving
 
 
-## Phase after dt seconds at a ground speed.
-static func advance_phase(p: float, v: float, dt: float) -> float:
-	return fposmod(p + v / stride_at(v) * dt, 1.0)
+## Phase after dt seconds at a ground speed; stride_scale: how much longer the body shape's stride is.
+static func advance_phase(p: float, v: float, dt: float, stride_scale := 1.0) -> float:
+	return fposmod(p + v / (stride_at(v) * stride_scale) * dt, 1.0)
 
 
 ## Clip time (s) of a gait at a shared phase: phase 0 is that clip's left mid-stance.
@@ -293,12 +297,15 @@ func _view_sprite(shader_path: String) -> Sprite2D:
 	return s
 
 
-## The model under the pivot: the body glb, its surfaces drawn by pixel_3d_lit.gdshader, and the
-## animation tree on its AnimationPlayer.
+## The model under the pivot: the look's parts (or the bare body glb), its surfaces drawn by
+## pixel_3d_lit.gdshader, and the animation tree on its AnimationPlayer.
 func _build_model() -> void:
-	if not _models.has(MODEL):
-		_models[MODEL] = load(MODEL)
-	_model = _models[MODEL].instantiate()
+	if look.is_empty():
+		if not _models.has(MODEL):
+			_models[MODEL] = load(MODEL)
+		_model = _models[MODEL].instantiate()
+	else:
+		_model = CharacterRig.build(look)
 	_pivot.add_child(_model)
 	_matte(_model)
 	var player: AnimationPlayer = _model.find_children("*", "AnimationPlayer", true, false)[0]
@@ -306,15 +313,33 @@ func _build_model() -> void:
 		_lengths[g] = player.get_animation(g).length
 	_tree = _make_tree(player)
 	_model.add_child(_tree)
+	_skeleton = _model.find_children("*", "Skeleton3D", true, false)[0]
+	_morph = CharacterMorph.new(_skeleton, _model.get_meta("morph", CharacterMorph.BASE))
 	_tree.anim_player = _tree.get_path_to(player)
 	_tree.active = true
 
 
-## Each surface drawn by pixel_3d_lit.gdshader with its glTF base colour.
+## Wears another look: the model is rebuilt from its parts, keeping facing, phase and speed.
+func set_look(new_look: Array) -> void:
+	if new_look == look:
+		return
+	look = new_look.duplicate(true)
+	if _pivot == null:
+		return
+	_pivot.remove_child(_model)
+	_model.queue_free()
+	_materials.clear()
+	_build_model()
+	_pose()
+
+
+## Each surface drawn by pixel_3d_lit.gdshader with its colour (CharacterRig's override, or the glTF's).
 func _matte(root: Node) -> void:
 	for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
 		for s in mi.mesh.get_surface_count():
-			var m := mi.mesh.surface_get_material(s)
+			var m: Material = mi.get_surface_override_material(s)
+			if m == null:
+				m = mi.mesh.surface_get_material(s)
 			var c: Color = m.albedo_color if m is BaseMaterial3D else Color.WHITE
 			mi.set_surface_override_material(s, lit_material(c))
 
@@ -377,7 +402,7 @@ func step(cell_delta: Vector2, dt: float) -> int:
 		target_yaw = yaw_of(cell_delta)
 	yaw = turn_towards(yaw, target_yaw, deg_to_rad(TURN_DEG_S) * dt)
 	var before := phase
-	phase = advance_phase(phase, speed_m_s, dt)
+	phase = advance_phase(phase, speed_m_s, dt, _morph.stride_scale if _morph != null else 1.0)
 	idle_t = idle_t + dt if speed_m_s < 0.05 else 0.0
 	_pose()
 	return contacts_between(before, phase, speed_m_s) if speed_m_s >= 0.05 else 0
@@ -414,4 +439,5 @@ func _pose() -> void:
 	for g in GAITS:
 		_tree.set("parameters/seek_%s/seek_request" % g, minf(clip_time(g, phase), _lengths[g] - 0.0001))
 	_tree.advance(0.0)
+	_morph.apply(_skeleton)
 	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE

@@ -1,0 +1,2 @@
+{"id": "feet_boots", "slot": "feet", "name": "Bottes", "kind": "skinned", "glb": "res://assets/character/parts/feet_boots.glb",
+ "hides": ["feet"], "colors": ["leather", "brown"]}

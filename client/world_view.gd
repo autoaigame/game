@@ -21,6 +21,7 @@ var _actors := {}  ## peer_id -> Node2D
 var _creatures := {}
 var _marks := {}  ## mark id -> {node: MarkView, left: seconds}
 var _walk := {}  ## peer_id -> {"server", "shown"}: its last snapshot position and the one drawn, in cells
+var _looks := {}  ## peer_id -> what it wears (CharacterParts look), from the server
 var _camera := Camera2D.new()
 var _my_pos := Vector2.ZERO  ## my position in the last snapshot, in cells
 var _key_dir := Vector2i.ZERO  ## direction of the held keys at the last frame
@@ -46,6 +47,8 @@ func _ready() -> void:
 	client.creatures_received.connect(_on_creatures)
 	client.marks_received.connect(_on_marks)
 	client.welcomed.connect(func(cell: Vector2i): _my_pos = Vector2(cell))
+	if client.has_signal("look_received"):
+		client.look_received.connect(_on_look)
 
 
 func _on_snapshot(players: Array) -> void:
@@ -55,7 +58,7 @@ func _on_snapshot(players: Array) -> void:
 		seen[id] = true
 		var actor: Node2D = _actors.get(id)
 		if actor == null:
-			actor = _make_actor(p["name"], id == client.my_peer_id)
+			actor = _make_actor(p["name"], id == client.my_peer_id, _looks.get(id, CharacterParts.default_look()))
 			_actors[id] = actor
 			add_child(actor)
 			_walk[id] = {"server": p["pos"], "shown": p["pos"]}
@@ -68,6 +71,7 @@ func _on_snapshot(players: Array) -> void:
 			_actors[id].queue_free()
 			_actors.erase(id)
 			_walk.erase(id)
+			_looks.erase(id)
 
 
 func _on_creatures(list: Array) -> void:
@@ -222,10 +226,11 @@ func _drift_camera(delta: float) -> void:
 	_camera.position = IsoLayer.cell_to_local(Vector2(MapData.spawn_cell()) + DRIFT_CELLS * Vector2(cos(a), sin(a)))
 
 
-func _make_actor(player_name: String, is_me: bool) -> Node2D:
+func _make_actor(player_name: String, is_me: bool, look: Array) -> Node2D:
 	var actor := Node2D.new()
 	var model := Character3D.new()
 	model.name = "Model3D"
+	model.look = look
 	actor.add_child(model)
 	var label := Label.new()
 	label.text = player_name
@@ -239,6 +244,15 @@ func _make_actor(player_name: String, is_me: bool) -> Node2D:
 	label.position = r.position
 	actor.add_child(label)
 	return actor
+
+
+## A player's parts changed (or it just joined). An unknown part (newer data than this client's) is
+## drawn as its slot's default.
+func _on_look(id: int, look: Array) -> void:
+	_looks[id] = CharacterParts.normalize(look)
+	var actor: Node2D = _actors.get(id)
+	if actor != null:
+		actor.get_node("Model3D").set_look(_looks[id])
 
 
 func _unhandled_input(event: InputEvent) -> void:

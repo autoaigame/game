@@ -1,0 +1,3 @@
+{"id": "body_standard", "slot": "body", "name": "Standard", "kind": "body", "glb": "res://assets/character/body.glb", "morph": "standard",
+ "regions": ["head", "scalp", "nape", "torso", "arms_upper", "arms_lower", "hands", "hips", "legs_upper", "legs_lower", "feet"],
+ "colors": ["skin_light", "skin_medium", "skin_dark"]}

@@ -60,6 +60,12 @@ func cook(item: String) -> void:
 	_forward("on_cook", [multiplayer.get_remote_sender_id(), item])
 
 
+## The parts the player wears (CharacterParts look), checked by the server. May come before join.
+@rpc("any_peer", "call_remote", "reliable")
+func set_look(look: Array) -> void:
+	_forward("on_set_look", [multiplayer.get_remote_sender_id(), look])
+
+
 # server -> client
 @rpc("authority", "call_remote", "reliable")
 func welcome(peer_id: int, cell: Vector2i) -> void:
@@ -106,3 +112,9 @@ func inventory(items: Dictionary) -> void:
 @rpc("authority", "call_remote", "reliable")
 func notice(key: String, args: Dictionary) -> void:
 	_forward("on_notice", [key, args])
+
+
+## What a player wears, sent when it joins or changes (not in every snapshot).
+@rpc("authority", "call_remote", "reliable")
+func look(peer_id: int, parts: Array) -> void:
+	_forward("on_look", [peer_id, parts])

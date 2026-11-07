@@ -11,12 +11,16 @@ signal status_received(status: Dictionary)
 signal inventory_received(items: Dictionary)
 signal notice_received(key: String, args: Dictionary)
 signal connection_lost
+## What a player wears (CharacterParts look), when it joins or changes.
+signal look_received(peer_id: int, look: Array)
 
 ## ws(s):// URL of the server. On the web it defaults to the page's own host + /ws.
 var server_url := ""
 ## Join automatically with this name once connected ("" = wait for join_with()).
 var player_name := ""
 var my_peer_id := 0
+## The parts this player wears (CharacterParts look), remembered between sessions, sent before joining.
+var look: Array = []
 
 var _net: Node
 
@@ -24,6 +28,7 @@ var _net: Node
 func _ready() -> void:
 	_net = get_parent().get_node("Net")
 	_net.set_handler(self)
+	look = ClientSettings.load_look()
 	if server_url == "":
 		server_url = _default_url()
 	var peer := WebSocketMultiplayerPeer.new()
@@ -67,7 +72,7 @@ func join_with(new_name: String) -> void:
 	player_name = new_name
 	if multiplayer.multiplayer_peer != null \
 			and multiplayer.multiplayer_peer.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED:
-		_net.join.rpc_id(1, player_name)
+		_join()
 
 
 ## target in cell units: a cell center for a click, a point on the held line for the keys.
@@ -138,7 +143,25 @@ func on_notice(key: String, args: Dictionary) -> void:
 
 func _on_connected() -> void:
 	if player_name != "":
-		_net.join.rpc_id(1, player_name)
+		_join()
+
+
+## The look first, so that the others see it as soon as this player appears.
+func _join() -> void:
+	_net.set_look.rpc_id(1, look)
+	_net.join.rpc_id(1, player_name)
+
+
+## Wears a new look: remembered, and sent to the server (which checks it) once joined.
+func set_look(new_look: Array) -> void:
+	look = new_look.duplicate(true)
+	ClientSettings.save_look(look)
+	if my_peer_id != 0:
+		_net.set_look.rpc_id(1, look)
+
+
+func on_look(peer_id: int, parts: Array) -> void:
+	look_received.emit(peer_id, parts)
 
 
 func _default_url() -> String:

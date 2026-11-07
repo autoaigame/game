@@ -70,3 +70,24 @@ func test_bad_stored_volume_is_fixed() -> void:
 	cfg.save(PATH)
 	assert_almost(ClientSettings.load_audio(PATH)["master"], ClientSettings.DEFAULT_VOLUME, 0.0001)
 	_clean()
+
+
+## The look is remembered; parts gone from the data since are repaired, a broken entry gives the default.
+func test_look_is_kept_and_repaired() -> void:
+	_clean()
+	assert_eq(ClientSettings.load_look(PATH), CharacterParts.default_look())
+	var look := [{"id": "body_standard", "color": "skin_dark"}, {"id": "top_tshirt", "color": "olive"},
+			{"id": "bottom_shorts", "color": "grey"}]
+	ClientSettings.save_look(look, PATH)
+	assert_eq(ClientSettings.load_look(PATH), look)
+	var cfg := ConfigFile.new()
+	cfg.load(PATH)
+	cfg.set_value("player", "look", '[{"id":"body_standard","color":"skin_dark"},{"id":"gone_hat","color":"x"}]')
+	cfg.save(PATH)
+	var repaired := ClientSettings.load_look(PATH)
+	assert_eq(CharacterParts.validate(repaired), "")
+	assert_eq(repaired[0], {"id": "body_standard", "color": "skin_dark"})
+	cfg.set_value("player", "look", "{not json")
+	cfg.save(PATH)
+	assert_eq(ClientSettings.load_look(PATH), CharacterParts.default_look())
+	_clean()

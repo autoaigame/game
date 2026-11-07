@@ -40,3 +40,25 @@ static func save_audio(settings: Dictionary, path := PATH) -> void:
 	cfg.load(path)
 	AudioSettings.write(cfg, settings)
 	cfg.save(path)
+
+
+## The look (CharacterParts) last chosen; the default look if none. Parts gone from the data since are
+## dropped (CharacterParts.normalize).
+static func load_look(path := PATH) -> Array:
+	var cfg := ConfigFile.new()
+	if cfg.load(path) != OK:
+		return CharacterParts.default_look()
+	var value: Variant = cfg.get_value("player", "look", "")
+	if typeof(value) != TYPE_STRING or value == "":
+		return CharacterParts.default_look()
+	var json := JSON.new()
+	if json.parse(value) != OK:
+		return CharacterParts.default_look()
+	return CharacterParts.normalize(json.data)
+
+
+static func save_look(look: Array, path := PATH) -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(path)
+	cfg.set_value("player", "look", JSON.stringify(look))
+	cfg.save(path)
