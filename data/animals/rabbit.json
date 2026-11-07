@@ -1,0 +1,8 @@
+{
+	"id": "rabbit",
+	"name": "Lapin",
+	"biomes": ["grassland", "steppe", "forest"],
+	"walk_speed": 2.0,
+	"flee_speed": 6.0,
+	"flee_radius": 4.0
+}
