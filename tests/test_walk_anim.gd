@@ -197,3 +197,19 @@ func test_stops_walking_after_stopping() -> void:
 	for fr in _draw_walk(0.015, 1.0, 2.0):
 		if fr[0] > 1.5:
 			assert_true(fr[1].y < WalkAnim.IDLE_FRAMES, "walk row %d at %.3f s" % [fr[1].y, fr[0]])
+
+
+## While walking steadily, the drawn player glides at an even speed: no frame stands still (a 15 Hz
+## stop-and-go reads as a stutter), none rushes ahead, and it stays close behind the server.
+func test_walking_speed_on_screen_is_even() -> void:
+	var nominal := Protocol.SPEED_CELLS_PER_S / 60.0
+	for jitter in [0.0, 0.015, 0.03]:
+		var frames := _draw_walk(jitter, 4.0, 4.0)
+		for i in range(1, frames.size()):
+			if frames[i][0] < 0.5:
+				continue
+			var speed: float = (frames[i][2] - frames[i - 1][2]).length() / nominal
+			assert_true(speed > 0.6 and speed < 1.3, "jitter %s: %.2fx the walking speed at %.3f s" % [jitter, speed, frames[i][0]])
+			var real: Vector2 = Vector2(1, -1).normalized() * Protocol.SPEED_CELLS_PER_S * frames[i][0]
+			var behind: float = (real - frames[i][2]).length()
+			assert_true(behind < 0.6, "jitter %s: %.2f cells behind at %.3f s" % [jitter, behind, frames[i][0]])
