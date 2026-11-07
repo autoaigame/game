@@ -133,18 +133,51 @@ func test_notice_shows_then_fades() -> void:
 	hud.free()
 
 
-## H whistles the dog to hunt, once joined.
-func test_h_whistles() -> void:
-	var hud := _hud()
+func _press(hud: CanvasLayer, code: Key) -> void:
 	var key := InputEventKey.new()
-	key.physical_keycode = KEY_H
+	key.physical_keycode = code
 	key.pressed = true
 	hud._unhandled_input(key)
+
+
+## The key next to the movement keys (Q on QWERTY, A on AZERTY) whistles the dog, once joined.
+func test_q_key_whistles() -> void:
+	var hud := _hud()
+	_press(hud, KEY_Q)
 	assert_eq(hud.client.whistles, 0, "not before joining")
 	hud.client.welcomed.emit(Vector2i.ZERO)
-	hud._unhandled_input(key)
+	_press(hud, KEY_Q)
 	assert_eq(hud.client.whistles, 1)
+	_press(hud, KEY_H)
+	assert_eq(hud.client.whistles, 1, "H no longer whistles")
+	_press(hud, KEY_A)
+	assert_eq(hud.client.whistles, 1, "the move-left key does not whistle")
 	hud.free()
+
+
+## E opens and closes the bag; I no longer does.
+func test_e_toggles_the_bag() -> void:
+	var hud := _hud()
+	hud.client.welcomed.emit(Vector2i.ZERO)
+	_press(hud, KEY_E)
+	assert_true(hud.bag().visible)
+	_press(hud, KEY_E)
+	assert_false(hud.bag().visible)
+	_press(hud, KEY_I)
+	assert_false(hud.bag().visible, "I no longer opens it")
+	hud.free()
+
+
+## The key hints name the keys as printed on the player's keyboard.
+func test_key_hints_follow_the_layout() -> void:
+	var physical: Array = UiText.KEYS.map(func(k): return k[0])
+	assert_eq(physical, [KEY_E, KEY_Q])
+	if DisplayServer.get_name() in UiText.LAYOUT_AWARE:
+		var label := DisplayServer.keyboard_get_label_from_physical(KEY_Q)
+		assert_eq(UiText.key_name(KEY_Q), OS.get_keycode_string(label))
+	else:
+		assert_eq(UiText.key_name(KEY_Q), "Q", "QWERTY name without a known layout")
+		assert_eq(UiText.key_name(KEY_E), "E")
 
 
 ## A notice about an item shows its icon.

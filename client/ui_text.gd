@@ -29,8 +29,9 @@ const NOTICES := {
 	"bag_full": "Ton sac est plein.",
 }
 const COOK := "Cuire"
-## Key hints (key, what it does), shown as key caps under the hunger bar.
-const KEYS := [["I", "Sac"], ["H", "Siffler le chien"]]
+## Key hints (physical key, what it does), shown as key caps under the hunger bar.
+## Physical keys sit next to the movement keys whatever the layout: E and Q on QWERTY, E and A on AZERTY.
+const KEYS := [[KEY_E, "Sac"], [KEY_Q, "Siffler le chien"]]
 ## The bag window (client/bag_view.gd).
 const FOOD_DESC := "Nourrit : +%d"
 const COOKS_DESC := "Sur un feu, devient : %s"
@@ -91,3 +92,14 @@ static func notice(key: String, args: Dictionary) -> String:
 	if key == "ate" or key == "cooked":
 		return NOTICES[key] % ItemData.item(String(args.get("item", ""))).get("name", "?")
 	return NOTICES.get(key, "")
+
+
+## Display servers that know the keyboard layout. Others (headless, web) give the QWERTY name.
+const LAYOUT_AWARE := ["Windows", "macOS", "X11", "Wayland"]
+
+
+## The name printed on the player's keyboard for a physical key.
+static func key_name(physical: Key) -> String:
+	if DisplayServer.get_name() in LAYOUT_AWARE:
+		return OS.get_keycode_string(DisplayServer.keyboard_get_label_from_physical(physical))
+	return OS.get_keycode_string(physical)
