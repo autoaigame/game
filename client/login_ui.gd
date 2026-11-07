@@ -19,6 +19,7 @@ var _status := Label.new()
 var _status_icon := TextureRect.new()
 var _in_game := false
 var _tween: Tween
+var _focus_next: Control = null  ## control to focus on the next frame (once in the tree)
 
 
 ## Where the focus starts: on the button when a remembered name fills the field.
@@ -61,10 +62,14 @@ func _ready() -> void:
 	client.connection_lost.connect(_on_lost)
 	_root.modulate.a = 0.0
 	_fade_to(1.0, FADE_IN_S)
-	if initial_focus(remembered) == FOCUS_BUTTON:
-		_button.grab_focus.call_deferred()
-	else:
-		_name_edit.grab_focus.call_deferred()
+	# focused on the first frame, once every control is in the tree
+	_focus_next = _button if initial_focus(remembered) == FOCUS_BUTTON else _name_edit
+
+
+func _process(_delta: float) -> void:
+	if _focus_next != null:
+		_focus_next.grab_focus()
+		_focus_next = null
 
 
 func _build() -> void:
