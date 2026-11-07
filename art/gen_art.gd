@@ -121,8 +121,12 @@ const GROUNDS := ["deep_water", "shallow_water", "sand", "grass", "dry_grass", "
 const MASKS := IsoLayer.MASK_COLUMNS
 ## Variants keep variant 0's texels this close to the tile edge (lattice units), and their own beyond
 ## VARIANT_EDGE_IN, with dithering in between, so any two variants join seamlessly.
-const VARIANT_EDGE_OUT := 0.03
-const VARIANT_EDGE_IN := 0.13
+const VARIANT_EDGE_OUT := 0.025
+const VARIANT_EDGE_IN := 0.07
+
+## Ground blotches fade to EDGE_TONE over this distance from the tile edge (lattice units).
+const EDGE_FADE := 0.16
+const EDGE_TONE := 0.5
 
 ## Shifts every hash seed, so each variant gets its own texture and details.
 var _salt := 0
@@ -178,6 +182,11 @@ func _ground(kind: String, row: int) -> Image:
 			if not _inside(x, y):
 				continue
 			var v := _fbm(x, y, 10 + row * 7 + _salt * 101)
+			# fade the blotches to a mid tone near the edges: every tile edge and corner then looks alike
+			# whatever the variant, without lining up light or dark spots over the whole map
+			var l := _lattice(x + 0.5, y + 0.5)
+			var edge := 0.5 - maxf(absf(l.x), absf(l.y))
+			v = lerpf(EDGE_TONE, v, clampf(edge / EDGE_FADE, 0.0, 1.0))
 			var col: Color
 			match kind:
 				"deep_water": col = _c(WATER, _pick(WATER, v * 1.3 - 0.15, x, y, 0, 2))
