@@ -32,6 +32,10 @@ var _zoom_target := CameraZoom.DEFAULT  ## the zoom the camera glides to (mouse 
 var _drift_t := 0.0  ## seconds of slow camera drift behind the start menu
 const DRIFT_CELLS := 2.0  ## radius of the drift around the spawn, in cells
 const DRIFT_PERIOD_S := 60.0
+## The points of my body tested against the trees in front of it (ChunkView.TREE_FADE_ALPHA): x in px,
+## and height as a share of the head's height above the feet. Up the middle, and the arms at mid height.
+const BODY_POINTS := [Vector2(0, 0.15), Vector2(0, 0.5), Vector2(0, 0.85), Vector2(-15, 0.5), Vector2(15, 0.5)]
+var _faded := {}  ## tree sprite -> true while not fully opaque
 
 
 func _ready() -> void:
@@ -51,6 +55,41 @@ func _ready() -> void:
 		client.look_received.connect(_on_look)
 	if client.has_signal("whistled"):
 		client.whistled.connect(_on_whistled)
+
+
+## Whether `tree`, drawn in front of a player standing at `feet` (sorted after it), covers its body.
+static func covers_body(tree: Sprite2D, feet: Vector2) -> bool:
+	if tree.position.y <= feet.y:
+		return false  # drawn behind the player
+	for b in BODY_POINTS:
+		if ChunkView.hides(tree, feet + Vector2(b.x, -Character3D.HEAD_PX * b.y)):
+			return true
+	return false
+
+
+## Fades the trees drawn in front of my player where they cover its body, and brings back the others.
+## Only the chunks around me are looked at.
+func _fade_trees(dt: float) -> void:
+	var me: Node2D = _actors.get(client.my_peer_id)
+	var hiding := {}
+	if me != null:
+		var at := MapData.chunk_of(Protocol.cell_of(_my_pos))
+		for dy in range(-1, 2):
+			for dx in range(-1, 2):
+				var node: Node2D = _chunk_nodes.get(at + Vector2i(dx, dy))
+				if node == null:
+					continue
+				for sp in node.get_children():
+					if sp is Sprite2D and sp.has_meta("tree") and covers_body(sp, me.position):
+						hiding[sp] = true
+						_faded[sp] = true
+	for sp in _faded.keys():
+		if not is_instance_valid(sp):
+			_faded.erase(sp)
+			continue
+		sp.modulate.a = ChunkView.fade_step(sp.modulate.a, hiding.has(sp), dt)
+		if sp.modulate.a >= 1.0 and not hiding.has(sp):
+			_faded.erase(sp)
 
 
 func _on_snapshot(players: Array) -> void:
@@ -321,6 +360,7 @@ func _process(delta: float) -> void:
 	var z := CameraZoom.approach(_camera.zoom.x, _zoom_target, delta)
 	_camera.zoom = Vector2(z, z)
 	_stream_chunks()
+	_fade_trees(delta)
 	if client.my_peer_id == 0:
 		_drift_camera(delta)
 		return
