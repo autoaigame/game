@@ -134,4 +134,18 @@ func test_fast_dog_glides_without_jumping() -> void:
 	assert_true(biggest_jump < 0.5, "no jump: biggest step drawn in a frame %f cells" % biggest_jump)
 	assert_true(pos.distance_to(view._creatures[1]["shown"]) < 1.5, "close behind")
 	assert_true(node.position.distance_to(IsoLayer.cell_to_local(view._creatures[1]["shown"])) < 0.01)
+
+
+## A dog bringing back its catch is drawn with it in its mouth, until it hands it over.
+func test_dog_carries_its_catch() -> void:
+	var view := _view()
+	view.client.creatures_received.emit([{"id": 1, "kind": "dog", "owner": 1, "pos": Vector2(5, 5), "state": "fetch",
+			"carry": "rabbit"}])
+	var node: Node2D = view._creatures[1]["node"]
+	var carried: MarkView = node.get_node_or_null("Carry")
+	assert_true(carried != null, "drawn in its mouth")
+	assert_eq(carried.kind, "carcass_rabbit")
+	assert_true(carried.position.x > 0.0 and carried.position.y < 0.0, "at its head, which faces right")
+	view.client.creatures_received.emit([{"id": 1, "kind": "dog", "owner": 1, "pos": Vector2(5, 5), "state": "idle"}])
+	assert_true(node.get_node_or_null("Carry") == null or node.get_node("Carry").is_queued_for_deletion(), "handed over")
 	view.free()
