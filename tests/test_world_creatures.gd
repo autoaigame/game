@@ -83,3 +83,13 @@ func test_marks_drawn_fade_and_go() -> void:
 	view.client.marks_received.emit([])
 	assert_false(view._marks.has(9))
 	view.free()
+
+
+## A dug hole is drawn (it is not an empty node).
+func test_hole_mark_is_drawn() -> void:
+	var view := _view()
+	view.client.marks_received.emit([{"id": 4, "kind": "hole", "pos": Vector2(1, 1), "left": 100.0}])
+	var node: MarkView = view._marks[4]["node"]
+	assert_eq(node.kind, "hole")
+	assert_true(MarkView.KINDS.has("hole") and MarkView.KINDS.has("pee"), "both kinds drawn")
+	view.free()
