@@ -66,6 +66,10 @@ func _add_views() -> void:
 	ui.settings = settings
 	add_child(ui)
 	add_child(settings)
+	var panel: CanvasLayer = load("res://client/look_panel.gd").new()
+	panel.client = self
+	panel.menu = settings
+	add_child(panel)
 
 
 func join_with(new_name: String) -> void:

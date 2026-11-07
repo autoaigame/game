@@ -200,7 +200,8 @@ static func resolve(look: Array) -> Dictionary:
 	return {"parts": out, "hidden": hidden}
 
 
-## The look with the next (step 1) or previous (-1) part in a slot; optional slots pass through "none".
+## The look with the next (step 1) or previous (-1) part in a slot; optional slots pass through "none". The
+## colour stays when the new part allows it (a skin tone across body shapes).
 static func cycle_part(look: Array, slot_id: String, step: int) -> Array:
 	_ensure()
 	var choices: Array = Array(parts_for(slot_id))
@@ -209,15 +210,18 @@ static func cycle_part(look: Array, slot_id: String, step: int) -> Array:
 	if choices.is_empty():
 		return look
 	var current := ""
+	var colour := ""
 	var out := []
 	for e in look:
 		if _parts.get(e["id"], {}).get("slot", "") == slot_id:
 			current = e["id"]
+			colour = e["color"]
 		else:
 			out.append(e)
 	var next: String = choices[posmod(choices.find(current) + step, choices.size())]
 	if next != "":
-		out.append({"id": next, "color": _parts[next]["colors"][0]})
+		var cs: Array = _parts[next]["colors"]
+		out.append({"id": next, "color": colour if colour in cs else cs[0]})
 	return _in_slot_order(out)
 
 
