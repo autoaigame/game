@@ -25,6 +25,12 @@ func move_to(target: Vector2) -> void:
 	_forward("on_move_to", [multiplayer.get_remote_sender_id(), target])
 
 
+## Sprint (Shift held) or walk. The server caps the speed at Protocol.SPRINT_FACTOR times the walk.
+@rpc("any_peer", "call_remote", "reliable")
+func sprint(on: bool) -> void:
+	_forward("on_sprint", [multiplayer.get_remote_sender_id(), on])
+
+
 @rpc("any_peer", "call_remote", "reliable")
 func stop() -> void:
 	_forward("on_stop", [multiplayer.get_remote_sender_id()])
