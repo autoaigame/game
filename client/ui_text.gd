@@ -7,6 +7,16 @@ const TAGLINE := "un seul monde, qui ne s'arrête jamais"
 const NAME_LABEL := "Ton nom"
 const NAME_PLACEHOLDER := "ex. Corbeau_42"
 const NAME_HINT := "Lettres, chiffres, _ et - (%d au plus)"
+## In-game HUD (client/hud.gd).
+const HUNGER := "Faim"
+const STARVING := "Affamé : tu marches plus lentement"
+const BAG := "Sac (I)"
+const BAG_EMPTY := "Ton sac est vide."
+const NOTICES := {
+	"gathered": "+%d %s",
+	"bush_empty": "Ce buisson n'a plus de baies. Reviens plus tard.",
+	"too_far": "Trop loin.",
+}
 const ENTER := "Entrer dans le monde"
 
 const CONNECTING := "Connexion au serveur…"
@@ -39,3 +49,10 @@ static func rejection(_reason: String, player_name: String) -> String:
 	if problem != "":
 		return problem
 	return NAME_TAKEN % player_name
+
+
+## The text of a server notice (shared/net.gd notice), or "" for an unknown key.
+static func notice(key: String, args: Dictionary) -> String:
+	if key == "gathered":
+		return NOTICES[key] % [int(args.get("count", 0)), ItemData.item(String(args.get("item", ""))).get("name", "?")]
+	return NOTICES.get(key, "")

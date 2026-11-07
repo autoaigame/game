@@ -6,6 +6,8 @@ class FakeClient:
 	extends Node
 	signal welcomed(cell: Vector2i)
 	signal snapshot_received(players: Array)
+	signal creatures_received(creatures: Array)
+	signal marks_received(marks: Array)
 	var my_peer_id := 1
 
 	func request_move(_cell: Vector2i) -> void:
