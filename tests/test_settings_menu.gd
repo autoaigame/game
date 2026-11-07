@@ -171,3 +171,15 @@ func test_controls_tab_learns_the_layout() -> void:
 	texts = _page_texts(menu)
 	assert_true("Z" in texts and not "W" in texts)
 	menu.free()
+
+
+## At launch the menu goes fullscreen as saved, on desktop only.
+func test_menu_restores_fullscreen_at_launch() -> void:
+	_clean()
+	var menu := _built()
+	assert_false(menu.restore_fullscreen(false))
+	ClientSettings.save_fullscreen(true, PATH)
+	assert_true(menu.restore_fullscreen(false))
+	assert_false(menu.restore_fullscreen(true))
+	menu.free()
+	_clean()
