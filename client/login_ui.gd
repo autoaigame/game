@@ -1,6 +1,6 @@
 ## Start menu, drawn over the world until the server welcomes us. Under the title band, one screen at a
 ## time from a stack; the title and play screens show the connection state. The title screen (client/title_screen.gd) is the root;
-## Jouer opens the play screen (look, name, Entrer). A new screen is a Control given to add_screen(),
+## Jouer opens the play screen (look, name, Entrer), Crédits the credits (client/credits_screen.gd). A new screen is a Control given to add_screen(),
 ## opened with go(id); Escape and Retour go back. Texts are in client/ui_text.gd, looks in client/ui_theme.gd.
 extends CanvasLayer
 
@@ -12,6 +12,7 @@ const FADE_OUT_S := 0.4
 const SCREEN_FADE_S := 0.15
 const ROOT_SCREEN := "title"
 const PLAY_SCREEN := "play"
+const CREDITS_SCREEN := "credits"
 const ESCAPE_SETTINGS := "settings"  ## Escape opens the settings menu (it does so itself)
 const ESCAPE_BACK := "back"  ## Escape goes back a screen
 const FOCUS_SETTINGS_BUTTON := "settings_button"  ## the title's Paramètres button
@@ -101,6 +102,17 @@ static func stack_after_rejected(stack: Array) -> Array:
 	return pushed([ROOT_SCREEN] if stack.is_empty() else stack, PLAY_SCREEN)
 
 
+## The screen a title button opens, or "" (Paramètres opens the settings menu, Quitter quits).
+static func screen_for(choice: String) -> String:
+	return {"play": PLAY_SCREEN, "credits": CREDITS_SCREEN}.get(choice, "")
+
+
+## The title button that takes the focus back on the title screen, coming from screen `left`: the
+## one that opened it, else Jouer.
+static func title_button_after_back(left: String) -> String:
+	return {CREDITS_SCREEN: "credits"}.get(left, "play")
+
+
 static func button_enabled(s: State) -> bool:
 	return s == State.READY
 
@@ -153,12 +165,19 @@ func go(id: String) -> void:
 func back() -> void:
 	if _stack.size() <= 1:
 		return
+	var left: String = top_screen()
 	_stack = popped(_stack)
 	_show_top(true)
+	if top_screen() == ROOT_SCREEN:
+		_focus_next = _title.button(title_button_after_back(left))
 
 
 func top_screen() -> String:
 	return _stack.back()
+
+
+func has_screen(id: String) -> bool:
+	return _screens.has(id)
 
 
 ## Registers screen `id`, hidden until go(id). `first_focus` takes the focus when it shows.
@@ -247,6 +266,10 @@ func _build() -> void:
 	_title_status.autowrap_mode = TextServer.AUTOWRAP_WORD
 	add_screen(ROOT_SCREEN, title_page, _title.first_button())
 	add_screen(PLAY_SCREEN, _build_play_screen(), _button)
+	var credits: Control = load("res://client/credits_screen.gd").new()
+	credits.sounds = sounds
+	credits.back_pressed.connect(back)
+	add_screen(CREDITS_SCREEN, credits, credits.first_focus())
 
 
 ## The title screen: big logo at the top, tagline, buttons at the bottom. Other screens (the play
@@ -385,9 +408,10 @@ func _icon_row(icon: TextureRect, label: Label) -> HBoxContainer:
 
 
 func _on_title_chosen(id: String) -> void:
+	if screen_for(id) != "":
+		go(screen_for(id))
+		return
 	match id:
-		"play":
-			go(PLAY_SCREEN)
 		"settings":
 			_open_settings()
 		"quit":

@@ -113,3 +113,26 @@ func test_stack_after_a_lost_connection() -> void:
 func test_stack_after_a_refused_name() -> void:
 	assert_eq(LoginUi.stack_after_rejected(["title"]), ["title", "play"])
 	assert_eq(LoginUi.stack_after_rejected(["title", "play"]), ["title", "play"])
+
+
+## Jouer and Crédits open their screen; Paramètres and Quitter open none.
+func test_title_choices_open_their_screen() -> void:
+	assert_eq(LoginUi.screen_for("play"), LoginUi.PLAY_SCREEN)
+	assert_eq(LoginUi.screen_for("credits"), LoginUi.CREDITS_SCREEN)
+	assert_eq(LoginUi.screen_for("settings"), "")
+	assert_eq(LoginUi.screen_for("quit"), "")
+
+
+## Back on the title screen, the focus is on the button that opened the screen left.
+func test_focus_after_going_back() -> void:
+	assert_eq(LoginUi.title_button_after_back(LoginUi.CREDITS_SCREEN), "credits")
+	assert_eq(LoginUi.title_button_after_back(LoginUi.PLAY_SCREEN), "play")
+	assert_eq(LoginUi.title_button_after_back("other"), "play")
+
+
+## The start menu has a Crédits screen in its stack, which Retour leaves.
+func test_menu_has_a_credits_screen() -> void:
+	var ui: CanvasLayer = LoginUi.new()
+	ui._build()
+	assert_true(ui.has_screen(LoginUi.CREDITS_SCREEN))
+	ui.free()
