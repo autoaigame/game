@@ -15,7 +15,7 @@ var _walk := {}  ## peer_id -> {server, shown: Vector2 in cells, walked: float i
 var _camera := Camera2D.new()
 var _my_pos := Vector2.ZERO  ## my position in the last snapshot, in cells
 var _key_dir := Vector2i.ZERO  ## direction of the held keys at the last frame
-var _key_target := Vector2i.ZERO  ## last target sent for the held keys
+var _key_target := Vector2.ZERO  ## last target sent for the held keys
 var _zoom_target := CameraZoom.DEFAULT  ## the zoom the camera glides to (mouse wheel)
 var _drift_t := 0.0  ## seconds of slow camera drift behind the start menu
 const DRIFT_CELLS := 2.0  ## radius of the drift around the spawn, in cells
@@ -126,7 +126,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		client.request_move(_layer.local_to_map(_layer.get_local_mouse_position()))
+		client.request_move(Vector2(_layer.local_to_map(_layer.get_local_mouse_position())))
 
 
 func _process(delta: float) -> void:
@@ -146,7 +146,7 @@ func _process(delta: float) -> void:
 		_key_dir = dir
 		return
 	var target := KeyMove.held_target(_my_pos, dir)
-	if dir != _key_dir or target != _key_target:
+	if dir != _key_dir or not target.is_equal_approx(_key_target):
 		client.request_move(target)
 	_key_dir = dir
 	_key_target = target

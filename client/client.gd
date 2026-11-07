@@ -51,8 +51,9 @@ func join_with(new_name: String) -> void:
 		_net.join.rpc_id(1, player_name)
 
 
-func request_move(cell: Vector2i) -> void:
-	_net.move_to.rpc_id(1, cell)
+## target in cell units: a cell center for a click, a point on the held line for the keys.
+func request_move(target: Vector2) -> void:
+	_net.move_to.rpc_id(1, target)
 
 
 func request_stop() -> void:
