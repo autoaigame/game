@@ -371,11 +371,13 @@ func on_whistle(peer_id: int) -> void:
 		_net.notice.rpc_id(peer_id, r["notice"], {})
 
 
-## {notice: hunt or no_prey}, or {} for an unknown player.
+## {notice: hunt, no_prey, or dog_busy while it is bringing back a catch}, or {} for an unknown player.
 func _whistle(peer_id: int) -> Dictionary:
 	if not _players.has(peer_id):
 		return {}
 	var p: Dictionary = _players[peer_id]
+	if p["dog"].has("carry"):
+		return {"notice": "dog_busy"}
 	var best: Variant = null
 	var best_d := DOG.HUNT_RADIUS
 	for id in _wild["animals"]:

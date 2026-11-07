@@ -23,6 +23,7 @@ const NOTICES := {
 	"fire_here": "Il y a déjà un feu ici.",
 	"hunt": "Ton chien part en chasse !",
 	"no_prey": "Aucun animal à chasser près de toi.",
+	"dog_busy": "Ton chien te rapporte déjà sa prise.",
 	"cooked": "Cuit : %s",
 	"no_fire": "Il te faut un feu tout près pour cuire.",
 	"bag_full": "Ton sac est plein.",

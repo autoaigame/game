@@ -204,3 +204,21 @@ func test_runs_back_after_a_hunt() -> void:
 	for i in 40:
 		DOG.update(dog, owner, 0.1)
 	assert_true(dog["pos"].distance_to(owner) < DOG.FOLLOW_START + 1.0, "back by its owner")
+
+
+## While the dog carries a catch, a whistle does not send it off again: the catch is never lost.
+func test_no_new_hunt_while_carrying() -> void:
+	var server := _server_with_rabbit(Vector2i(5, 0))
+	server._players[1]["dog"]["state"] = "fetch"
+	server._players[1]["dog"]["carry"] = "pheasant"
+	assert_eq(server._whistle(1), {"notice": "dog_busy"})
+	assert_eq(server._players[1]["dog"]["state"], "fetch")
+	assert_eq(server._players[1]["dog"]["carry"], "pheasant")
+	assert_true(UiText.notice("dog_busy", {}) != "", "the player is told why")
+	server.free()
+
+
+## Every wild animal the dog can catch gives raw meat when it brings it back.
+func test_every_species_gives_meat() -> void:
+	for id in WILD.species():
+		assert_true(load(SERVER_SCRIPT).MEAT.get("carcass_" + id, 0) > 0, "%s gives meat" % id)
