@@ -183,3 +183,14 @@ func test_loop_short_file() -> void:
 	assert_almost(CrossfadeLoop.gains(1.5, 2.0, 0.0, 1.5).length(), 1.0, 0.001)
 	assert_true(CrossfadeLoop.gains(2.0, 2.0, 0.0, 1.5).is_equal_approx(Vector2(0, 1)))
 	assert_eq(CrossfadeLoop.gains(10.9, 12.0, 10.0, 1.5), Vector2(1, 0))  # loop part is 2 s long
+
+
+## Back from a pause longer than the loop (a hidden browser tab runs no frames), the next turn starts
+## inside the loop, not past the end of the file.
+func test_loop_resumes_inside_after_a_long_pause() -> void:
+	for t in [20.0, 20.3, 45.0, 400.0, 12345.6]:
+		var p := CrossfadeLoop.turn_position(t, 20.0, 0.0, 1.5)
+		assert_true(p >= 0.0 and p < 20.0, "%f -> %f" % [t, p])
+	assert_almost(CrossfadeLoop.turn_position(20.3, 20.0, 0.0, 1.5), 1.8, 0.0001, "a late frame is unchanged")
+	var music := CrossfadeLoop.turn_position(5000.0, 200.0, 31.4, 0.2)
+	assert_true(music >= 31.4 and music < 200.0, "music stays in its looped part: %f" % music)

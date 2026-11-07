@@ -66,6 +66,13 @@ func set_look(look: Array) -> void:
 	_forward("on_set_look", [multiplayer.get_remote_sender_id(), look])
 
 
+## Back from a pause (its tab was hidden: no frames, so stale or dropped updates), the client asks for
+## everything that is only sent on a change. The server answers resynced(), then all of it.
+@rpc("any_peer", "call_remote", "reliable")
+func resync() -> void:
+	_forward("on_resync", [multiplayer.get_remote_sender_id()])
+
+
 # server -> client
 @rpc("authority", "call_remote", "reliable")
 func welcome(peer_id: int, cell: Vector2i) -> void:
@@ -112,6 +119,13 @@ func inventory(items: Dictionary) -> void:
 @rpc("authority", "call_remote", "reliable")
 func notice(key: String, args: Dictionary) -> void:
 	_forward("on_notice", [key, args])
+
+
+## The start of a resync's answer: every update from here on is fresh (the client dropped the
+## ones before it as stale).
+@rpc("authority", "call_remote", "reliable")
+func resynced() -> void:
+	_forward("on_resynced", [])
 
 
 ## What a player wears, sent when it joins or changes (not in every snapshot).

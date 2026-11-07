@@ -22,7 +22,21 @@ var my_peer_id := 0
 ## The parts this player wears (CharacterParts look), remembered between sessions, sent before joining.
 var look: Array = []
 
+## A frame this long after the previous one means the game was paused (a hidden browser tab runs no
+## frames). The updates buffered meanwhile are stale, and those that did not fit were dropped.
+const PAUSE_GAP_MS := 1000
+## Waiting longer than this for the server's "resynced" marker, the client shows updates again anyway.
+const RESYNC_TIMEOUT_S := 3.0
+## The receive buffer: about a minute of updates, so a short alt-tab drops nothing.
+const INBOUND_BUFFER := 1 << 21
+const MAX_QUEUED_PACKETS := 8192
+
+## Emitted to ask the server for a resync (connected to the RPC in _ready).
+signal resync_requested
+
 var _net: Node
+var _resync_left := 0.0  ## > 0 while waiting for "resynced": updates received meanwhile are stale
+var _last_frame_ms := 0
 
 
 func _ready() -> void:
@@ -31,7 +45,9 @@ func _ready() -> void:
 	look = ClientSettings.load_look()
 	if server_url == "":
 		server_url = _default_url()
-	var peer := WebSocketMultiplayerPeer.new()
+	get_tree().multiplayer_poll = false  # polled in _process, after checking for a pause
+	resync_requested.connect(func(): _net.resync.rpc_id(1))
+	var peer := new_peer()
 	var err := peer.create_client(server_url)
 	if err != OK:
 		push_error("client: cannot connect to %s (%s)" % [server_url, error_string(err)])
@@ -70,6 +86,51 @@ func _add_views() -> void:
 	panel.client = self
 	panel.menu = settings
 	add_child(panel)
+
+
+## The client's connection, with a receive buffer big enough for a short pause.
+static func new_peer() -> WebSocketMultiplayerPeer:
+	var peer := WebSocketMultiplayerPeer.new()
+	peer.inbound_buffer_size = INBOUND_BUFFER
+	peer.max_queued_packets = MAX_QUEUED_PACKETS
+	return peer
+
+
+## Checks for a pause before reading the network, so the stale updates read after it are dropped.
+func _process(delta: float) -> void:
+	var now := Time.get_ticks_msec()
+	if paused_between(_last_frame_ms, now):
+		begin_resync()
+	_last_frame_ms = now
+	tick_resync(delta)
+	if multiplayer.has_multiplayer_peer():
+		multiplayer.poll()
+
+
+## Whether frames at `before_ms` and `now_ms` (0: no frame yet) were a pause apart.
+func paused_between(before_ms: int, now_ms: int) -> bool:
+	return before_ms > 0 and now_ms - before_ms > PAUSE_GAP_MS
+
+
+## Drops updates until the server's "resynced" marker (or RESYNC_TIMEOUT_S), and asks for it. The
+## server sends the marker first, then everything again.
+func begin_resync() -> void:
+	if my_peer_id == 0:
+		return
+	_resync_left = RESYNC_TIMEOUT_S
+	resync_requested.emit()
+
+
+func tick_resync(dt: float) -> void:
+	_resync_left = maxf(_resync_left - dt, 0.0)
+
+
+func on_resynced() -> void:
+	_resync_left = 0.0
+
+
+func _stale() -> bool:
+	return _resync_left > 0.0
 
 
 func join_with(new_name: String) -> void:
@@ -122,27 +183,33 @@ func on_rejected(reason: String) -> void:
 
 
 func on_snapshot(players: Array) -> void:
-	snapshot_received.emit(players)
+	if not _stale():
+		snapshot_received.emit(players)
 
 
 func on_creatures(creatures: Array) -> void:
-	creatures_received.emit(creatures)
+	if not _stale():
+		creatures_received.emit(creatures)
 
 
 func on_marks(marks: Array) -> void:
-	marks_received.emit(marks)
+	if not _stale():
+		marks_received.emit(marks)
 
 
 func on_status(status: Dictionary) -> void:
-	status_received.emit(status)
+	if not _stale():
+		status_received.emit(status)
 
 
 func on_inventory(items: Dictionary) -> void:
-	inventory_received.emit(items)
+	if not _stale():
+		inventory_received.emit(items)
 
 
 func on_notice(key: String, args: Dictionary) -> void:
-	notice_received.emit(key, args)
+	if not _stale():
+		notice_received.emit(key, args)
 
 
 func _on_connected() -> void:
@@ -165,7 +232,8 @@ func set_look(new_look: Array) -> void:
 
 
 func on_look(peer_id: int, parts: Array) -> void:
-	look_received.emit(peer_id, parts)
+	if not _stale():
+		look_received.emit(peer_id, parts)
 
 
 func _default_url() -> String:

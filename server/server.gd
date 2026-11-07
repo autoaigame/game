@@ -96,6 +96,41 @@ func on_join(peer_id: int, player_name: String) -> void:
 	print("server: %s joined at %s" % [player_name, cell])
 
 
+## The client is back from a pause (its browser tab ran no frames, so it dropped updates): sends it
+## again everything that is only sent on a change.
+func on_resync(peer_id: int) -> void:
+	if _net == null:
+		return
+	for m in _resync_messages(peer_id):
+		var args: Array = m[1]
+		match m[0]:
+			"resynced":
+				_net.resynced.rpc_id(peer_id)
+			"marks":
+				_net.marks.rpc_id(peer_id, args[0])
+			"status":
+				_net.status.rpc_id(peer_id, args[0])
+			"inventory":
+				_net.inventory.rpc_id(peer_id, args[0])
+			"look":
+				_net.look.rpc_id(peer_id, args[0], args[1])
+
+
+## What a resync sends a player, in order, as [rpc name, args]: first the "resynced" marker (the
+## client drops what came before it, sent before its request, as stale), then the marks, their status
+## (even if unchanged), their inventory and what everyone wears. [] if not joined.
+func _resync_messages(peer_id: int) -> Array:
+	if not _players.has(peer_id):
+		return []
+	var p: Dictionary = _players[peer_id]
+	p["sent"] = {}
+	var out := [["resynced", []], ["marks", [MARKS.snapshot(_marks)]], ["status", [_status_to_send(p)]],
+			["inventory", [p["inventory"]]]]
+	for id in _players:
+		out.append(["look", [id, _players[id]["look"]]])
+	return out
+
+
 ## A joined player's record at `cell`, with their dog and their saved stats (hunger: full if none),
 ## wearing `look` if it is valid, the default look otherwise.
 func _new_player(player_name: String, cell: Vector2i, stats: Dictionary, inventory := {}, look: Variant = []) -> Dictionary:
