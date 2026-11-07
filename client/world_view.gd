@@ -14,6 +14,9 @@ var _camera := Camera2D.new()
 var _my_pos := Vector2.ZERO  ## my position in the last snapshot, in cells
 var _key_dir := Vector2i.ZERO  ## direction of the held keys at the last frame
 var _key_target := Vector2i.ZERO  ## last target sent for the held keys
+var _drift_t := 0.0  ## seconds of slow camera drift behind the start menu
+const DRIFT_CELLS := 2.0  ## radius of the drift around the spawn, in cells
+const DRIFT_PERIOD_S := 60.0
 
 
 func _ready() -> void:
@@ -86,6 +89,13 @@ func _stream_chunks() -> void:
 		add_child(node)
 
 
+## Before joining, the camera circles slowly around the spawn behind the menu (display only).
+func _drift_camera(delta: float) -> void:
+	_drift_t += delta
+	var a := TAU * _drift_t / DRIFT_PERIOD_S
+	_camera.position = IsoLayer.cell_to_local(Vector2(MapData.spawn_cell()) + DRIFT_CELLS * Vector2(cos(a), sin(a)))
+
+
 func _make_actor(player_name: String, is_me: bool) -> Node2D:
 	var actor := Node2D.new()
 	var sprite := Sprite2D.new()
@@ -121,6 +131,7 @@ func _process(delta: float) -> void:
 	_animate_actors(delta)
 	_stream_chunks()
 	if client.my_peer_id == 0:
+		_drift_camera(delta)
 		return
 	var dir := KeyMove.direction(
 			Input.is_physical_key_pressed(KEY_W), Input.is_physical_key_pressed(KEY_S),
