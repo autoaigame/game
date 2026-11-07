@@ -19,7 +19,9 @@
     "uid",
     "import",
     "gdshader",
-    "gitignore"
+    "gitignore",
+    "glb",
+    "gdshaderinc"
   ],
   "forbidden_extensions": [
     "so",
@@ -38,7 +40,8 @@
     "png",
     "wav",
     "ogg",
-    "ttf"
+    "ttf",
+    "glb"
   ],
   "ai_diff_budget_chars": 200000,
   "model": "deepseek/deepseek-v4.1-flash",
@@ -52,7 +55,8 @@
     "godot",
     "cfg",
     "import",
-    "gdshader"
+    "gdshader",
+    "gdshaderinc"
   ],
   "denied_code_patterns": [
     "OS\\.(execute|execute_with_pipe|create_process|create_instance|shell_open|shell_show_in_file_manager|kill|get_environment|set_environment)",
@@ -74,7 +78,8 @@
     "png": "89504e470d0a1a0a",
     "ogg": "4f676753",
     "wav": "52494646",
-    "ttf": "0001000000"
+    "ttf": "0001000000",
+    "glb": "676c5446"
   },
   "review_required_extensions": [
     "sh",
