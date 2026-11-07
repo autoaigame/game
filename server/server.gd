@@ -4,6 +4,8 @@ extends Node
 
 const SAVE_INTERVAL_S := 10.0
 const CARCASS_S := 120.0  ## how long a caught animal lies on the ground
+## Raw meat a caught animal gives when picked up, by mark kind.
+const MEAT := {"carcass_rabbit": 2, "carcass_pheasant": 1}
 const DOG := preload("res://server/dog.gd")
 const MARKS := preload("res://server/marks.gd")
 const HUNGER := preload("res://server/hunger.gd")
@@ -176,6 +178,35 @@ func _fires_near(pos: Vector2, radius: float) -> Array:
 		if m["kind"] == "fire" and (m["pos"] as Vector2).distance_to(pos) <= radius:
 			out.append(m["pos"])
 	return out
+
+
+## The player picks up a caught animal (the mark `mark_id`).
+func on_pick_up(peer_id: int, mark_id: int) -> void:
+	var r := _pick_up(peer_id, mark_id)
+	if r.is_empty():
+		return
+	if r["notice"] == "gathered":
+		_net.inventory.rpc_id(peer_id, _players[peer_id]["inventory"])
+	var args := r.duplicate()
+	args.erase("notice")
+	_net.notice.rpc_id(peer_id, r["notice"], args)
+
+
+## Picks up a carcass within reach for its raw meat: {notice: gathered (item, count) or too_far},
+## or {} for a request to ignore (unknown player, no such carcass).
+func _pick_up(peer_id: int, mark_id: int) -> Dictionary:
+	if not _players.has(peer_id):
+		return {}
+	var mark := MARKS.find(_marks, mark_id)
+	if not MEAT.has(mark.get("kind", "")):
+		return {}
+	var p: Dictionary = _players[peer_id]
+	if (p["pos"] as Vector2).distance_to(mark["pos"]) > Protocol.GATHER_REACH:
+		return {"notice": "too_far"}
+	var n := INV.add(p["inventory"], "raw_meat", MEAT[mark["kind"]])
+	MARKS.remove(_marks, mark_id)
+	_marks_changed = true
+	return {"notice": "gathered", "item": "raw_meat", "count": n}
 
 
 ## Picked objects regrow.

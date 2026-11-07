@@ -95,6 +95,10 @@ func request_whistle() -> void:
 	_net.whistle.rpc_id(1)
 
 
+func request_pick_up(mark_id: int) -> void:
+	_net.pick_up.rpc_id(1, mark_id)
+
+
 func on_welcome(peer_id: int, cell: Vector2i) -> void:
 	my_peer_id = peer_id
 	welcomed.emit(cell)
