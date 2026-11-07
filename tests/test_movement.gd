@@ -12,12 +12,16 @@ func test_never_overshoots() -> void:
 	assert_eq(p, Vector2(17, 16))
 
 
+## Walks from the spawn towards the first non-walkable cell along +x, far away: stops just before it.
 func test_stops_before_water() -> void:
-	# Column 16 is path down to row 1; row 0 is the water border.
-	var p := Protocol.step_towards(Vector2(16, 16), Vector2i(16, 0), 10.0)
+	var start := MapData.spawn_cell()
+	var wall := start
+	while MapData.is_walkable(wall):
+		wall += Vector2i(1, 0)
+	var p := Protocol.step_towards(Vector2(start), wall + Vector2i(5, 0), 1000.0)
 	var cell := Protocol.cell_of(p)
 	assert_true(MapData.is_walkable(cell), "ended on %s" % cell)
-	assert_eq(cell, Vector2i(16, 1))
+	assert_eq(cell, wall - Vector2i(1, 0))
 
 
 func test_cell_of_rounds() -> void:

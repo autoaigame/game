@@ -1,0 +1,7 @@
+{
+	"id": "grass",
+	"name": "Grass",
+	"walkable": true,
+	"priority": 3,
+	"atlas": 3
+}

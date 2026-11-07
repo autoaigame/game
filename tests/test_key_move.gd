@@ -26,10 +26,14 @@ func test_held_target_is_ahead_of_the_player() -> void:
 			Vector2i(20 - KeyMove.LOOKAHEAD, 20 - KeyMove.LOOKAHEAD))
 
 
+## Along +x from the spawn, the first non-walkable cell (water) stops the target in front of it.
 func test_held_target_stops_at_water() -> void:
-	# Row 16 is path up to x = 30; x = 31 is the water border.
-	assert_eq(KeyMove.held_target(Vector2(30, 16), Vector2i(1, 0)), Vector2i(30, 16))
-	assert_eq(KeyMove.held_target(Vector2(29, 16), Vector2i(1, 0)), Vector2i(30, 16))
+	var wall := MapData.spawn_cell()
+	while MapData.is_walkable(wall):
+		wall += Vector2i(1, 0)
+	var last := wall - Vector2i(1, 0)
+	assert_eq(KeyMove.held_target(Vector2(last), Vector2i(1, 0)), last)
+	assert_eq(KeyMove.held_target(Vector2(last - Vector2i(1, 0)), Vector2i(1, 0)), last)
 
 
 func test_diagonal_moves_both_axes() -> void:

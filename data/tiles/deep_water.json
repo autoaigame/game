@@ -1,0 +1,7 @@
+{
+	"id": "deep_water",
+	"name": "Deep water",
+	"walkable": false,
+	"priority": 0,
+	"atlas": 0
+}

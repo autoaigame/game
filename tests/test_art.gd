@@ -7,11 +7,34 @@ func test_tiles_are_high_resolution() -> void:
 	assert_eq(IsoLayer.TILE_SIZE, Vector2i(128, 64))
 
 
-func test_tiles_atlas_matches_tile_size() -> void:
+## One row per ground (data/tiles "atlas"), one column per DualGrid corner mask.
+func test_tiles_atlas_has_a_row_per_ground_and_a_column_per_mask() -> void:
 	var tex: Texture2D = load("res://assets/tiles.png")
-	assert_eq(tex.get_height(), IsoLayer.TILE_SIZE.y)
-	assert_eq(tex.get_width() % IsoLayer.TILE_SIZE.x, 0)
-	assert_eq(tex.get_width() / IsoLayer.TILE_SIZE.x, 3, "one tile per MapData.TILE_*")
+	assert_eq(tex.get_width(), IsoLayer.TILE_SIZE.x * IsoLayer.ATLAS_COLUMNS)
+	assert_eq(tex.get_height(), IsoLayer.TILE_SIZE.y * WorldData.tiles().size())
+	var rows := {}
+	for t in WorldData.tiles():
+		assert_false(rows.has(t["atlas"]), "two tiles on atlas row %d" % t["atlas"])
+		rows[t["atlas"]] = true
+		assert_true(t["atlas"] >= 0 and t["atlas"] < WorldData.tiles().size(), t["id"])
+
+
+## Mask 0 is empty. Near each corner of the diamond, a tile is opaque exactly when the mask has that
+## corner's bit (DualGrid: top = NW, right = NE, bottom = SE, left = SW).
+func test_mask_tiles_follow_the_corner_bits() -> void:
+	var img: Image = load("res://assets/tiles.png").get_image()
+	var w := IsoLayer.TILE_SIZE.x
+	var h := IsoLayer.TILE_SIZE.y
+	var probes := [Vector2i(w / 2, h / 8), Vector2i(w - w / 7, h / 2), Vector2i(w / 2, h - h / 7), Vector2i(w / 7, h / 2)]
+	var bits := [DualGrid.NW, DualGrid.NE, DualGrid.SE, DualGrid.SW]
+	for row in img.get_height() / h:
+		var empty := img.get_region(Rect2i(0, row * h, w, h))
+		assert_true(empty.is_invisible(), "row %d mask 0 is not empty" % row)
+		for mask in range(1, IsoLayer.ATLAS_COLUMNS):
+			for i in 4:
+				var p: Vector2i = probes[i] + Vector2i(mask * w, row * h)
+				var opaque := img.get_pixelv(p).a == 1.0
+				assert_eq(opaque, mask & bits[i] != 0, "row %d mask %d corner %d" % [row, mask, i])
 
 
 func test_player_frames_are_high_resolution() -> void:
@@ -34,18 +57,20 @@ func test_walk_frames_are_all_different() -> void:
 			seen[key] = true
 
 
-## Neighbouring tiles are offset by (w/2, h/2) and (-w/2, h/2). Each tile must
+## Neighbouring tiles are offset by (w/2, h/2) and (-w/2, h/2). Each full tile (mask 15) must
 ## cover exactly one texel per point of that lattice: no gaps, no overlaps.
 func test_tiles_cover_the_plane_exactly_once() -> void:
 	var img: Image = load("res://assets/tiles.png").get_image()
 	var w := IsoLayer.TILE_SIZE.x
 	var h := IsoLayer.TILE_SIZE.y
-	for t in img.get_width() / w:
+	for row in img.get_height() / h:
 		var seen := {}
 		var overlaps := 0
+		var ox := DualGrid.FULL * w
+		var oy := row * h
 		for y in h:
 			for x in w:
-				if img.get_pixel(t * w + x, y).a == 0.0:
+				if img.get_pixel(ox + x, oy + y).a == 0.0:
 					continue
 				# lattice coordinates of the texel centre, relative to the tile centre
 				var a := (x + 0.5 - w / 2.0) / w + (y + 0.5 - h / 2.0) / h
@@ -56,5 +81,5 @@ func test_tiles_cover_the_plane_exactly_once() -> void:
 				if seen.has(key):
 					overlaps += 1
 				seen[key] = true
-		assert_eq(overlaps, 0, "tile %d overlaps itself" % t)
-		assert_eq(seen.size(), w * h / 2, "tile %d leaves gaps" % t)
+		assert_eq(overlaps, 0, "row %d overlaps itself" % row)
+		assert_eq(seen.size(), w * h / 2, "row %d leaves gaps" % row)

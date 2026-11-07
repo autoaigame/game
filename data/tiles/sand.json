@@ -1,0 +1,7 @@
+{
+	"id": "sand",
+	"name": "Sand",
+	"walkable": true,
+	"priority": 2,
+	"atlas": 2
+}

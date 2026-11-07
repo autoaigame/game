@@ -1,0 +1,52 @@
+{
+	"seed": 20261107,
+	"altitude": {
+		"scale": 160,
+		"stretch": 1.6,
+		"octaves": 5,
+		"curve": [[0.0, 0.0], [0.30, 0.10], [0.42, 0.30], [0.55, 0.55], [0.68, 0.80], [1.0, 1.0]]
+	},
+	"moisture": {
+		"scale": 90,
+		"octaves": 4
+	},
+	"rivers": {
+		"scale": 200,
+		"octaves": 3,
+		"width": 0.02,
+		"deep_width": 0.006,
+		"bank_width": 0.028,
+		"max_altitude": 0.7,
+		"fade": 0.08
+	},
+	"meadow": {
+		"radius": 26,
+		"blend": 14,
+		"altitude": 0.5,
+		"moisture": 0.45
+	},
+	"biomes": {
+		"deep_water": {"tile": "deep_water"},
+		"shallow_water": {"tile": "shallow_water"},
+		"river": {"tile": "shallow_water"},
+		"beach": {"tile": "sand"},
+		"steppe": {"tile": "dry_grass"},
+		"grassland": {"tile": "grass"},
+		"forest": {"tile": "forest_floor"},
+		"highland": {"tile": "dry_grass"}
+	},
+	"table": [
+		{"max_altitude": 0.13, "biome": "deep_water"},
+		{"max_altitude": 0.175, "biome": "shallow_water"},
+		{"max_altitude": 0.21, "biome": "beach"},
+		{"max_altitude": 0.72, "by_moisture": [
+			{"max_moisture": 0.34, "biome": "steppe"},
+			{"max_moisture": 0.64, "biome": "grassland"},
+			{"max_moisture": 1.0, "biome": "forest"}
+		]},
+		{"max_altitude": 1.0, "by_moisture": [
+			{"max_moisture": 0.45, "biome": "highland"},
+			{"max_moisture": 1.0, "biome": "forest"}
+		]}
+	]
+}

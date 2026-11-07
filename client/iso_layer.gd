@@ -2,7 +2,13 @@
 class_name IsoLayer
 extends RefCounted
 
+## Tile size and atlas layout: the one place to change them (art/gen_art.gd reads them too).
 const TILE_SIZE := Vector2i(128, 64)
+## Ground atlas: one row per ground (data/tiles "atlas"), one column per DualGrid corner mask.
+const TILES_ATLAS := "res://assets/tiles.png"
+const ATLAS_COLUMNS := 16
+## Camera zoom: screen pixels per texel.
+const CAMERA_ZOOM := 1.0
 
 
 ## A TileMapLayer with the game's isometric TileSet. texture = the tiles atlas (null in tests).
@@ -15,8 +21,9 @@ static func new_layer(texture: Texture2D) -> TileMapLayer:
 		var src := TileSetAtlasSource.new()
 		src.texture = texture
 		src.texture_region_size = TILE_SIZE
-		for i in int(texture.get_width() / TILE_SIZE.x):
-			src.create_tile(Vector2i(i, 0))
+		for row in int(texture.get_height() / TILE_SIZE.y):
+			for col in int(texture.get_width() / TILE_SIZE.x):
+				src.create_tile(Vector2i(col, row))
 		ts.add_source(src, 0)
 	var layer := TileMapLayer.new()
 	layer.tile_set = ts

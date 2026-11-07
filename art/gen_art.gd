@@ -7,6 +7,9 @@ const GRASS := ["1b3a2f", "24502f", "306a32", "438a37", "62a83c", "8cc84a", "bde
 const DIRT := ["3f2a26", "5e3d2e", "7f5537", "a06f43", "be8b55", "d9a96f", "efcf98"]
 const WATER := ["0f2547", "15365f", "1b4c7c", "22669b", "3285b6", "53a9d1", "93d8ec", "e8fbff"]
 const STONE := ["4a3a36", "6e5c52", "958274", "bba997", "e0d4c0"]
+const SAND := ["5a4436", "7e6244", "a6844f", "c9a65f", "e2c47c", "f2dfa4", "fdf3cf"]
+const DRY := ["3a3424", "5a5129", "7f722f", "a6953d", "c6b154", "dfcb76", "f1e5a6"]
+const FOREST := ["101f1c", "17301f", "1f4224", "2b5628", "3d6c2e", "5b8a3a"]
 const SKIN := ["6b3d33", "a8634a", "d18f68", "efb98d", "fdd9b0"]
 const HAIR := ["24150f", "3e2416", "5c3620", "7f4e2c", "a5703e"]
 const TUNIC := ["3a1630", "62203b", "922f46", "c24450", "e7695d", "f79c80"]
@@ -19,14 +22,14 @@ const EYE_WHITE := "f4f1ea"
 const EYE := "203a6b"
 const SHADOW := Color(0.05, 0.03, 0.1, 0.38)
 
-const TILE := Vector2i(128, 64)
+const TILE := IsoLayer.TILE_SIZE  ## tile size and atlas layout live in client/iso_layer.gd
 const SPRITE := Vector2i(64, 96)
 const LIGHT := Vector3(-0.55, -0.65, 0.52)  ## from the top left, towards the viewer
 const BAYER := [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5]
 
 
 func _initialize() -> void:
-	_tiles().save_png("res://assets/tiles.png")
+	_tiles().save_png(IsoLayer.TILES_ATLAS)
 	_player().save_png("res://assets/player.png")
 	print("art: wrote assets/tiles.png and assets/player.png")
 	quit()
@@ -104,27 +107,97 @@ func _put(img: Image, o: Vector2i, x: int, y: int, col: Color) -> void:
 	img.set_pixel(o.x + p.x, o.y + p.y, col)
 
 
+## Ground types, one atlas row each, in the order of the "atlas" field of data/tiles/*.json.
+const GROUNDS := ["deep_water", "shallow_water", "sand", "grass", "dry_grass", "forest_floor"]
+## Each row has one tile per corner mask (DualGrid): NW << 3 | NE << 2 | SW << 1 | SE, where on screen
+## NW is the top corner, NE the right one, SW the left one and SE the bottom one.
+const MASKS := IsoLayer.ATLAS_COLUMNS
+## How a ground's edge looks: rim ramp and steps (dark side, lit side), and what it casts outside
+## (a translucent shadow on the bottom-right side, foam all around, or nothing).
+const EDGES := {
+	"deep_water": {"ramp": WATER, "dark": 0, "lit": 2, "outer": "none"},
+	"shallow_water": {"ramp": WATER, "dark": 2, "lit": 6, "outer": "none"},
+	"sand": {"ramp": SAND, "dark": 2, "lit": 6, "outer": "foam"},
+	"grass": {"ramp": GRASS, "dark": 1, "lit": 5, "outer": "shadow"},
+	"dry_grass": {"ramp": DRY, "dark": 2, "lit": 6, "outer": "shadow"},
+	"forest_floor": {"ramp": FOREST, "dark": 0, "lit": 4, "outer": "shadow"},
+}
+
+
 func _tiles() -> Image:
-	# atlas: grass, path, water (MapData.TILE_* order)
-	var img := Image.create_empty(TILE.x * 3, TILE.y, false, Image.FORMAT_RGBA8)
-	for t in 3:
-		var o := Vector2i(t * TILE.x, 0)
-		for y in TILE.y:
-			for x in TILE.x:
-				if not _inside(x, y):
-					continue
-				var v := _fbm(x, y, 10 + t * 7)
-				var col: Color
-				match t:
-					0: col = _c(GRASS, _pick(GRASS, v * 1.25 - 0.12, x, y, 1, 4))
-					1: col = _c(DIRT, _pick(DIRT, v * 1.2 - 0.1, x, y, 2, 5))
-					_: col = _c(WATER, _pick(WATER, v * 1.3 - 0.15, x, y, 1, 4))
-				img.set_pixel(o.x + x, o.y + y, col)
-		match t:
-			0: _grass_details(img, o)
-			1: _path_details(img, o)
-			_: _water_details(img, o)
+	var img := Image.create_empty(TILE.x * MASKS, TILE.y * GROUNDS.size(), false, Image.FORMAT_RGBA8)
+	for row in GROUNDS.size():
+		var full := _ground(GROUNDS[row], row)
+		for mask in MASKS:
+			_cut(img, full, Vector2i(mask * TILE.x, row * TILE.y), mask, GROUNDS[row], 60 + row * 5)
 	return img
+
+
+## The whole diamond of one ground, seamless with copies of itself.
+func _ground(kind: String, row: int) -> Image:
+	var img := Image.create_empty(TILE.x, TILE.y, false, Image.FORMAT_RGBA8)
+	var o := Vector2i.ZERO
+	for y in TILE.y:
+		for x in TILE.x:
+			if not _inside(x, y):
+				continue
+			var v := _fbm(x, y, 10 + row * 7)
+			var col: Color
+			match kind:
+				"deep_water": col = _c(WATER, _pick(WATER, v * 1.3 - 0.15, x, y, 0, 2))
+				"shallow_water": col = _c(WATER, _pick(WATER, v * 1.3 - 0.15, x, y, 3, 5))
+				"sand": col = _c(SAND, _pick(SAND, v * 1.3 - 0.15, x, y, 3, 5))
+				"grass": col = _c(GRASS, _pick(GRASS, v * 1.25 - 0.12, x, y, 1, 4))
+				"dry_grass": col = _c(DRY, _pick(DRY, v * 1.25 - 0.12, x, y, 2, 4))
+				"forest_floor": col = _c(FOREST, _pick(FOREST, v * 1.3 - 0.15, x, y, 1, 3))
+			img.set_pixel(x, y, col)
+	match kind:
+		"deep_water": _water_details(img, o, -2)
+		"shallow_water": _water_details(img, o, 0)
+		"sand": _sand_details(img, o)
+		"grass": _grass_details(img, o)
+		"dry_grass": _dry_details(img, o)
+		"forest_floor": _forest_details(img, o)
+	return img
+
+
+## Copies the part of `full` that a corner mask keeps into the atlas at `o`. The kept area comes
+## from the 4 corner values interpolated over the diamond, with a periodic noise for a ragged edge:
+## on a tile edge it depends only on the two corners of that edge, and the noise is periodic over
+## the tile lattice, so neighbouring tiles always meet. Edge texels get a rim, lit on the top left.
+func _cut(img: Image, full: Image, o: Vector2i, mask: int, kind: String, seed: int) -> void:
+	# corner values on screen: top (NW), right (NE), bottom (SE), left (SW)
+	var c := [float((mask >> 3) & 1), float((mask >> 2) & 1), float(mask & 1), float((mask >> 1) & 1)]
+	var edge: Dictionary = EDGES[kind]
+	for y in TILE.y:
+		for x in TILE.x:
+			if not _inside(x, y):
+				continue
+			var l := _lattice(x + 0.5, y + 0.5)
+			var u := l.x + 0.5  # 0 at the top/left corners' side, 1 at the right/bottom side
+			var w := l.y + 0.5  # 0 at the top/right side, 1 at the left/bottom side
+			# corners: top (0, 0), right (1, 0), bottom (1, 1), left (0, 1)
+			var value := lerpf(lerpf(c[0], c[1], u), lerpf(c[3], c[2], u), w)
+			var noise := (_vnoise(x, y, 4, seed) - 0.5) * 0.24 + (_vnoise(x, y, 12, seed + 1) - 0.5) * 0.1
+			var e := value - 0.5 + noise
+			# outward normal of the kept area, on screen: lattice (a, b) -> screen (a - b, a + b)
+			var ga := lerpf(c[1] - c[0], c[2] - c[3], w)
+			var gb := lerpf(c[3] - c[0], c[2] - c[1], u)
+			var facing_light := (ga - gb) + (ga + gb) > 0.0  # normal . (-1, -1) > 0
+			if e > 0.0:
+				var col := full.get_pixel(x, y)
+				if e < 0.05 and mask != 15:
+					col = _c(edge["ramp"], edge["lit"] if facing_light else edge["dark"])
+				img.set_pixel(o.x + x, o.y + y, col)
+			elif e > -0.06 and mask != 0:
+				var b: float = (BAYER[(y % 4) * 4 + (x % 4)] + 0.5) / 16.0
+				match edge["outer"]:
+					"shadow":
+						if not facing_light:
+							img.set_pixel(o.x + x, o.y + y, SHADOW)
+					"foam":
+						if b < 0.75 + e * 8.0:
+							img.set_pixel(o.x + x, o.y + y, Color(_c(WATER, 7), 0.85))
 
 
 func _grass_details(img: Image, o: Vector2i) -> void:
@@ -184,18 +257,21 @@ func _path_details(img: Image, o: Vector2i) -> void:
 					_put(img, o, x, y, _c(DIRT, 1))
 
 
-func _water_details(img: Image, o: Vector2i) -> void:
+## shift: tone offset of the crests (deep water: darker crests, fewer, no sparkles).
+func _water_details(img: Image, o: Vector2i, shift: int) -> void:
 	# wave crests: light arcs over a dark trough
-	for i in 30:
+	for i in 30 + shift * 6:
 		var x := int(_hash(i, 0, 41) * TILE.x)
 		var y := int(_hash(i, 1, 41) * TILE.y)
 		var w := 5 + int(_hash(i, 2, 41) * 9)
-		var tone := 5 if _hash(i, 3, 41) < 0.65 else 6
+		var tone := (5 if _hash(i, 3, 41) < 0.65 else 6) + shift
 		for k in w:
 			var t := float(k) / (w - 1)
 			var lift := roundi(sin(t * PI) * 1.6)
 			_put(img, o, x + k, y - lift, _c(WATER, tone if t > 0.15 and t < 0.85 else tone - 1))
-			_put(img, o, x + k, y - lift + 1, _c(WATER, 1))
+			_put(img, o, x + k, y - lift + 1, _c(WATER, maxi(0, 1 + shift / 2)))
+	if shift < 0:
+		return
 	# sparkles: a bright core with a soft cross
 	for i in 5:
 		var x := int(_hash(i, 0, 42) * TILE.x)
@@ -203,6 +279,78 @@ func _water_details(img: Image, o: Vector2i) -> void:
 		for p in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
 			_put(img, o, x + p.x, y + p.y, _c(WATER, 6))
 		_put(img, o, x, y, _c(WATER, 7))
+
+
+func _sand_details(img: Image, o: Vector2i) -> void:
+	# grains: dark and light specks
+	for i in 120:
+		var x := int(_hash(i, 0, 51) * TILE.x)
+		var y := int(_hash(i, 1, 51) * TILE.y)
+		_put(img, o, x, y, _c(SAND, 2 if i % 3 else 6))
+	# ripples left by the wind: short light strokes over a shadow
+	for i in 9:
+		var x := int(_hash(i, 0, 52) * TILE.x)
+		var y := int(_hash(i, 1, 52) * TILE.y)
+		var w := 6 + int(_hash(i, 2, 52) * 8)
+		for k in w:
+			_put(img, o, x + k, y + (k / 4), _c(SAND, 5))
+			_put(img, o, x + k, y + (k / 4) + 1, _c(SAND, 2))
+	# small shells and pebbles
+	for i in 4:
+		var x := int(_hash(i, 0, 53) * TILE.x)
+		var y := int(_hash(i, 1, 53) * TILE.y)
+		_put(img, o, x, y, _c(STONE, 4))
+		_put(img, o, x + 1, y, _c(STONE, 3))
+		_put(img, o, x, y + 1, _c(SAND, 1))
+		_put(img, o, x + 1, y + 1, _c(SAND, 1))
+
+
+func _dry_details(img: Image, o: Vector2i) -> void:
+	# tufts: straw-coloured blades with pale tips, leaning more than green grass
+	for i in 120:
+		var x := int(_hash(i, 0, 61) * TILE.x)
+		var y := int(_hash(i, 1, 61) * TILE.y)
+		var tall := 3 + int(_hash(i, 2, 61) * 4)
+		var lean := int(_hash(i, 3, 61) * 5) - 2
+		var tone := 3 + int(_hash(i, 4, 61) * 3)
+		for k in tall:
+			var shade := tone - 2 + int(float(k) / tall * 3.0)
+			_put(img, o, x + (lean * k) / 3, y - k, _c(DRY, shade))
+	# bare earth showing through
+	for i in 5:
+		var cx := int(_hash(i, 0, 62) * TILE.x)
+		var cy := int(_hash(i, 1, 62) * TILE.y)
+		for k in 7:
+			var x := cx + int(_hash(i, 10 + k, 62) * 6) - 3
+			var y := cy + int(_hash(i, 20 + k, 62) * 3) - 1
+			_put(img, o, x, y, _c(DIRT, 3 if k % 2 else 4))
+
+
+func _forest_details(img: Image, o: Vector2i) -> void:
+	# fallen leaves in autumn browns and golds
+	for i in 70:
+		var x := int(_hash(i, 0, 71) * TILE.x)
+		var y := int(_hash(i, 1, 71) * TILE.y)
+		var col := _c(DIRT, 2 + int(_hash(i, 2, 71) * 3)) if i % 4 else _c(GOLD, 1)
+		_put(img, o, x, y, col)
+		_put(img, o, x + 1, y, col)
+		_put(img, o, x, y + 1, _c(FOREST, 0))
+	# moss cushions: a lit top over a dark base
+	for i in 6:
+		var x := int(_hash(i, 0, 72) * TILE.x)
+		var y := int(_hash(i, 1, 72) * TILE.y)
+		for dx in range(-2, 3):
+			_put(img, o, x + dx, y + 1, _c(FOREST, 1))
+			_put(img, o, x + dx, y, _c(FOREST, 4 if dx < 1 else 3))
+		_put(img, o, x - 1, y - 1, _c(FOREST, 5))
+		_put(img, o, x, y - 1, _c(FOREST, 4))
+	# twigs
+	for i in 5:
+		var x := int(_hash(i, 0, 73) * TILE.x)
+		var y := int(_hash(i, 1, 73) * TILE.y)
+		var w := 4 + int(_hash(i, 2, 73) * 5)
+		for k in w:
+			_put(img, o, x + k, y + (k / 3 if i % 2 else -k / 3), _c(DIRT, 1))
 
 
 ## Lambert brightness in [0, 1] of a sphere-like surface at normalized offset n.
