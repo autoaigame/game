@@ -1,0 +1,8 @@
+{
+	"id": "pebble",
+	"name": "Pebbles",
+	"sprite": "res://assets/decals/pebble.png",
+	"grounds": ["sand", "dry_grass", "packed_dirt", "grass"],
+	"cell_size": 3,
+	"density": 0.25
+}

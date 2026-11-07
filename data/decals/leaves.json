@@ -1,0 +1,8 @@
+{
+	"id": "leaves",
+	"name": "Fallen leaves",
+	"sprite": "res://assets/decals/leaves.png",
+	"grounds": ["forest_floor", "grass"],
+	"cell_size": 2,
+	"density": 0.3
+}

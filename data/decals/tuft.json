@@ -1,0 +1,8 @@
+{
+	"id": "tuft",
+	"name": "Grass tuft",
+	"sprite": "res://assets/decals/tuft.png",
+	"grounds": ["grass", "dry_grass", "forest_floor"],
+	"cell_size": 2,
+	"density": 0.35
+}

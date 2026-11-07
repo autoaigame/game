@@ -5,6 +5,8 @@ extends RefCounted
 
 ## Ground layers are drawn under everything else, lowest priority first.
 const GROUND_Z := -32
+## Decals: flat on the ground, above every ground layer, under objects and players (z 0).
+const DECALS_Z := -8
 
 
 ## The drawn ground tiles of a chunk (DualGrid), by layer: tile index -> {drawn tile -> atlas coords}.
@@ -45,16 +47,27 @@ static func objects(chunk: Vector2i) -> Dictionary:
 ## A sprite for an object standing on `cell`. Its position is the cell centre, so it sorts by y with
 ## the players (y_sort): a player north of a tree walks behind it.
 static func object_sprite(cell: Vector2i, index: int) -> Sprite2D:
-	var path: String = WorldData.object(index)["sprite"]
-	if not _sprites.has(path):
-		_sprites[path] = load(path) if ResourceLoader.exists(path) else null
 	var sprite := Sprite2D.new()
-	sprite.texture = _sprites[path]
+	sprite.texture = _texture(WorldData.object(index)["sprite"])
 	sprite.centered = false
 	var size := sprite.texture.get_size() if sprite.texture != null else Vector2.ZERO
 	sprite.offset = Vector2(-size.x / 2.0, IsoLayer.OBJECT_FOOT_PX - size.y)
 	sprite.position = IsoLayer.cell_to_local(Vector2(cell))
 	return sprite
+
+
+## A flat sprite for a decal, centred on its cell centre moved by the decal's offset.
+static func decal_sprite(cell: Vector2i, d: Dictionary) -> Sprite2D:
+	var sprite := Sprite2D.new()
+	sprite.texture = _texture(WorldData.decals()[d["index"]]["sprite"])
+	sprite.position = IsoLayer.cell_to_local(Vector2(cell) + d["offset"]).round()
+	return sprite
+
+
+static func _texture(path: String) -> Texture2D:
+	if not _sprites.has(path):
+		_sprites[path] = load(path) if ResourceLoader.exists(path) else null
+	return _sprites[path]
 
 
 ## A node drawing the chunk. Its layers use world coordinates, so it sits at the origin. It is y-sorted
@@ -66,6 +79,12 @@ static func build(chunk: Vector2i, tiles: Texture2D) -> Node2D:
 	var obj := objects(chunk)
 	for cell in obj:
 		node.add_child(object_sprite(cell, obj[cell]))
+	var decals := Node2D.new()
+	decals.name = "Decals"
+	decals.z_index = DECALS_Z
+	for d in Decals.in_chunk(chunk):
+		decals.add_child(decal_sprite(d[0], d[1]))
+	node.add_child(decals)
 	var ground := ground_tiles(chunk)
 	var order := ground.keys()
 	order.sort()
