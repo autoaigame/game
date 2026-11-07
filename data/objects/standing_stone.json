@@ -1,0 +1,8 @@
+{
+	"id": "standing_stone",
+	"name": "Standing stone",
+	"blocks": true,
+	"cell_size": 1,
+	"sprite": "res://assets/objects/standing_stone.png",
+	"densities": {}
+}

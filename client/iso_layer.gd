@@ -7,6 +7,9 @@ const TILE_SIZE := Vector2i(128, 64)
 ## Ground atlas: one row per ground (data/tiles "atlas"), one column per DualGrid corner mask.
 const TILES_ATLAS := "res://assets/tiles.png"
 const ATLAS_COLUMNS := 16
+## Object sprites (data/objects "sprite"): the object's cell centre is this many px above the bottom
+## edge of its image, horizontally centred.
+const OBJECT_FOOT_PX := 8
 ## Camera zoom: screen pixels per texel.
 const CAMERA_ZOOM := 1.0
 

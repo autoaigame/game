@@ -10,7 +10,7 @@ const CACHE_MAX_CHUNKS := 4096
 ## How far nearest_walkable() looks, in cells.
 const SEARCH_RADIUS := 128
 
-static var _chunks := {}  ## chunk coords -> {tiles: PackedByteArray, walk: PackedByteArray}
+static var _chunks := {}  ## chunk coords -> {tiles, walk, objects, places: PackedByteArray}
 static var _spawn: Variant = null
 
 
@@ -20,6 +20,26 @@ static func tile_at(cell: Vector2i) -> int:
 	return _chunk(c)["tiles"][_index_in_chunk(cell, c)]
 
 
+## Index of the object on a cell (WorldData.objects()), or -1.
+static func object_index_at(cell: Vector2i) -> int:
+	var c := chunk_of(cell)
+	return _chunk(c)["objects"][_index_in_chunk(cell, c)] - 1
+
+
+## Id of the object on a cell, or "".
+static func object_at(cell: Vector2i) -> String:
+	var i := object_index_at(cell)
+	return WorldData.object(i)["id"] if i >= 0 else ""
+
+
+## Id of the hand-made place covering a cell, or "".
+static func place_at(cell: Vector2i) -> String:
+	var c := chunk_of(cell)
+	var i: int = _chunk(c)["places"][_index_in_chunk(cell, c)] - 1
+	return WorldData.places()[i]["id"] if i >= 0 else ""
+
+
+## Walkable ground and no blocking object.
 static func is_walkable(cell: Vector2i) -> bool:
 	var c := chunk_of(cell)
 	return _chunk(c)["walk"][_index_in_chunk(cell, c)] == 1
@@ -75,6 +95,7 @@ static func _nearest(from: Vector2i, cells: Dictionary) -> Variant:
 static func clear_cache() -> void:
 	_chunks.clear()
 	_spawn = null
+	WorldPlaces.clear_cache()
 
 
 static func _index_in_chunk(cell: Vector2i, chunk: Vector2i) -> int:
@@ -95,12 +116,33 @@ static func _chunk(c: Vector2i) -> Dictionary:
 static func _generate(c: Vector2i) -> Dictionary:
 	var tiles := PackedByteArray()
 	var walk := PackedByteArray()
+	var objects := PackedByteArray()  ## object index + 1, 0 = none
+	var places := PackedByteArray()  ## place index + 1, 0 = none
 	tiles.resize(CHUNK * CHUNK)
 	walk.resize(CHUNK * CHUNK)
+	objects.resize(CHUNK * CHUNK)
+	places.resize(CHUNK * CHUNK)
 	var biomes := WorldData.biomes()
 	for y in CHUNK:
 		for x in CHUNK:
-			var t: int = biomes[Terrain.biome(c.x * CHUNK + x, c.y * CHUNK + y)]["tile"]
-			tiles[y * CHUNK + x] = t
-			walk[y * CHUNK + x] = 1 if WorldData.tile(t)["walkable"] else 0
-	return {"tiles": tiles, "walk": walk}
+			var cell := c * CHUNK + Vector2i(x, y)
+			tiles[y * CHUNK + x] = biomes[Terrain.biome(cell.x, cell.y)]["tile"]
+			objects[y * CHUNK + x] = WorldObjects.object_at(cell) + 1
+	# hand-made places replace the ground and the objects under their footprint
+	var rect := Rect2i(c * CHUNK, Vector2i(CHUNK, CHUNK))
+	for p in WorldPlaces.places_in(rect):
+		var place: Dictionary = WorldData.places()[p["index"]]
+		for pc in place["cells"]:
+			var cell: Vector2i = p["origin"] + pc[0]
+			if not rect.has_point(cell):
+				continue
+			var i := _index_in_chunk(cell, c)
+			if pc[1] >= 0:
+				tiles[i] = pc[1]
+			objects[i] = pc[2] + 1
+			places[i] = p["index"] + 1
+	for i in CHUNK * CHUNK:
+		var ob := objects[i] - 1
+		var blocked: bool = ob >= 0 and WorldData.object(ob)["blocks"]
+		walk[i] = 1 if WorldData.tile(tiles[i])["walkable"] and not blocked else 0
+	return {"tiles": tiles, "walk": walk, "objects": objects, "places": places}

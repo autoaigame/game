@@ -1,0 +1,7 @@
+{
+	"id": "packed_dirt",
+	"name": "Packed dirt",
+	"walkable": true,
+	"priority": 6,
+	"atlas": 6
+}

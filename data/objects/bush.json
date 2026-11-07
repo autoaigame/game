@@ -1,0 +1,8 @@
+{
+	"id": "bush",
+	"name": "Bush",
+	"blocks": false,
+	"cell_size": 5,
+	"sprite": "res://assets/objects/bush.png",
+	"densities": {"grassland": 0.2, "forest": 0.3, "steppe": 0.1}
+}
