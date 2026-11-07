@@ -6,6 +6,7 @@ signal welcomed(cell: Vector2i)
 signal join_rejected(reason: String)
 signal snapshot_received(players: Array)
 signal creatures_received(creatures: Array)
+signal marks_received(marks: Array)
 signal connection_lost
 
 ## ws(s):// URL of the server. On the web it defaults to the page's own host + /ws.
@@ -76,6 +77,10 @@ func on_snapshot(players: Array) -> void:
 
 func on_creatures(creatures: Array) -> void:
 	creatures_received.emit(creatures)
+
+
+func on_marks(marks: Array) -> void:
+	marks_received.emit(marks)
 
 
 func _on_connected() -> void:
