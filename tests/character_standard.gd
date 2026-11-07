@@ -8,6 +8,9 @@ const ASSETS := "res://ASSETS.toml"
 const BODY_GLB := "res://assets/character/body.glb"
 ## PNG chunks a part's texture may have: no text, time, colour profile or other metadata.
 const PNG_CHUNKS := ["IHDR", "PLTE", "tRNS", "IDAT", "IEND"]
+## What art/character/new_part.py writes for the contributor to replace.
+const PLACEHOLDERS := ["<version>", "say how it is made", "TODO"]
+const PLACEHOLDER_HELP := {"author": "your GitHub login", "tool": "the Blender version and how the part is made"}
 ## A colour is a palette colour when each channel is within this of it (8-bit sRGB steps).
 const COLOUR_SLACK := 1.5 / 255.0
 
@@ -36,6 +39,10 @@ static func problems(id: String) -> PackedStringArray:
 	if typeof(rec.get("when_hidden")) == TYPE_DICTIONARY:
 		files.append(String(rec["when_hidden"]["glb"]))
 	for f in files:
+		var entry: Dictionary = entries().get(f.trim_prefix("res://"), {})
+		for p in placeholder_problems(rec, entry):
+			if not ("%s: %s" % [id, p]) in out:
+				out.append("%s: %s" % [id, p])
 		var why_asset := asset_problem(f.trim_prefix("res://"))
 		if why_asset != "":
 			out.append("%s: %s" % [id, why_asset])
@@ -48,11 +55,24 @@ static func problems(id: String) -> PackedStringArray:
 	return out
 
 
+## Placeholders art/character/new_part.py leaves for the contributor to fill, still in the record or the
+## ASSETS.toml entry.
+static func placeholder_problems(rec: Dictionary, entry: Dictionary) -> PackedStringArray:
+	var out := PackedStringArray()
+	if String(rec.get("name", "")).strip_edges().to_upper().begins_with("TODO"):
+		out.append("record: name is still a placeholder (%s): the name players see, in French" % rec["name"])
+	for key in ["author", "tool"]:
+		var v := String(entry.get(key, ""))
+		for mark in PLACEHOLDERS:
+			if v.contains(mark):
+				out.append("ASSETS.toml: %s still has the placeholder \"%s\": %s" % [key, mark, PLACEHOLDER_HELP[key]])
+				break
+	return out
+
+
 ## "" when ASSETS.toml has an entry for `path` (relative to the repository) with licence CC0-1.0.
 static func asset_problem(path: String) -> String:
-	if _assets.is_empty():
-		_assets = parse_assets(FileAccess.get_file_as_string(ASSETS))
-	if not _assets.has(path):
+	if not entries().has(path):
 		return "no ASSETS.toml entry for %s" % path
 	var e: Dictionary = _assets[path]
 	if e.get("license", "") != "CC0-1.0":
@@ -60,6 +80,13 @@ static func asset_problem(path: String) -> String:
 	if String(e.get("author", "")) == "":
 		return "%s: no author in ASSETS.toml" % path
 	return ""
+
+
+## The entries of ASSETS.toml by path, read once.
+static func entries() -> Dictionary:
+	if _assets.is_empty():
+		_assets = parse_assets(FileAccess.get_file_as_string(ASSETS))
+	return _assets
 
 
 ## {path: {key: value}} of the [[asset]] entries of an ASSETS.toml text (string values only).

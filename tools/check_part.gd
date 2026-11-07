@@ -23,10 +23,10 @@ func _init() -> void:
 	var id: String = args[0]
 	var bad := PackedStringArray()
 	bad.append_array(Std.problems(id))
-	if not bad.is_empty() or not id in CharacterParts.part_ids():
+	if not id in CharacterParts.part_ids():
 		_report(id, bad if not bad.is_empty() else PackedStringArray(["%s: not loaded (see the errors above)" % id]))
 		return
-	print("files: ok")
+	print("files: %s" % ("ok" if bad.is_empty() else "see below"))
 	for path in TESTS:
 		var script: GDScript = load(path)
 		for m in script.get_script_method_list():
@@ -36,7 +36,7 @@ func _init() -> void:
 			t.call(m["name"])
 			for f in t.failures:
 				bad.append("%s::%s: %s" % [path.get_file(), m["name"], f])
-	print("records, rig, faces: %s" % ("ok" if bad.is_empty() else "see below"))
+	print("records, rig, faces: done")
 	var p := CharacterParts.part(id)
 	var bodies := CharacterParts.parts_for("body")
 	if p["slot"] == "hat" or p["slot"] == "hair":

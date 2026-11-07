@@ -111,3 +111,17 @@ func test_skinned_part_needs_body_bones_and_every_shape_key() -> void:
 	assert_true(p.contains("no shape key morph_stocky"), p)
 	assert_true(p.contains("bone DEF-tail"), p)
 	assert_true(" ".join(Std.glb_problems(good, "rigid", "hat")).contains("no skin"), "a skinned glb is not rigid")
+
+
+## new_part.py writes placeholders; a part that still has them is not finished.
+func test_placeholders_of_new_part_are_refused() -> void:
+	var done := {"tool": "art/character/parts/hat_x.py (Blender 5.2.3 LTS) on assets/character/body.glb: a dome and a band", "author": "someone"}
+	assert_true(Std.placeholder_problems({"name": "Chapeau"}, done).is_empty())
+	var p := Std.placeholder_problems({"name": "TODO: nom en français"}, done)
+	assert_eq(p.size(), 1)
+	assert_true(" ".join(p).contains("name"), "%s" % p)
+	for tool in ["art/character/parts/hat_x.py (Blender <version>) on assets/character/body.glb: a dome",
+			"art/character/parts/hat_x.py (Blender 5.2) on assets/character/body.glb: say how it is made"]:
+		var q := Std.placeholder_problems({"name": "Chapeau"}, {"tool": tool, "author": "someone"})
+		assert_eq(q.size(), 1, tool)
+		assert_true(" ".join(q).contains("tool"), "%s" % q)

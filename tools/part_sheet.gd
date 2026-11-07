@@ -1,7 +1,8 @@
 ## A sheet of one character part as the game draws it: the default look wearing the part, on every body
-## shape (rows), from the front, three-quarters, the side and the back, then running (columns). Writes
+## shape (rows), from the front, three-quarters, the side and the back, then running (columns). Given a
+## slot instead of a part, a gallery: every part of the slot (rows) on the standard body shape. Writes
 ## <out>.png at game size and <out>_x3.png enlarged 3 times. Needs a renderer (not --headless):
-##   godot --path . --rendering-driver opengl3 -s res://tools/part_sheet.gd -- <id> <out.png>
+##   godot --path . --rendering-driver opengl3 -s res://tools/part_sheet.gd -- <id or slot> <out.png>
 ## On Linux without a display: xvfb-run. make check-part runs it.
 extends SceneTree
 
@@ -21,17 +22,27 @@ var sheet := Vector2i.ZERO
 
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
-	if args.size() != 2 or CharacterParts.part(args[0]).is_empty():
-		print("usage: part_sheet.gd -- <part id> <out.png>")
+	if args.size() != 2 or (CharacterParts.part(args[0]).is_empty() and CharacterParts.slot(args[0]).is_empty()):
+		print("usage: part_sheet.gd -- <part id or slot> <out.png>")
 		quit(2)
 		return
-	var id: String = args[0]
 	out = args[1]
-	var slot: String = CharacterParts.part(id)["slot"]
-	var bodies: Array = Array(CharacterParts.parts_for("body")) if slot != "body" else [id]
-	var size := Vector2i(CELL.x * VIEWS.size(), TOP + CELL.y * bodies.size())
+	var rows := []  ## [label, body part, part worn in the slot]
+	if CharacterParts.slot(args[0]).is_empty():  # one part on every body shape
+		var id: String = args[0]
+		var slot: String = CharacterParts.part(id)["slot"]
+		if slot == "body":
+			rows.append([id.trim_prefix("body_"), id, id])
+		else:
+			for b in CharacterParts.parts_for("body"):
+				rows.append([b.trim_prefix("body_"), b, id])
+	else:  # a gallery: every part of a slot on the standard body shape
+		for id in CharacterParts.parts_for(args[0]):
+			rows.append([id, "body_standard" if args[0] != "body" else id, id])
+	var size := Vector2i(CELL.x * VIEWS.size(), TOP + CELL.y * rows.size())
 	sheet = size
 	root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED  # one game pixel per screen pixel
+	DisplayServer.window_set_size(size.max(Vector2i(64, 64)))
 	var world := Node2D.new()
 	root.add_child(world)
 	var bg := ColorRect.new()
@@ -44,16 +55,18 @@ func _initialize() -> void:
 		l.position = Vector2(CELL.x * c + 4, 0)
 		l.add_theme_font_size_override("font_size", 11)
 		world.add_child(l)
-	for r in bodies.size():
+	for r in rows.size():
+		var body: String = rows[r][1]
+		var id: String = rows[r][2]
+		var slot: String = CharacterParts.part(id)["slot"]
 		var look := []
 		for e in CharacterParts.normalize(CharacterParts.default_look()):
 			var s: String = CharacterParts.part(e["id"])["slot"]
-			if s == slot or (s == "body" and slot != "body"):
-				continue
-			look.append(e)
+			if s != slot and s != "body":
+				look.append(e)
+		look.append({"id": body, "color": CharacterParts.part(body)["colors"][0]})
 		if slot != "body":
-			look.append({"id": bodies[r], "color": CharacterParts.part(bodies[r])["colors"][0]})
-		look.append({"id": id, "color": CharacterParts.part(id)["colors"][0]})
+			look.append({"id": id, "color": CharacterParts.part(id)["colors"][0]})
 		look = CharacterParts.normalize(look)
 		for c in VIEWS.size():
 			var m := Character3D.new()
@@ -64,7 +77,7 @@ func _initialize() -> void:
 			m.set_meta("run", VIEWS[c][2])
 			models.append(m)
 		var l := Label.new()
-		l.text = bodies[r].trim_prefix("body_")
+		l.text = rows[r][0]
 		l.position = Vector2(4, TOP + CELL.y * r + 2)
 		l.add_theme_font_size_override("font_size", 11)
 		world.add_child(l)

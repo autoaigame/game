@@ -79,7 +79,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           for id in $IDS; do
             echo "::group::$id"
-            xvfb-run -a make check-part ID="$id" GODOT="$GODOT" 2>&1 | tee "build/check-$id.log" || true
+            xvfb-run -a -s "-screen 0 1280x2048x24" make check-part ID="$id" GODOT="$GODOT" 2>&1 | tee "build/check-$id.log" || true
             if grep -q "^${id} follows the standard" "build/check-$id.log"; then
               result="follows the standard"
             else

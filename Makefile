@@ -1,7 +1,7 @@
 GODOT ?= godot
 RUN := $(GODOT) --headless --path .
 
-.PHONY: setup check test smoke art export-web run-server part check-part
+.PHONY: setup check test smoke art export-web run-server part check-part gallery
 
 setup: ## import the project (first run, or after adding assets)
 	@$(RUN) --import >/dev/null 2>&1 || $(RUN) --import
@@ -28,10 +28,16 @@ part: ## build one character part: make part ID=<id> [BLEND=1] (Blender for volu
 
 check-part: setup ## check one character part against the standard and draw its sheet: make check-part ID=<id>
 	@test -n "$(ID)" || { echo "usage: make check-part ID=<id>"; exit 2; }
-	@$(RUN) -s res://tools/check_part.gd -- $(ID)
 	@mkdir -p build/parts && touch build/parts/.gdignore
-	@$(GODOT) --path . --rendering-driver opengl3 --resolution 1280x720 -s res://tools/part_sheet.gd -- $(ID) build/parts/$(ID)_sheet.png \
-		|| echo "no sheet: rendering needs a display (on Linux without one: xvfb-run make check-part ID=$(ID))"
+	@status=0; $(RUN) -s res://tools/check_part.gd -- $(ID) || status=$$?; \
+	$(GODOT) --path . --rendering-driver opengl3 --resolution 1280x720 -s res://tools/part_sheet.gd -- $(ID) build/parts/$(ID)_sheet.png \
+		|| echo "no sheet: rendering needs a display. On Linux without one: xvfb-run make check-part ID=$(ID) (needs xauth), or Xvfb :99 & then DISPLAY=:99 make check-part ID=$(ID)"; \
+	exit $$status
+
+gallery: setup ## every character part of a slot on one sheet: make gallery SLOT=<slot>
+	@test -n "$(SLOT)" || { echo "usage: make gallery SLOT=<slot>"; exit 2; }
+	@mkdir -p build/parts && touch build/parts/.gdignore
+	@$(GODOT) --path . --rendering-driver opengl3 --resolution 1280x720 -s res://tools/part_sheet.gd -- $(SLOT) build/parts/gallery_$(SLOT).png
 
 export-web: setup ## web build into build/web/
 	@mkdir -p build/web

@@ -161,7 +161,8 @@ changes the art direction: ask first in an issue.
 ## Building a part
 
 The tools are in `art/character/part_kit.py` (Blender): the body, its regions and skin weights, copying
-the body's faces out along the normals (`extract`), primitives, the skull dome hats sit on, moving a rigid
+the body's faces out along the normals (`extract`), primitives, round shapes (`lathe`, `ring` for a
+brim), the skull dome hats sit on, moving a rigid
 part into its bone's space, the body-shape keys (`transfer_morphs`) and the export.
 
 A new part starts from `art/character/new_part.py`, which writes a part of the slot that already passes
@@ -201,13 +202,16 @@ splits the mesh at its regions and texture seams, and `part_kit.load_body` welds
   CC0-1.0 `ASSETS.toml` entry, PNGs have no metadata chunk, a glb has one mesh, no animation, camera,
   light or texture, a rigid part no skin and no moved node, a skinned part one skin on the body's bones
   with at most 4 per vertex and every `morph_<id>` shape key, triangles within the slot's budget, and
-  every colour not named `main…` in the palette.
+  every colour not named `main…` in the palette. A record whose `name` still starts with `TODO`, or an
+  entry still holding `new_part.py`'s placeholders (`<version>`, "say how it is made"), fails.
 - `tests/test_character_rig.gd`: every part builds on the body, rigid parts hang from their bone,
   skinned parts bind to the body's bones by name, hidden regions are off.
 - `tests/test_character_looks.gd`: faces and flat beards are exact index textures with eyes 2 texels
   wide; ramps are palette colours from dark to light.
 - `tests/test_character_head_parts.gd`: on every body shape, no vertex of the head or of the hair a hat
-  leaves drawn pokes through the hat, in 16 poses of the four animations.
+  leaves drawn pokes through the hat, in 16 poses of the four animations. It casts rays from the middle
+  of the hat's lowest level towards each vertex above it: a brim that droops lowers that level, and a
+  disc across the head stops the rays, so a brim is a ring outside the crown (`part_kit.ring`).
 - `tests/test_character_garments.gd`: on every body shape, the skin under a garment and a garment under
   another (a top under the jacket) stay under it, in 12 poses of the four animations. The layers come from
   the records: each skinned part over the regions it hides, the jacket over the top. Each garment is
@@ -217,7 +221,8 @@ splits the mesh at its regions and texture seams, and `part_kit.load_body` welds
 sheet in `build/parts/<id>_sheet.png` (and `_x3`, enlarged): every body shape from the front,
 three-quarters, the side, the back and running, as the game draws it. On a pull request that touches
 `data/character/`, `assets/character/` or `art/character/`, the `character` check does the same for each
-part it adds or changes and keeps the sheets as an artifact, for voters.
+part it adds or changes and keeps the sheets as an artifact, for voters. `make gallery SLOT=<slot>`
+draws every part of a slot on the standard body, to compare a new part with the others.
 
 Look at your part in the game before opening the pull request: the editor of the start menu shows it
 turning, and C opens the editor in game, where you can run with it. Say in the PR what you checked.

@@ -34,6 +34,10 @@ GARMENT_OFFSET = {"top": 0.016, "jacket": 0.030, "bottom": 0.014, "feet": 0.017}
 # Body regions a garment is made from (its record's "hides" may be fewer: an open jacket shows the top).
 GARMENT_COVERS = {"top": ("torso", "arms_upper"), "jacket": ("torso", "arms_upper", "arms_lower"),
         "bottom": ("hips", "legs_upper", "legs_lower"), "feet": ("feet",)}
+# Starters cut from the body's own faces (extract): the body mesh is Quaternius's (CC0), so the entry
+# credits it like the repository's own parts cut from it (art/character/parts.py).
+FROM_BODY = ("hair", "beard", "garment")
+BODY_SOURCE = "https://opengameart.org/content/universal-animation-library"
 USAGE = "usage: python3 art/character/new_part.py <slot> <id> <github-login> [--flat]"
 
 HEADER = '''# {id}: a {slot} part ({kind}). Started by art/character/new_part.py from {ref}; change it freely.
@@ -88,8 +92,9 @@ BONE = "DEF-head"
 ''',
     "hat": '''
 # A dome on the skull above the rim (K.skull_dome: wide enough that no part of the head pokes through),
-# and a band around its base. A brim or a visor goes at the rim, outside the head (a disc across the head
-# cuts through it): see hat_cap in art/character/parts.py.
+# and a band around its base. A brim goes at the rim, outside the head (a disc across the head cuts
+# through it): K.ring(K.RIM, inner, outer, main, centre=(cx, cy)), inner = the band's radius. A wide brim
+# hides the eyes.
 cx, cy, dome = K.skull_dome()
 main = K.material("main.hat", "6b5a4c")
 PART = [K.prim("sphere", dome + Vector((0.006, 0.006, 0.10 * K.HS)), (cx, cy, K.RIM), main, cut_below=K.RIM),
@@ -185,12 +190,20 @@ def main():
     with open(rec_path, "w") as f:
         f.write(json.dumps(rec, indent="\t", ensure_ascii=False) + "\n")
     written.append(rec_path)
+    if build in FROM_BODY:
+        who, origin, source = "Quaternius (the body mesh it is cut from); %s (the part)" % author, "third-party", BODY_SOURCE
+    else:
+        who, origin, source = author, "original", ""
     with open(os.path.join(ROOT, "ASSETS.toml"), "a") as f:
-        f.write('\n[[asset]]\npath = "%s"\nauthor = "%s"\norigin = "original"\ntool = "%s"\nprompt = ""\n'
-                'license = "CC0-1.0"\nsource = ""\n' % (asset, author, tool))
+        f.write('\n[[asset]]\npath = "%s"\nauthor = "%s"\norigin = "%s"\ntool = "%s"\nprompt = ""\n'
+                'license = "CC0-1.0"\nsource = "%s"\n' % (asset, who, origin, tool, source))
     for w in written:
         print("wrote", os.path.relpath(w, ROOT))
     print("added", asset, "to ASSETS.toml")
+    print("copied from %s: review in %s" % (ref, os.path.relpath(rec_path, ROOT)))
+    print("  name (a placeholder: the checks fail until you replace it), colors (ramps; the first is the default),")
+    print("  hides and covers (what your part hides: %s hides %s)" % (ref, rec.get("hides", []) or "nothing"))
+    print("and in ASSETS.toml, tool: the Blender version and how the part is made (the checks fail on the placeholders)")
     print("next: make part ID=%s, then make check-part ID=%s" % (pid, pid))
 
 

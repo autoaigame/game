@@ -325,6 +325,43 @@ def prim(kind, size, loc, mat, rot=(0, 0, 0), bevel=0.0, cut_below=None, segment
     return o
 
 
+def lathe(profile, centre, mat, segments=24, squash=(1.0, 1.0)):
+    """A surface of revolution around the vertical axis through `centre` (x, y): profile is a list of
+    (radius, height) points, from the inside out or bottom to top, heights in the body's space (z). squash
+    scales x and y (an oval hat). Open at both ends: close it with a profile point at radius 0."""
+    cx, cy = centre
+    verts, faces_ = [], []
+    for k in range(segments):
+        a = 2 * math.pi * k / segments
+        for r, z in profile:
+            verts.append((cx + r * math.cos(a) * squash[0], cy + r * math.sin(a) * squash[1], z))
+    n = len(profile)
+    for k in range(segments):
+        k2 = (k + 1) % segments
+        for i in range(n - 1):
+            faces_.append((k * n + i, k2 * n + i, k2 * n + i + 1, k * n + i + 1))
+    mesh = bpy.data.meshes.new("lathe")
+    mesh.from_pydata(verts, [], faces_)
+    mesh.update()
+    o = bpy.data.objects.new("lathe", mesh)
+    bpy.context.scene.collection.objects.link(o)
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-6)  # radius 0 points
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.materials.append(mat)
+    return o
+
+
+def ring(z, inner, outer, mat, droop=0.0, thick=0.01, centre=(0.0, 0.0), segments=24, squash=(1.0, 1.0)):
+    """A flat ring (a hat's brim) at height z, from radius `inner` to `outer`, `thick` metres thick, its
+    outer edge `droop` metres lower. A closed volume: top and bottom faces and both edges."""
+    return lathe([(inner, z), (outer, z - droop), (outer, z - droop - thick), (inner, z - thick), (inner, z)],
+            centre, mat, segments, squash)
+
+
 def join(objs, name):
     bpy.ops.object.select_all(action="DESELECT")
     for p in objs:

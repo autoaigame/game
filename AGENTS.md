@@ -9,14 +9,15 @@ New here? Start with `contribute_llm.txt`.
 The game uses Godot 4.7 (GDScript only). Install Godot 4.7.2 and put `godot` on your PATH, or pass `GODOT=/path/to/godot` to `make`.
 
 - `make setup`: import the project. Duration: about 5 s.
-- `make check`: everything CI requires (`test` + `smoke`). Duration: about 35 s. Run it before every push.
+- `make check`: everything CI requires (`test` + `smoke`). Duration: about 35 s. Run it before every push. Only `N passed, 0 failed` and `SMOKE PASS` matter: the `ERROR` lines Godot prints at exit (resources still in use, leaked RIDs, no audio device) are expected.
 - `make test`: unit tests (`tests/`).
-- `make smoke`: a real headless server and headless clients play join, move, disconnect and reconnect.
+- `make smoke`: a real headless server and headless clients play join, move, disconnect and reconnect, on port 19000. Two runs on one machine collide: give each its own with `SMOKE_PORT=<port> make check`.
 - `make run-server`: a local server on port 9000. Run the client with `godot --path . -- --connect ws://127.0.0.1:9000`.
 - `make export-web`: the browser build in `build/web/`.
 - `make art`: regenerate the pixel art from `art/gen_art.gd`.
 - `make part ID=<id>`: build one character part from its source. Volumes need Blender 5.2 (`BLENDER=/path/to/blender`).
 - `make check-part ID=<id>`: check one character part and draw its sheet in `build/parts/` (the sheet needs a display: `xvfb-run` on Linux without one).
+- `make gallery SLOT=<slot>`: every character part of a slot on one sheet, `build/parts/gallery_<slot>.png`.
 
 ## Layout
 
