@@ -86,6 +86,22 @@ static func sheet_column(f: int) -> int:
 	return FACING_COLUMN[f]
 
 
+## New drawing state for one player: w = {server, shown: Vector2 in cells, walked: cells, facing: FACINGS
+## index or -1, still: s}, updated in place for a frame of dt seconds. Returns the sheet frame to draw.
+static func animate(w: Dictionary, dt: float) -> Vector2i:
+	var before: Vector2 = w["shown"]
+	w["shown"] = follow(before, w["server"], dt)
+	var moved: float = (w["shown"] - before).length()
+	var walking := moved > 0.0
+	if walking:
+		w["walked"] += moved
+		var screen := IsoLayer.cell_to_local(w["shown"]) - IsoLayer.cell_to_local(before)
+		w["facing"] = facing(screen, w["facing"])
+	w["still"] = 0.0 if walking else w["still"] + dt
+	var row := walk_row(w["walked"]) if walking else idle_row(w["still"])
+	return Vector2i(sheet_column(maxi(w["facing"], 0)), row)
+
+
 ## Sprite row (walk frame) after walking this many cells.
 static func walk_row(walked: float) -> int:
 	return WALK_FIRST_ROW + int(walked / WALK_CYCLE_CELLS * WALK_FRAMES) % WALK_FRAMES
