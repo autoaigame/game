@@ -1,7 +1,7 @@
 extends TestCase
 
 ## A tree drawn in front of my player fades where it covers the body, then comes back once I have
-## passed (client/world_view.gd). Scenes built by hand, so the
+## passed; meanwhile my silhouette is not drawn (client/world_view.gd). Scenes built by hand, so the
 ## world seed does not matter.
 
 const TestTreeScale := preload("res://tests/test_tree_scale.gd")
@@ -40,6 +40,10 @@ func _view(me: Vector2, trees: Array) -> Node2D:
 
 func _tree(view: Node2D, i: int) -> Sprite2D:
 	return view._chunk_nodes.values()[0].get_child(i)
+
+
+func _ghost_on(view: Node2D) -> bool:
+	return (view._actors[1].get_node("Model3D") as Character3D).silhouette
 
 
 func _run(view: Node2D, seconds: float) -> void:
@@ -88,3 +92,30 @@ func test_a_tree_over_an_arm_fades() -> void:
 	assert_true(t.modulate.a < 1.0, "fades for the arm")
 	view.free()
 
+
+## While the trees in front are faded my silhouette is off (it would wash out the player seen through
+## them); it stays on until they are faded enough, and comes back once no tree covers me.
+func test_no_silhouette_through_a_faded_tree() -> void:
+	var view := _view(Vector2(4, 4), [Vector2(5, 5)])
+	_run(view, 1.0 / 60.0)
+	assert_true(_ghost_on(view), "still on while the tree is almost opaque")
+	_run(view, 0.5)
+	assert_false(_ghost_on(view), "off behind the faded tree")
+	view.client.snapshot_received.emit([{"id": 1, "name": "me", "pos": Vector2(7, 7)}])
+	(view._actors[1] as Node2D).position = IsoLayer.cell_to_local(Vector2(7, 7))
+	_run(view, 1.0 / 60.0)
+	assert_true(_ghost_on(view), "back once passed")
+	view.free()
+
+
+## show_silhouette() hides and shows the drawn silhouette sprite (built by _ready, which needs the
+## renderer: stood in for by a plain sprite).
+func test_show_silhouette_on_a_drawn_model() -> void:
+	var model := Character3D.new()
+	model._ghost = Sprite2D.new()
+	model.add_child(model._ghost)
+	model.show_silhouette(false)
+	assert_false(model._ghost.visible)
+	model.show_silhouette(true)
+	assert_true(model._ghost.visible)
+	model.free()

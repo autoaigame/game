@@ -36,6 +36,8 @@ const DRIFT_PERIOD_S := 60.0
 ## and height as a share of the head's height above the feet. Up the middle, and the arms at mid height.
 const BODY_POINTS := [Vector2(0, 0.15), Vector2(0, 0.5), Vector2(0, 0.85), Vector2(-15, 0.5), Vector2(15, 0.5)]
 var _faded := {}  ## tree sprite -> true while not fully opaque
+## My silhouette stays drawn until the trees covering me are this faded.
+const SILHOUETTE_UNTIL_ALPHA := 0.7
 
 
 func _ready() -> void:
@@ -68,7 +70,8 @@ static func covers_body(tree: Sprite2D, feet: Vector2) -> bool:
 
 
 ## Fades the trees drawn in front of my player where they cover its body, and brings back the others.
-## Only the chunks around me are looked at.
+## Only the chunks around me are looked at. Once the trees covering me are faded, my silhouette is not
+## drawn: the player already shows through them.
 func _fade_trees(dt: float) -> void:
 	var me: Node2D = _actors.get(client.my_peer_id)
 	var hiding := {}
@@ -83,13 +86,18 @@ func _fade_trees(dt: float) -> void:
 					if sp is Sprite2D and sp.has_meta("tree") and covers_body(sp, me.position):
 						hiding[sp] = true
 						_faded[sp] = true
+	var see_through := not hiding.is_empty()
 	for sp in _faded.keys():
 		if not is_instance_valid(sp):
 			_faded.erase(sp)
 			continue
 		sp.modulate.a = ChunkView.fade_step(sp.modulate.a, hiding.has(sp), dt)
+		if hiding.has(sp) and sp.modulate.a > SILHOUETTE_UNTIL_ALPHA:
+			see_through = false  # not faded enough yet: the silhouette still shows the player
 		if sp.modulate.a >= 1.0 and not hiding.has(sp):
 			_faded.erase(sp)
+	if me != null:
+		(me.get_node("Model3D") as Character3D).show_silhouette(not see_through)
 
 
 func _on_snapshot(players: Array) -> void:

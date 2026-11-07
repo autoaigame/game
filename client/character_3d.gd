@@ -79,6 +79,7 @@ var _morph: CharacterMorph  ## the body shape's bone changes, after each animati
 var _lengths := {}
 var _materials: Array[ShaderMaterial] = []
 var _shadow: Polygon2D
+var silhouette := true  ## whether _ghost is drawn (show_silhouette)
 var _ghost: Sprite2D  ## silhouette copy drawn above the world, where a tree hides the model
 
 
@@ -287,6 +288,7 @@ func _ready() -> void:
 	# The silhouette is drawn after everything else (top_level, outside the y-sorting), placed by place().
 	_ghost = _view_sprite(GHOST_SHADER)
 	_ghost.top_level = true
+	_ghost.visible = silhouette
 	add_child(_ghost)
 	_pose()
 
@@ -463,6 +465,14 @@ func face(y: float) -> void:
 	yaw = y
 	target_yaw = y
 	_pose()
+
+
+## Whether the silhouette is drawn where something covers the model. Off while the tree in front is
+## faded (client/world_view.gd): the model shows through it, and the silhouette would wash it out.
+func show_silhouette(on: bool) -> void:
+	silhouette = on
+	if _ghost != null:
+		_ghost.visible = on
 
 
 ## Puts the feet at canvas_pos, snapped to whole screen pixels: parent_pos is where the parent node is,
