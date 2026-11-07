@@ -100,8 +100,8 @@ func on_gather(peer_id: int, cell: Vector2i) -> void:
 	_net.notice.rpc_id(peer_id, r["notice"], args)
 
 
-## Gathers for a player from the object on `cell`: {notice: gathered (with item, count), bush_empty or
-## too_far}, or {} for a request to ignore (unknown player, nothing gatherable there).
+## Gathers for a player from the object on `cell`: {notice: gathered (with item, count), the rule's
+## empty notice or too_far}, or {} for a request to ignore (unknown player, nothing gatherable there).
 func _gather(peer_id: int, cell: Vector2i) -> Dictionary:
 	if not _players.has(peer_id):
 		return {}
@@ -112,7 +112,7 @@ func _gather(peer_id: int, cell: Vector2i) -> Dictionary:
 	if (p["pos"] as Vector2).distance_to(Vector2(cell)) > GATHER.REACH:
 		return {"notice": "too_far"}
 	if _picked.has(cell):
-		return {"notice": "bush_empty"}
+		return {"notice": rule["empty"]}
 	var n := INV.add(p["inventory"], rule["item"], _rng.randi_range(rule["min"], rule["max"]))
 	_picked[cell] = rule["regrow_s"]
 	return {"notice": "gathered", "item": rule["item"], "count": n}
@@ -137,6 +137,41 @@ func _eat(peer_id: int, item: String) -> Dictionary:
 		return {}
 	p["hunger"] = HUNGER.fed(p["hunger"], food)
 	return {"notice": "ate", "item": item}
+
+
+## The player builds a campfire where they stand.
+func on_build_fire(peer_id: int) -> void:
+	var r := _build_fire(peer_id)
+	if r.is_empty():
+		return
+	if r["notice"] == "fire_built":
+		_net.inventory.rpc_id(peer_id, _players[peer_id]["inventory"])
+	_net.notice.rpc_id(peer_id, r["notice"], {})
+
+
+## Builds a campfire (a "fire" mark lasting Protocol.FIRE_S) on the player's cell for FIRE_STICKS
+## sticks: {notice: fire_built, need_sticks or fire_here (a fire is already there)}, or {}.
+func _build_fire(peer_id: int) -> Dictionary:
+	if not _players.has(peer_id):
+		return {}
+	var p: Dictionary = _players[peer_id]
+	var cell := Protocol.cell_of(p["pos"])
+	if not _fires_near(Vector2(cell), 1.0).is_empty():
+		return {"notice": "fire_here"}
+	if not INV.remove(p["inventory"], "sticks", Protocol.FIRE_STICKS):
+		return {"notice": "need_sticks"}
+	MARKS.add(_marks, "fire", Vector2(cell), Protocol.FIRE_S)
+	_marks_changed = true
+	return {"notice": "fire_built"}
+
+
+## Burning campfires within `radius` cells of `pos`: their positions.
+func _fires_near(pos: Vector2, radius: float) -> Array:
+	var out := []
+	for m in MARKS.snapshot(_marks):
+		if m["kind"] == "fire" and (m["pos"] as Vector2).distance_to(pos) <= radius:
+			out.append(m["pos"])
+	return out
 
 
 ## Picked objects regrow.

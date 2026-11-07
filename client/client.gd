@@ -87,6 +87,10 @@ func request_eat(item: String) -> void:
 	_net.eat.rpc_id(1, item)
 
 
+func request_build_fire() -> void:
+	_net.build_fire.rpc_id(1)
+
+
 func on_welcome(peer_id: int, cell: Vector2i) -> void:
 	my_peer_id = peer_id
 	welcomed.emit(cell)
