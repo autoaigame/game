@@ -31,13 +31,14 @@ func test_new_dog_stands_next_to_its_owner() -> void:
 	assert_true(cell != at and (cell - at).abs().x <= 1 and (cell - at).abs().y <= 1, "next to its owner: %s" % cell)
 
 
-## Close to its owner, the dog does not move.
+## Close to its owner, the dog does not follow (it may sniff around nearby).
 func test_dog_stays_when_owner_is_close() -> void:
 	var at := Vector2(_open_cell())
 	var server := _server(at, at + Vector2(1, 0))
 	for i in 30:
 		server._move_dogs(DT)
-	assert_eq(_dog(server)["pos"], at + Vector2(1, 0))
+		assert_true(_dog(server)["state"] != "follow", "does not follow a close owner")
+	assert_true(_dog(server)["pos"].distance_to(at) <= DOG.WANDER_RADIUS + 1.5, "stays near")
 	server.free()
 
 
