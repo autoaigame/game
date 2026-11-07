@@ -110,7 +110,7 @@ func chunk_image(c: Vector2i) -> Image:
 	return img
 
 
-## Writes the map to `path`; false if storage is missing (the map is then only kept until reload).
+## Writes the map to `path`; false if storage is missing (the map is then lost when the page closes).
 func save(path: String) -> bool:
 	var f := FileAccess.open_compressed(path, FileAccess.WRITE, FileAccess.COMPRESSION_DEFLATE)
 	if f == null:
