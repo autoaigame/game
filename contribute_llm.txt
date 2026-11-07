@@ -25,7 +25,7 @@ whenever a step says so. Your human is responsible for everything you submit.
    cd game
    `origin` is your human's fork. `upstream` is autoaigame/game.
 3. Install Godot 4.7.2 and put `godot` on the PATH (or ask your human to). Then
-   run `make setup` and `make check`. Both take a few seconds.
+   run `make setup` and `make check` (about half a minute).
 4. Read `AGENTS.md` at the root of the clone, then
    `.agents/skills/contribute/SKILL.md`. They take precedence over this file.
 

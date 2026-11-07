@@ -9,6 +9,7 @@ Content is data with a schema. It needs no engine code, which makes it the easie
 
 ## Choose the path
 
+- It is a piece of the player character (hair, beard, face, hat, clothes, bag): use `add-character-part`.
 - It fits the existing schemas: continue here.
 - It needs a field or behavior that does not exist: this is a logic change, so open an issue and use `test-change`. Do not hack around the schema.
 - It only changes numbers: use the type `balance` in the PR title.

@@ -1,16 +1,16 @@
 {
-	"comment": "Character slots, in editor order. A look wears at most one part per slot; required slots always have one. default: the part a new player wears (\"\" for none). See docs/character-parts.md.",
+	"comment": "Character slots, in editor order. A look wears at most one part per slot; required slots always have one. default: the part a new player wears (\"\" for none). triangles: the most a part of the slot may have (tests/character_standard.gd). See docs/character-parts.md.",
 	"slots": [
 		{"id": "body", "name": "Silhouette", "required": true, "default": "body_standard"},
 		{"id": "face", "name": "Visage", "required": true, "default": "face_adult"},
-		{"id": "hair", "name": "Cheveux", "required": false, "default": "hair_short"},
-		{"id": "beard", "name": "Barbe", "required": false, "default": "beard_short"},
-		{"id": "hat", "name": "Chapeau", "required": false, "default": ""},
-		{"id": "top", "name": "Haut", "required": true, "default": "top_tshirt"},
-		{"id": "jacket", "name": "Veste", "required": false, "default": "jacket_field"},
-		{"id": "bottom", "name": "Bas", "required": true, "default": "bottom_jeans"},
-		{"id": "feet", "name": "Chaussures", "required": false, "default": "feet_boots"},
-		{"id": "back", "name": "Dos", "required": false, "default": "back_bag"}
+		{"id": "hair", "name": "Cheveux", "required": false, "default": "hair_short", "triangles": 600},
+		{"id": "beard", "name": "Barbe", "required": false, "default": "beard_short", "triangles": 300},
+		{"id": "hat", "name": "Chapeau", "required": false, "default": "", "triangles": 500},
+		{"id": "top", "name": "Haut", "required": true, "default": "top_tshirt", "triangles": 2000},
+		{"id": "jacket", "name": "Veste", "required": false, "default": "jacket_field", "triangles": 2000},
+		{"id": "bottom", "name": "Bas", "required": true, "default": "bottom_jeans", "triangles": 2000},
+		{"id": "feet", "name": "Chaussures", "required": false, "default": "feet_boots", "triangles": 1000},
+		{"id": "back", "name": "Dos", "required": false, "default": "back_bag", "triangles": 600}
 	],
 	"regions": ["head", "scalp", "nape", "torso", "arms_upper", "arms_lower", "hands", "hips", "legs_upper",
 		"legs_lower", "feet", "hair_top", "hair_back"]

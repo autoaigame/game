@@ -125,8 +125,10 @@ Hiding is not transitive: a part that is not drawn hides nothing.
 - Materials: a material named `main…` takes the colour the player chooses; any other keeps its own colour,
   which must be a palette colour.
 - Shapes: simple volumes with clear edges. At about 100 px, small details only add noise. Keep a part under
-  about 2 000 triangles.
-- Flat colours per material: no texture on a mesh, no gradient, no baked shadow.
+  its slot's budget: `triangles` in `data/character/slots.json` (2 000 for clothes, a few hundred for the
+  head and the back).
+- Flat colours per material: no texture on a mesh, no gradient, no baked shadow. No animation, camera or
+  light in the file.
 - Volume for what changes the silhouette (hair, full beards, hats); a texture for what stays flat (eyes,
   brows, mouth, scars, stubble, a moustache). No modelled nose or ears.
 
@@ -158,8 +160,27 @@ changes the art direction: ask first in an issue.
 
 ## Building a part
 
+The tools are in `art/character/part_kit.py` (Blender): the body, its regions and skin weights, copying
+the body's faces out along the normals (`extract`), primitives, the skull dome hats sit on, moving a rigid
+part into its bone's space, the body-shape keys (`transfer_morphs`) and the export.
+
+A new part starts from `art/character/new_part.py`, which writes a part of the slot that already passes
+the checks, its record and its `ASSETS.toml` entry (the `add-character-part` skill has the steps):
+
+```
+python3 art/character/new_part.py <slot> <id> <github-login>
+make part ID=<id>          # blender -b --python art/character/parts/<id>.py
+make check-part ID=<id>
+```
+
+- A volume is a script, `art/character/parts/<id>.py`, that builds it on `assets/character/body.glb`.
+  Reproducible and easy to review: the best path for an AI agent. Blender 5.2, headless.
+- To model by hand, `make part ID=<id> BLEND=1` saves `build/parts/<id>.blend` with the body, the part and
+  the game's camera; `art/character/export_part.py` exports the object named `<id>` from it.
+- A face or a flat beard is a grid, `art/character/faces/<id>.txt`, drawn by `art/character/faces.py`.
+
 The parts of the repository are made by `art/character/parts.py`, run by `art/character/body.py` in the
-same Blender session, so they see the exact rest pose and skin weights of the body:
+same Blender session as the body:
 
 ```
 blender -b --python art/character/body.py -- <AnimationLibrary_Godot_Standard.glb> .
@@ -167,8 +188,8 @@ blender -b --python art/character/body.py -- <AnimationLibrary_Godot_Standard.gl
 
 Garments are copies of the body's own faces of the regions they cover, pushed out along the normals.
 Hats are sized on the skull. Sizes are fractions of the head or relative to bones, never absolute
-heights. A new part can be added to this script (reproducible and easy to review, the best path for an
-AI agent), or modelled by hand in Blender on the body and exported as glTF with the rules above.
+heights. A part built on `body.glb` matches one built with the body within a few millimetres: the glb
+splits the mesh at its regions and texture seams, and `part_kit.load_body` welds them back.
 
 ## Checks
 
@@ -176,6 +197,11 @@ AI agent), or modelled by hand in Blender on the body and exported as glTF with 
 
 - `tests/test_character_parts.gd`: every record loads (`CharacterParts.check_record`), names a known
   slot, existing files, known regions and ramps; looks are validated and repaired.
+- `tests/test_character_standard.gd` (rules in `tests/character_standard.gd`): every part's files have a
+  CC0-1.0 `ASSETS.toml` entry, PNGs have no metadata chunk, a glb has one mesh, no animation, camera,
+  light or texture, a rigid part no skin and no moved node, a skinned part one skin on the body's bones
+  with at most 4 per vertex and every `morph_<id>` shape key, triangles within the slot's budget, and
+  every colour not named `main…` in the palette.
 - `tests/test_character_rig.gd`: every part builds on the body, rigid parts hang from their bone,
   skinned parts bind to the body's bones by name, hidden regions are off.
 - `tests/test_character_looks.gd`: faces and flat beards are exact index textures with eyes 2 texels
@@ -183,7 +209,15 @@ AI agent), or modelled by hand in Blender on the body and exported as glTF with 
 - `tests/test_character_head_parts.gd`: on every body shape, no vertex of the head or of the hair a hat
   leaves drawn pokes through the hat, in 16 poses of the four animations.
 - `tests/test_character_garments.gd`: on every body shape, the skin under a garment and a garment under
-  another (the top under the jacket) stay under it, in 12 poses of the four animations.
+  another (a top under the jacket) stay under it, in 12 poses of the four animations. The layers come from
+  the records: each skinned part over the regions it hides, the jacket over the top. Each garment is
+  worn over the default outfit.
+
+`make check-part ID=<id>` runs the same checks for one part, with a message per problem, then draws its
+sheet in `build/parts/<id>_sheet.png` (and `_x3`, enlarged): every body shape from the front,
+three-quarters, the side, the back and running, as the game draws it. On a pull request that touches
+`data/character/`, `assets/character/` or `art/character/`, the `character` check does the same for each
+part it adds or changes and keeps the sheets as an artifact, for voters.
 
 Look at your part in the game before opening the pull request: the editor of the start menu shows it
 turning, and C opens the editor in game, where you can run with it. Say in the PR what you checked.
