@@ -43,6 +43,15 @@ static func next_position(t: float, length: float, begin: float, crossfade: floa
 	return begin + t - (length - minf(crossfade, (length - begin) / 2.0))
 
 
+## Where the next turn is when the current one is `t` (>= length) seconds in: next_position(), brought
+## back inside the looped part after a pause longer than a turn (a hidden browser tab runs no frames).
+static func turn_position(t: float, length: float, begin: float, crossfade: float) -> float:
+	var into := next_position(t, length, begin, crossfade)
+	if into >= length:
+		into = begin + fposmod(into - begin, length - begin)
+	return into
+
+
 var playing: bool:
 	get:
 		return _active
@@ -81,7 +90,7 @@ func update(volume_db: float) -> void:
 	var length := cur.stream.get_length()
 	var t := position()
 	if t >= length:  # hand-over done: the next turn becomes the current one
-		var into := next_position(t, length, loop_begin, crossfade_s)
+		var into := turn_position(t, length, loop_begin, crossfade_s)
 		cur.stop()
 		_cur = 1 - _cur
 		_start_us = Time.get_ticks_usec() - int(into * 1e6)
