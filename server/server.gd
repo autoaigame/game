@@ -4,7 +4,8 @@ extends Node
 
 const SAVE_INTERVAL_S := 10.0
 const CARCASS_S := 120.0  ## how long a caught animal lies on the ground
-## Raw meat a caught animal gives when picked up, by mark kind.
+## Raw meat a caught animal gives, by mark kind: when the dog brings it back, or when picked up off the
+## ground (where the dog drops it if its owner's bag has no room).
 const MEAT := {"carcass_rabbit": 2, "carcass_pheasant": 1}
 const DOG := preload("res://server/dog.gd")
 const MARKS := preload("res://server/marks.gd")
@@ -284,7 +285,11 @@ func _step(dt: float) -> void:
 	_tick_hunger(dt)
 	_tick_gathering(dt)
 	_move_players(dt)
-	_move_dogs(dt)
+	for told in _move_dogs(dt):
+		_net.inventory.rpc_id(told[0], _players[told[0]]["inventory"])
+		var args: Dictionary = told[1].duplicate()
+		args.erase("notice")
+		_net.notice.rpc_id(told[0], told[1]["notice"], args)
 	_move_wildlife(dt)
 	if MARKS.tick(_marks, dt):
 		_marks_changed = true
@@ -315,14 +320,48 @@ func _threats() -> Array:
 	return out
 
 
-func _move_dogs(dt: float) -> void:
-	for p in _players.values():
+## Moves every dog. Returns what to tell players whose dog brought back a catch: [peer id,
+## {notice: gathered (item, count) or bag_full}].
+func _move_dogs(dt: float) -> Array:
+	var told := []
+	for id in _players:
+		var p: Dictionary = _players[id]
 		var dog: Dictionary = p["dog"]
+		var events: Array
 		if dog["state"] == "hunt":
 			var prey: Dictionary = _wild["animals"].get(dog["prey"], {})
-			_add_events(DOG.hunt(dog, p["pos"], prey.get("pos"), dt))
+			events = DOG.hunt(dog, p["pos"], prey.get("pos"), dt)
 		else:
-			_add_events(DOG.update(dog, p["pos"], dt))
+			events = DOG.update(dog, p["pos"], dt)
+		for e in events:
+			match e["kind"]:
+				"catch":
+					_dog_catches(dog, e["prey"])
+				"deliver":
+					told.append([id, _deliver(p, "carcass_" + String(e["carry"]))])
+				_:
+					_add_events([e])
+	return told
+
+
+## The dog caught wild animal `prey_id`: it is gone from the wild, and the dog carries it.
+func _dog_catches(dog: Dictionary, prey_id: int) -> void:
+	var prey: Dictionary = _wild["animals"].get(prey_id, {})
+	if prey.is_empty():
+		return
+	_wild["animals"].erase(prey_id)
+	dog["carry"] = String(prey["kind"])
+
+
+## The dog hands its catch (mark kind `carcass`) to player `p`: its raw meat goes into their bag, or,
+## with no room for any, the catch is dropped at the dog's feet to pick up later.
+func _deliver(p: Dictionary, carcass: String) -> Dictionary:
+	var n := INV.add(p["inventory"], "raw_meat", MEAT.get(carcass, 0))
+	if n > 0:
+		return {"notice": "gathered", "item": "raw_meat", "count": n}
+	MARKS.add(_marks, carcass, p["dog"]["pos"], CARCASS_S)
+	_marks_changed = true
+	return {"notice": "bag_full"}
 
 
 ## The player whistles: their dog runs after the nearest wild animal within DOG.HUNT_RADIUS of them.
@@ -332,11 +371,13 @@ func on_whistle(peer_id: int) -> void:
 		_net.notice.rpc_id(peer_id, r["notice"], {})
 
 
-## {notice: hunt or no_prey}, or {} for an unknown player.
+## {notice: hunt, no_prey, or dog_busy while it is bringing back a catch}, or {} for an unknown player.
 func _whistle(peer_id: int) -> Dictionary:
 	if not _players.has(peer_id):
 		return {}
 	var p: Dictionary = _players[peer_id]
+	if p["dog"].has("carry"):
+		return {"notice": "dog_busy"}
 	var best: Variant = null
 	var best_d := DOG.HUNT_RADIUS
 	for id in _wild["animals"]:
@@ -350,7 +391,7 @@ func _whistle(peer_id: int) -> Dictionary:
 	return {"notice": "hunt"}
 
 
-## Turns creature events into marks on the ground; a caught animal becomes a carcass.
+## Turns creature events into marks on the ground.
 func _add_events(events: Array) -> void:
 	for e in events:
 		match e["kind"]:
@@ -358,12 +399,6 @@ func _add_events(events: Array) -> void:
 				MARKS.add(_marks, "pee", e["pos"], DOG.PEE_MARK_S)
 			"hole":
 				MARKS.add(_marks, "hole", e["pos"], DOG.HOLE_MARK_S)
-			"catch":
-				var prey: Dictionary = _wild["animals"].get(e["prey"], {})
-				if prey.is_empty():
-					continue
-				_wild["animals"].erase(e["prey"])
-				MARKS.add(_marks, "carcass_" + String(prey["kind"]), e["pos"], CARCASS_S)
 			_:
 				continue
 		_marks_changed = true
@@ -380,7 +415,8 @@ func _snapshot_for(viewer: int) -> Array:
 	return out
 
 
-## The creatures a player is sent: {id, kind, owner (peer id or 0), pos, state}, those within
+## The creatures a player is sent: {id, kind, owner (peer id or 0), pos, state, and for a dog carrying
+## a catch, carry: its kind}, those within
 ## Protocol.INTEREST_RADIUS (and its own dog). A dog's id is its owner's peer id; wild animals have
 ## negative ids (server/wildlife.gd).
 func _creatures_for(viewer: int) -> Array:
@@ -389,7 +425,10 @@ func _creatures_for(viewer: int) -> Array:
 	for id in _players:
 		var dog: Dictionary = _players[id]["dog"]
 		if id == viewer or at.distance_to(dog["pos"]) <= Protocol.INTEREST_RADIUS:
-			out.append({"id": id, "kind": "dog", "owner": id, "pos": dog["pos"], "state": dog["state"]})
+			var c := {"id": id, "kind": "dog", "owner": id, "pos": dog["pos"], "state": dog["state"]}
+			if dog.has("carry"):
+				c["carry"] = dog["carry"]
+			out.append(c)
 	out.append_array(WILD.snapshot_near(_wild, at, Protocol.INTEREST_RADIUS))
 	return out
 

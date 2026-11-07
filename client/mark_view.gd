@@ -23,6 +23,7 @@ const FLICKER_HZ := 8.0
 const KINDS: Array[String] = ["pee", "hole", "fire", "carcass_rabbit", "carcass_pheasant"]  ## the kinds _draw knows
 
 var kind := ""
+var lifted := false  ## held off the ground (in the dog's mouth): drawn with no shadow
 var _t := 0.0
 
 
@@ -49,16 +50,21 @@ func _draw() -> void:
 		"fire":
 			_draw_fire()
 		"carcass_rabbit":  # lying on its side
-			_ellipse(Vector2(0, 1), Vector2(9, 3), Color(0, 0, 0, 0.22))
+			_shadow()
 			_ellipse(Vector2(-1, -2), Vector2(7, 3.5), AnimalView.FUR)
 			_ellipse(Vector2(5, -3), Vector2(3, 2.5), AnimalView.FUR)
 			_ellipse(Vector2(9, -2), Vector2(3.5, 1.2), AnimalView.FUR_DARK)  # ears flat
 			_ellipse(Vector2(-7, -2), Vector2(2, 2), AnimalView.FUR_LIGHT)
 		"carcass_pheasant":
-			_ellipse(Vector2(0, 1), Vector2(9, 3), Color(0, 0, 0, 0.22))
+			_shadow()
 			draw_line(Vector2(-4, -1), Vector2(-13, 1), AnimalView.PLUMAGE_DARK, 2)
 			_ellipse(Vector2(0, -2), Vector2(6, 3.5), AnimalView.PLUMAGE)
 			_ellipse(Vector2(7, -1), Vector2(2.2, 1.8), AnimalView.NECK)
+
+
+func _shadow() -> void:
+	if not lifted:
+		_ellipse(Vector2(0, 1), Vector2(9, 3), Color(0, 0, 0, 0.22))
 
 
 func _draw_fire() -> void:

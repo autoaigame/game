@@ -4,6 +4,9 @@ extends Node2D
 var _tiles_tex: Texture2D = load(IsoLayer.TILES_ATLAS)
 const PLAYER_TEX := preload("res://assets/player.png")
 const DOG_TEX := preload("res://assets/dog.png")
+## Where a dog holds its catch, from the dog's feet (facing right): just under its muzzle (art/dog_sheet.gd).
+const CARRY_AT := Vector2(20, -16)
+const CARRY_SCALE := 0.8
 
 var client: Node  ## client/client.gd
 var sounds: Node  ## client/sound_director.gd, or null (no sound)
@@ -84,10 +87,34 @@ func _on_creatures(list: Array) -> void:
 			_creatures[id]["t"] = 0.0
 		_creatures[id]["speed"] = WalkAnim.speed_between(_creatures[id]["server"], c["pos"])
 		_creatures[id]["server"] = c["pos"]
+		if c["kind"] == "dog":
+			_show_carry(_creatures[id]["node"], String(c.get("carry", "")))
 	for id in _creatures.keys():
 		if not seen.has(id):
 			_creatures[id]["node"].queue_free()
 			_creatures.erase(id)
+
+
+
+## Draws the catch a dog carries (wild animal kind, or "" for none) in its mouth, drawn like the
+## carcass on the ground but smaller, over the dog.
+func _show_carry(dog: Node2D, carry: String) -> void:
+	var held: MarkView = dog.get_node_or_null("Carry")
+	var kind := "carcass_" + carry if carry != "" else ""
+	if held != null and held.kind != kind:
+		dog.remove_child(held)
+		held.queue_free()
+		held = null
+	if held != null or kind == "":
+		return
+	held = MarkView.new()
+	held.name = "Carry"
+	held.kind = kind
+	held.lifted = true
+	held.z_index = 1
+	held.position = CARRY_AT
+	held.scale = Vector2.ONE * CARRY_SCALE
+	dog.add_child(held)
 
 
 func _on_marks(list: Array) -> void:
