@@ -262,7 +262,9 @@ func _build() -> void:
 	_notice_icon.visible = false
 	notice_line.add_child(_notice_icon)
 	_notice_label = Label.new()
-	_notice_label.add_theme_color_override("font_color", UiTheme.TEXT_DARK)
+	_notice_label.add_theme_color_override("font_color", UiTheme.TEXT_LIGHT)  # on the title band, outlined
+	_notice_label.add_theme_constant_override("outline_size", 4)
+	_notice_label.add_theme_color_override("font_outline_color", UiTheme.TEXT_DARK)
 	_notice_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	notice_line.add_child(_notice_label)
 
