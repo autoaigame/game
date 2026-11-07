@@ -29,11 +29,24 @@ func test_cell_of_rounds() -> void:
 
 
 ## A walkable cell c where c + dir is walkable but a cell beside that diagonal step is not: the corner
-## of a water cell.
-static func _water_corner(dir: Vector2i) -> Vector2i:
-	return MapData.nearest_matching(MapData.spawn_cell(), func(c: Vector2i) -> bool:
-		return MapData.is_walkable(c) and MapData.is_walkable(c + dir) \
-				and not (MapData.is_walkable(c + Vector2i(dir.x, 0)) and MapData.is_walkable(c + Vector2i(0, dir.y))))
+## of a water cell. The first one found in rings around the spawn, or null.
+static func _water_corner(dir: Vector2i) -> Variant:
+	for r in 200:
+		for c in _ring(MapData.spawn_cell(), r):
+			if MapData.is_walkable(c) and MapData.is_walkable(c + dir) \
+					and not (MapData.is_walkable(c + Vector2i(dir.x, 0)) and MapData.is_walkable(c + Vector2i(0, dir.y))):
+				return c
+	return null
+
+## The cells at Chebyshev distance r from center (the square ring), in a fixed order.
+static func _ring(center: Vector2i, r: int) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for dy in range(-r, r + 1):
+		for dx in range(-r, r + 1):
+			if maxi(absi(dx), absi(dy)) == r:
+				out.append(center + Vector2i(dx, dy))
+	return out
+
 
 
 ## A click (move_to) on the far side of a water corner: the straight line crosses the corner point, but
@@ -49,13 +62,23 @@ func test_never_cuts_a_water_corner() -> void:
 ## Starting a few cells back on a clear diagonal, the click still walks up to the corner and stops there.
 func test_walks_a_clear_diagonal_up_to_a_water_corner() -> void:
 	var dir := Vector2i(1, 1)
-	var c: Vector2i = MapData.nearest_matching(MapData.spawn_cell(), func(c: Vector2i) -> bool:
-		if not (MapData.is_walkable(c + dir) and not (MapData.is_walkable(c + Vector2i(1, 0)) and MapData.is_walkable(c + Vector2i(0, 1)))):
-			return false
-		for k in range(1, 4):
-			var b := c - dir * k
-			if not (MapData.is_walkable(b) and MapData.is_walkable(b + Vector2i(1, 0)) and MapData.is_walkable(b + Vector2i(0, 1))):
-				return false
-		return true)
+	var c := Vector2i.ZERO
+	var found := false
+	for r in 200:
+		for cell in _ring(MapData.spawn_cell(), r):
+			if found or not (MapData.is_walkable(cell + dir) and not (MapData.is_walkable(cell + Vector2i(1, 0)) \
+					and MapData.is_walkable(cell + Vector2i(0, 1)))):
+				continue
+			var clear := true
+			for k in range(1, 4):
+				var b := cell - dir * k
+				if not (MapData.is_walkable(b) and MapData.is_walkable(b + Vector2i(1, 0)) and MapData.is_walkable(b + Vector2i(0, 1))):
+					clear = false
+			if clear:
+				c = cell
+				found = true
+		if found:
+			break
+	assert_true(found, "no clear diagonal up to a water corner near the spawn")
 	var p := Protocol.step_towards(Vector2(c - dir * 3), c + dir * 2, 10.0)
 	assert_eq(Protocol.cell_of(p), c, "walked from %s, ended at %s" % [c - dir * 3, p])

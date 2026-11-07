@@ -78,11 +78,23 @@ func test_holding_a_key_never_stalls() -> void:
 ## A walkable cell where stepping along dir would pass between a walkable cell and a non-walkable
 ## one (or two): the corner of a water cell. The three cells before it along dir are clear.
 func _corner_cell(dir: Vector2i) -> Vector2i:
-	var found: Variant = MapData.nearest_matching(MapData.spawn_cell(), func(c: Vector2i) -> bool:
-		return MapData.is_walkable(c + dir) and not _clear_step(c, dir) and MapData.is_walkable(c - dir * 3) \
-				and _clear_step(c - dir * 3, dir) and _clear_step(c - dir * 2, dir) and _clear_step(c - dir, dir))
-	assert_true(found != null, "no water corner near the spawn")
-	return found
+	for r in 200:
+		for c in _ring(MapData.spawn_cell(), r):
+			if MapData.is_walkable(c + dir) and not _clear_step(c, dir) and MapData.is_walkable(c - dir * 3) \
+					and _clear_step(c - dir * 3, dir) and _clear_step(c - dir * 2, dir) and _clear_step(c - dir, dir):
+				return c
+	assert_true(false, "no water corner near the spawn")
+	return Vector2i.ZERO
+
+## The cells at Chebyshev distance r from center (the square ring), in a fixed order.
+static func _ring(center: Vector2i, r: int) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for dy in range(-r, r + 1):
+		for dx in range(-r, r + 1):
+			if maxi(absi(dx), absi(dy)) == r:
+				out.append(center + Vector2i(dx, dy))
+	return out
+
 
 
 ## The step from c to c + dir stays on walkable cells, and so do the two cells beside a diagonal.
