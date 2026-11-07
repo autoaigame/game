@@ -93,3 +93,22 @@ func test_hole_mark_is_drawn() -> void:
 	assert_eq(node.kind, "hole")
 	assert_true(MarkView.KINDS.has("hole") and MarkView.KINDS.has("pee") and MarkView.KINDS.has("fire"), "kinds drawn")
 	view.free()
+
+
+## Wild animals are drawn as AnimalView (not the dog sprite) and bob as they hop.
+func test_wild_animals_are_drawn_and_hop() -> void:
+	var view := _view()
+	view.client.creatures_received.emit([{"id": -1, "kind": "rabbit", "owner": 0, "pos": Vector2(2, 2), "state": "idle"},
+			{"id": -2, "kind": "pheasant", "owner": 0, "pos": Vector2(5, 2), "state": "idle"}])
+	var rabbit: Node2D = view._creatures[-1]["node"]
+	assert_true(rabbit is AnimalView, "rabbit drawn as an animal")
+	assert_eq((rabbit as AnimalView).kind, "rabbit")
+	assert_true(AnimalView.KINDS.has("rabbit") and AnimalView.KINDS.has("pheasant"))
+	view.client.creatures_received.emit([{"id": -1, "kind": "rabbit", "owner": 0, "pos": Vector2(4, 2), "state": "hop"}])
+	var highest := 0.0
+	for i in 30:
+		view._animate_creatures(1.0 / 60.0)
+		highest = maxf(highest, (rabbit as AnimalView).hop)
+	assert_true(highest > 0.3, "hops while moving: %f" % highest)
+	assert_false(view._creatures.has(-2), "pheasant gone")
+	view.free()
