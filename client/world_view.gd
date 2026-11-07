@@ -57,20 +57,10 @@ func _on_snapshot(players: Array) -> void:
 func _animate_actors(dt: float) -> void:
 	for id in _actors:
 		var w: Dictionary = _walk[id]
-		var before: Vector2 = w["shown"]
-		w["shown"] = WalkAnim.follow(before, w["server"], dt)
-		var moved: float = (w["shown"] - before).length()
-		var walking := moved > 0.0
-		if walking:
-			w["walked"] += moved
 		var actor: Node2D = _actors[id]
-		var pos := IsoLayer.cell_to_local(w["shown"])
 		var sprite: Sprite2D = actor.get_node("Sprite")
-		if walking:
-			w["facing"] = WalkAnim.facing(pos - actor.position, w["facing"])
-		w["still"] = 0.0 if walking else w["still"] + dt
-		var row := WalkAnim.walk_row(w["walked"]) if walking else WalkAnim.idle_row(w["still"])
-		sprite.frame_coords = Vector2i(WalkAnim.sheet_column(maxi(w["facing"], 0)), row)
+		sprite.frame_coords = WalkAnim.animate(w, dt)
+		var pos := IsoLayer.cell_to_local(w["shown"])
 		actor.position = pos
 		if id == client.my_peer_id:
 			_camera.position = pos

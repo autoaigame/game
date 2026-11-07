@@ -3,25 +3,36 @@
 class_name WalkAnim
 extends RefCounted
 
-## The drawn player catches up with the last snapshot at this multiple of the walking speed, so it
-## glides between snapshots and never falls behind while walking.
+## The drawn player follows the last snapshot about FOLLOW_LAG_CELLS behind (just over a snapshot at
+## walking speed), at the walking speed give or take FOLLOW_GAIN per FOLLOW_LAG_CELLS of difference,
+## so it glides evenly instead of rushing to each snapshot and waiting for the next.
+const FOLLOW_LAG_CELLS := 0.3
+const FOLLOW_GAIN := 0.25
+## Never slower than this multiple of the walking speed, so it still reaches a stopped player.
+const FOLLOW_MIN := 0.5
+## Never faster than this multiple of the walking speed, so it still catches up after a delay.
 const CATCH_UP := 1.5
 ## Farther than this from the snapshot (spawn, reconnect, lost snapshots): jump there at once.
 const SNAP_CELLS := 3.0
 ## Walk rows of the sheet play one cycle (two steps) over this distance, so the feet keep pace with
 ## the ground at Protocol.SPEED_CELLS_PER_S.
 const WALK_CYCLE_CELLS := 1.25
+## The drawn player catches up with each snapshot before the next one arrives, then waits for it: a
+## walker counts as stopped only after standing still this long (over two snapshot intervals, plus
+## network jitter), so the standing pose never flashes between walk frames.
+const STOP_GRACE_S := 0.15
 ## Standing still, the idle rows play at this many frames per second.
 const IDLE_FPS := 4.0
 
 
-## Next drawn position, in cells: towards the server's position, never past it.
+## Next drawn position, in cells: towards the server's position, never past it, faster the farther behind.
 static func follow(shown: Vector2, server: Vector2, dt: float) -> Vector2:
 	var to_server := server - shown
 	var dist := to_server.length()
 	if dist > SNAP_CELLS:
 		return server
-	var step := Protocol.SPEED_CELLS_PER_S * CATCH_UP * dt
+	var pace := clampf(1.0 + FOLLOW_GAIN * (dist - FOLLOW_LAG_CELLS) / FOLLOW_LAG_CELLS, FOLLOW_MIN, CATCH_UP)
+	var step := Protocol.SPEED_CELLS_PER_S * pace * dt
 	if step >= dist:
 		return server
 	return shown + to_server / dist * step
@@ -84,6 +95,22 @@ static func _facing_deg(f: int) -> float:
 ## Sprite sheet column for a facing.
 static func sheet_column(f: int) -> int:
 	return FACING_COLUMN[f]
+
+
+## New drawing state for one player: w = {server, shown: Vector2 in cells, walked: cells, facing: FACINGS
+## index or -1, still: s}, updated in place for a frame of dt seconds. Returns the sheet frame to draw.
+static func animate(w: Dictionary, dt: float) -> Vector2i:
+	var before: Vector2 = w["shown"]
+	w["shown"] = follow(before, w["server"], dt)
+	var moved: float = (w["shown"] - before).length()
+	var walking := moved > 0.0
+	if walking:
+		w["walked"] += moved
+		var screen := IsoLayer.cell_to_local(w["shown"]) - IsoLayer.cell_to_local(before)
+		w["facing"] = facing(screen, w["facing"])
+	w["still"] = 0.0 if walking else w["still"] + dt
+	var row := walk_row(w["walked"]) if w["still"] < STOP_GRACE_S else idle_row(w["still"] - STOP_GRACE_S)
+	return Vector2i(sheet_column(maxi(w["facing"], 0)), row)
 
 
 ## Sprite row (walk frame) after walking this many cells.
