@@ -19,6 +19,18 @@ static func add(marks: Dictionary, kind: String, pos: Vector2, ttl: float) -> vo
 		items.pop_front()
 
 
+## The mark with this id, or {}.
+static func find(marks: Dictionary, id: int) -> Dictionary:
+	for m in marks["items"]:
+		if m["id"] == id:
+			return m
+	return {}
+
+
+static func remove(marks: Dictionary, id: int) -> void:
+	marks["items"] = (marks["items"] as Array).filter(func(m): return m["id"] != id)
+
+
 ## Ages every mark by `dt` and removes the expired ones; true if any was removed.
 static func tick(marks: Dictionary, dt: float) -> bool:
 	var kept: Array = []
