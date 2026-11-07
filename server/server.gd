@@ -118,6 +118,27 @@ func _gather(peer_id: int, cell: Vector2i) -> Dictionary:
 	return {"notice": "gathered", "item": rule["item"], "count": n}
 
 
+## The player eats one of an item from their bag.
+func on_eat(peer_id: int, item: String) -> void:
+	var r := _eat(peer_id, item)
+	if r.is_empty():
+		return
+	_net.inventory.rpc_id(peer_id, _players[peer_id]["inventory"])
+	_net.notice.rpc_id(peer_id, "ate", {"item": item})
+
+
+## Eats one `item` (food the player has): {notice: ate, item}, or {} for a request to ignore.
+func _eat(peer_id: int, item: String) -> Dictionary:
+	if not _players.has(peer_id):
+		return {}
+	var food: int = ItemData.item(item).get("food", 0)
+	var p: Dictionary = _players[peer_id]
+	if food <= 0 or not INV.remove(p["inventory"], item, 1):
+		return {}
+	p["hunger"] = HUNGER.fed(p["hunger"], food)
+	return {"notice": "ate", "item": item}
+
+
 ## Picked objects regrow.
 func _tick_gathering(dt: float) -> void:
 	for cell in _picked.keys():
