@@ -9,6 +9,7 @@ The character is a 3D model drawn as pixel art, built from parts on one skeleton
 `docs/character-parts.md`. Read it first; this skill is the order of the steps. The short path:
 
 ```
+make blender
 python3 art/character/new_part.py <slot> <id> <github-login>
 make part ID=<id>
 make check-part ID=<id>
@@ -44,8 +45,11 @@ python3 art/character/new_part.py <slot> <id> <github-login>          # beard as
 
 ## 3. Make it
 
-Volumes (hair, beards, hats, clothes, bags) need Blender 5.2, run headless (`blender -b`); pass
-`BLENDER=/path/to/blender` to `make` if it is not on your PATH.
+Volumes (hair, beards, hats, clothes, bags) are built with Blender 5.2.3 LTS, run headless. Run
+`make blender` first: it downloads the portable build for your system from download.blender.org into
+`.tools/blender/` (git-ignored, nothing installed), checks its SHA-256, and does nothing the next time.
+`make part` uses `BLENDER=/path/to/blender` if you pass it, else a `blender` on your PATH, else that one.
+Another version may build a slightly different part: name the one you used in `ASSETS.toml`.
 
 - By script, the way for an AI agent and the easiest to review: edit `art/character/parts/<id>.py`.
   The tools are in `art/character/part_kit.py` (`ring` for a hat's brim, `lathe` for any round shape);

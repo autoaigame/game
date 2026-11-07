@@ -1,7 +1,7 @@
 GODOT ?= godot
 RUN := $(GODOT) --headless --path .
 
-.PHONY: setup check test smoke art export-web run-server part check-part gallery
+.PHONY: setup check test smoke art export-web run-server part check-part gallery blender
 
 setup: ## import the project (first run, or after adding assets)
 	@$(RUN) --import >/dev/null 2>&1 || $(RUN) --import
@@ -17,12 +17,19 @@ check: test smoke ## everything CI requires
 art: ## regenerate assets/*.png from art/gen_art.gd
 	@$(RUN) -s res://art/gen_art.gd
 
-BLENDER ?= blender
+# Blender for the character parts: BLENDER if given, else blender on PATH, else the portable one of
+# make blender (tools/get-blender.sh, in .tools/blender/).
+BLENDER ?= $(or $(shell command -v blender 2>/dev/null),$(shell tools/get-blender.sh --path 2>/dev/null))
+
+blender: ## download the portable Blender the character parts are built with, into .tools/ (SHA-256 checked)
+	@tools/get-blender.sh
+
 
 part: ## build one character part: make part ID=<id> [BLEND=1] (Blender for volumes, Python for faces)
 	@test -n "$(ID)" || { echo "usage: make part ID=<id>"; exit 2; }
 	@if [ -f art/character/faces/$(ID).txt ]; then python3 art/character/faces.py .; \
-	else mkdir -p build/parts && touch build/parts/.gdignore && $(BLENDER) -b --python-exit-code 1 --python art/character/parts/$(ID).py $(if $(BLEND),-- --blend) \
+	else command -v "$(BLENDER)" > /dev/null || { echo "no Blender at $(BLENDER): run make blender, or pass BLENDER=/path/to/blender"; exit 1; }; \
+	mkdir -p build/parts && touch build/parts/.gdignore && $(BLENDER) -b --python-exit-code 1 --python art/character/parts/$(ID).py $(if $(BLEND),-- --blend) \
 		> build/parts/$(ID).log 2>&1 && grep "^## " build/parts/$(ID).log || { tail -30 build/parts/$(ID).log; exit 1; }; fi
 	@$(RUN) --import >/dev/null 2>&1 || $(RUN) --import
 

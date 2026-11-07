@@ -175,7 +175,8 @@ make check-part ID=<id>
 ```
 
 - A volume is a script, `art/character/parts/<id>.py`, that builds it on `assets/character/body.glb`.
-  Reproducible and easy to review: the best path for an AI agent. Blender 5.2, headless.
+  Reproducible and easy to review: the best path for an AI agent. Blender 5.2.3 LTS, headless:
+  `make blender` downloads it (`tools/get-blender.sh`, the one place its version is set).
 - To model by hand, `make part ID=<id> BLEND=1` saves `build/parts/<id>.blend` with the body, the part and
   the game's camera; `art/character/export_part.py` exports the object named `<id>` from it.
 - A face or a flat beard is a grid, `art/character/faces/<id>.txt`, drawn by `art/character/faces.py`.

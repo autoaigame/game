@@ -15,7 +15,8 @@ The game uses Godot 4.7 (GDScript only). Install Godot 4.7.2 and put `godot` on 
 - `make run-server`: a local server on port 9000. Run the client with `godot --path . -- --connect ws://127.0.0.1:9000`.
 - `make export-web`: the browser build in `build/web/`.
 - `make art`: regenerate the pixel art from `art/gen_art.gd`.
-- `make part ID=<id>`: build one character part from its source. Volumes need Blender 5.2 (`BLENDER=/path/to/blender`).
+- `make blender`: download the portable Blender 5.2.3 LTS the character parts are built with into `.tools/blender/` (git-ignored, SHA-256 checked; Linux x64, Windows x64 and arm64, macOS arm64). About 370 MB, once.
+- `make part ID=<id>`: build one character part from its source, with `BLENDER` if given, else `blender` on your PATH, else the one of `make blender`.
 - `make check-part ID=<id>`: check one character part and draw its sheet in `build/parts/` (the sheet needs a display: `xvfb-run` on Linux without one).
 - `make gallery SLOT=<slot>`: every character part of a slot on one sheet, `build/parts/gallery_<slot>.png`.
 
