@@ -10,9 +10,6 @@ const TILES_ATLAS := "res://assets/tiles.png"
 const MASK_COLUMNS := 16
 const MAX_FULL_VARIANTS := 17  ## data/tiles "full_variants" at most
 const ATLAS_COLUMNS := MASK_COLUMNS + MAX_FULL_VARIANTS - 1
-## Object sprites (data/objects "sprite"): the object's cell centre is this many px above the bottom
-## edge of its image, horizontally centred.
-const OBJECT_FOOT_PX := 8
 ## Camera zoom: screen pixels per texel. An integer, so every texel covers the same number of pixels.
 const CAMERA_ZOOM := 1.0
 

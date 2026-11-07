@@ -4,6 +4,6 @@
 	"walkable": true,
 	"priority": 6,
 	"atlas": 6,
-	"full_variants": 17,
+	"full_variants": 14,
 	"mask_variants": 1
 }

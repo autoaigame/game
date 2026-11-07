@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d1div0gj0mr5l"
-path="res://.godot/imported/standing_stone.png-2110878982e701594ef2cf74dd0900ea.ctex"
+uid="uid://bpfivcajdb5wx"
+path="res://.godot/imported/stump_1.png-049145dc4eccf051f2e099b11ae5d1c7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/objects/standing_stone.png"
-dest_files=["res://.godot/imported/standing_stone.png-2110878982e701594ef2cf74dd0900ea.ctex"]
+source_file="res://assets/objects/stump_1.png"
+dest_files=["res://.godot/imported/stump_1.png-049145dc4eccf051f2e099b11ae5d1c7.ctex"]
 
 [params]
 

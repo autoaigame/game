@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ygwopxnwfftm"
-path="res://.godot/imported/pine.png-cc78d9df524693754e42ebafdb20e6a3.ctex"
+uid="uid://dvae1pl6vvkqw"
+path="res://.godot/imported/wall_3.png-57922c22ffe1ae2e20e2b76dd67cdf05.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/objects/pine.png"
-dest_files=["res://.godot/imported/pine.png-cc78d9df524693754e42ebafdb20e6a3.ctex"]
+source_file="res://assets/objects/wall_3.png"
+dest_files=["res://.godot/imported/wall_3.png-57922c22ffe1ae2e20e2b76dd67cdf05.ctex"]
 
 [params]
 

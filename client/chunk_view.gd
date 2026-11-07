@@ -49,14 +49,35 @@ static func objects(chunk: Vector2i) -> Dictionary:
 	return out
 
 
-## A sprite for an object standing on `cell`. Its position is the cell centre, so it sorts by y with
-## the players (y_sort): a player north of a tree walks behind it.
-static func object_sprite(cell: Vector2i, index: int) -> Sprite2D:
+## Which of an object's sprites stands on `cell`: a hash of the world seed, the cell and the object.
+static func sprite_variant(cell: Vector2i, index: int) -> int:
+	var n: int = WorldData.object(index)["sprites"].size()
+	if n <= 1:
+		return 0
+	return WorldNoise.hash3(int(WorldData.gen()["seed"]), cell.x, cell.y, WorldData.object(index)["salt"]) % n
+
+
+## Wall sprites run along the grid's y axis: a wall continuing along x (is_wall says where walls are)
+## is drawn mirrored.
+static func mirror_wall(cell: Vector2i, is_wall: Callable) -> bool:
+	var along_x: bool = is_wall.call(cell + Vector2i(1, 0)) or is_wall.call(cell + Vector2i(-1, 0))
+	var along_y: bool = is_wall.call(cell + Vector2i(0, 1)) or is_wall.call(cell + Vector2i(0, -1))
+	return along_x and not along_y
+
+
+## A sprite for an object standing on `cell`: its anchor (data/objects "anchor_px") on the cell centre.
+## The position is the cell centre, so it sorts by y with the players (y_sort): a player north of a
+## tree walks behind it. mirrored: flipped left to right around its anchor.
+static func object_sprite(cell: Vector2i, index: int, mirrored := false) -> Sprite2D:
+	var sp: Dictionary = WorldData.object(index)["sprites"][sprite_variant(cell, index)]
 	var sprite := Sprite2D.new()
-	sprite.texture = _texture(WorldData.object(index)["sprite"])
+	sprite.texture = _texture(sp["file"])
 	sprite.centered = false
-	var size := sprite.texture.get_size() if sprite.texture != null else Vector2.ZERO
-	sprite.offset = Vector2(-size.x / 2.0, IsoLayer.OBJECT_FOOT_PX - size.y)
+	var anchor := Vector2(sp["anchor_px"])
+	if mirrored and sprite.texture != null:
+		sprite.flip_h = true
+		anchor.x = sprite.texture.get_width() - anchor.x
+	sprite.offset = -anchor
 	sprite.position = IsoLayer.cell_to_local(Vector2(cell))
 	return sprite
 
@@ -104,8 +125,10 @@ static func build(chunk: Vector2i, tiles: Texture2D) -> Node2D:
 	node.name = "Chunk_%d_%d" % [chunk.x, chunk.y]
 	node.y_sort_enabled = true
 	var obj := objects(chunk)
+	var wall := WorldData.object_index("stone_wall")
+	var is_wall := func(c: Vector2i) -> bool: return MapData.object_index_at(c) == wall
 	for cell in obj:
-		node.add_child(object_sprite(cell, obj[cell]))
+		node.add_child(object_sprite(cell, obj[cell], obj[cell] == wall and mirror_wall(cell, is_wall)))
 	var decals := Node2D.new()
 	decals.name = "Decals"
 	decals.z_index = DECALS_Z

@@ -23,7 +23,7 @@ func test_places_are_loaded() -> void:
 	assert_eq(ids, ["camp", "ruin"])
 	var camp: Dictionary = WorldData.places()[0]
 	assert_eq(camp["size"], Vector2i(11, 11))
-	var fire: Array = camp["cells"].filter(func(pc): return pc[2] == WorldData.object_index("campfire"))
+	var fire: Array = camp["cells"].filter(func(pc): return pc[2] == WorldData.object_index("stump"))
 	assert_eq(fire.size(), 1)
 	assert_eq(fire[0][0], Vector2i(5, 5))
 	for p in WorldData.places():

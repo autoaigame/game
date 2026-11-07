@@ -2,7 +2,26 @@
 	"id": "bush",
 	"name": "Bush",
 	"blocks": false,
-	"cell_size": 5,
-	"sprite": "res://assets/objects/bush.png",
-	"densities": {"grassland": 0.2, "forest": 0.3, "steppe": 0.1}
+	"cell_size": 4,
+	"sprites": [
+		{
+			"file": "res://assets/objects/bush_0.png",
+			"anchor_px": [
+				30,
+				47
+			]
+		},
+		{
+			"file": "res://assets/objects/bush_1.png",
+			"anchor_px": [
+				32,
+				46
+			]
+		}
+	],
+	"densities": {
+		"grassland": 0.12,
+		"forest": 0.15,
+		"steppe": 0.06
+	}
 }

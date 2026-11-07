@@ -19,69 +19,6 @@ license = "CC0-1.0"
 source = ""
 
 [[asset]]
-path = "assets/objects/bush.png"
-author = "M3t4Data"
-origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
-license = "CC0-1.0"
-source = ""
-
-[[asset]]
-path = "assets/objects/oak.png"
-author = "M3t4Data"
-origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
-license = "CC0-1.0"
-source = ""
-
-[[asset]]
-path = "assets/objects/pine.png"
-author = "M3t4Data"
-origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
-license = "CC0-1.0"
-source = ""
-
-[[asset]]
-path = "assets/objects/rock.png"
-author = "M3t4Data"
-origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
-license = "CC0-1.0"
-source = ""
-
-[[asset]]
-path = "assets/objects/campfire.png"
-author = "M3t4Data"
-origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
-license = "CC0-1.0"
-source = ""
-
-[[asset]]
-path = "assets/objects/standing_stone.png"
-author = "M3t4Data"
-origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
-license = "CC0-1.0"
-source = ""
-
-[[asset]]
-path = "assets/objects/stone_wall.png"
-author = "M3t4Data"
-origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
-license = "CC0-1.0"
-source = ""
-
-[[asset]]
 path = "assets/decals/flowers.png"
 author = "M3t4Data"
 origin = "generated"
@@ -114,5 +51,122 @@ author = "M3t4Data"
 origin = "generated"
 tool = "art/gen_art.gd (Godot 4.7.2)"
 prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/oak.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, retouched by script"
+prompt = "large realistic mature oak tree filling the canvas, dense muted olive-green foliage in soft clumps, thick grey-brown bark trunk with roots at the base, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/fir.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, retouched by script"
+prompt = "tall realistic conifer fir tree filling the canvas height, layered dark muted green needle branches in a natural uneven cone, grey-brown trunk visible at the base, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/birch.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, retouched by script"
+prompt = "tall realistic birch tree filling the canvas height, slender pale grey-white trunk with dark bark marks, light airy muted olive-yellow foliage in loose clumps, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/boulder_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, retouched by script"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/boulder_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, retouched by script"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/bush_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, retouched by script"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/bush_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, retouched by script"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/stump_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, retouched by script"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/stump_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, retouched by script"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/wall_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, retouched by script"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/wall_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, retouched by script"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/wall_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, retouched by script"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/wall_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object, retouched by script"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
 license = "CC0-1.0"
 source = ""

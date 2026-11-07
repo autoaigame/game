@@ -1,0 +1,20 @@
+{
+	"id": "birch",
+	"name": "Birch",
+	"blocks": true,
+	"cell_size": 4,
+	"sprites": [
+		{
+			"file": "res://assets/objects/birch.png",
+			"anchor_px": [
+				73,
+				236
+			]
+		}
+	],
+	"densities": {
+		"grassland": 0.05,
+		"forest": 0.1,
+		"steppe": 0.015
+	}
+}

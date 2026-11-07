@@ -28,13 +28,10 @@ const LIGHT := Vector3(-0.55, -0.65, 0.52)  ## from the top left, towards the vi
 
 func _initialize() -> void:
 	_player().save_png("res://assets/player.png")
-	DirAccess.make_dir_recursive_absolute("res://assets/objects")
-	for id in OBJECTS:
-		_object(id).save_png("res://assets/objects/%s.png" % id)
 	DirAccess.make_dir_recursive_absolute("res://assets/decals")
 	for id in DECALS:
 		_decal(id).save_png("res://assets/decals/%s.png" % id)
-	print("art: wrote assets/player.png, assets/objects/*.png and assets/decals/*.png (assets/tiles.png comes from the PixelLab kit)")
+	print("art: wrote assets/player.png and assets/decals/*.png (tiles and objects come from the PixelLab kit)")
 	quit()
 
 
@@ -55,100 +52,6 @@ func _lum(n: Vector2) -> float:
 	var z := sqrt(maxf(0.0, 1.0 - n.length_squared()))
 	var normal := Vector3(n.x, n.y, z).normalized()
 	return clampf(0.18 + 0.9 * maxf(0.0, normal.dot(LIGHT.normalized())), 0.0, 1.0)
-
-
-# --- Objects -----------------------------------------------------------------
-# Provisional sprites (PixelLab sprites may replace them: data/objects/<id>.json names each file).
-# The object's cell centre is IsoLayer.OBJECT_FOOT_PX above the bottom edge, horizontally centred.
-
-const OBJECTS := {"oak": Vector2i(96, 128), "pine": Vector2i(64, 128), "rock": Vector2i(48, 40),
-	"bush": Vector2i(48, 40), "stone_wall": Vector2i(64, 64), "standing_stone": Vector2i(32, 64),
-	"campfire": Vector2i(48, 40)}
-const OBJECT_FOOT := IsoLayer.OBJECT_FOOT_PX
-
-
-func _object(id: String) -> Image:
-	var size: Vector2i = OBJECTS[id]
-	var img := Image.create_empty(size.x, size.y, false, Image.FORMAT_RGBA8)
-	var o := Vector2i.ZERO
-	var cx := size.x / 2.0
-	var foot := size.y - OBJECT_FOOT
-	match id:
-		"oak":
-			_limb(img, o, int(cx) - 5, foot - 44, 10, 46, DIRT)
-			for b in [[-16, -60, 22, 18], [16, -62, 22, 18], [0, -84, 28, 22], [-10, -72, 24, 20], [10, -74, 24, 20]]:
-				_blob(img, o, cx + b[0], foot + b[1], b[2], b[3], GRASS, 2.0, -0.05)
-		"pine":
-			_limb(img, o, int(cx) - 3, foot - 24, 6, 26, DIRT)
-			for k in 4:
-				var top := foot - 30 - k * 22
-				for y in 30:
-					var half := (y + 4) * (0.9 - k * 0.12)
-					for x in range(int(cx - half), int(cx + half)):
-						var n := Vector2((x + 0.5 - cx) / maxf(half, 1.0), 0.2)
-						_px(img, o, x, top + y, _c(FOREST, int(_lum(n) * 5.0) + 1))
-		"rock":
-			_blob(img, o, cx, foot - 10, 18, 13, STONE, 2.6)
-			_blob(img, o, cx + 9, foot - 4, 10, 7, STONE, 2.4, -0.1)
-		"stone_wall":
-			# a low wall block on a 48 x 24 base: lit top face, darker front faces, brick lines
-			var top_c := foot - 26.0
-			var base_c := foot - 4.0
-			for y in size.y:
-				for x in size.x:
-					var dx := absf(x + 0.5 - cx) / 24.0
-					if dx > 1.0:
-						continue
-					var half := 12.0 * (1.0 - dx)
-					var yy := y + 0.5
-					var face := -1
-					if yy >= top_c - half and yy <= top_c + half:
-						face = 4
-					elif yy > top_c + half and yy <= base_c + half:
-						face = 3 if x < cx else 2
-					if face < 0:
-						continue
-					var brick := 1 if face < 4 and ((y % 7 == 0) or ((x + (y / 7) * 5) % 10 == 0)) else 0
-					_px(img, o, x, y, _c(STONE, face - brick))
-		"standing_stone":
-			_blob(img, o, cx, foot - 26, 10, 28, STONE, 3.0)
-			for y in range(foot - 44, foot - 10, 7):
-				_px(img, o, int(cx) - 2, y, _c(GRASS, 3))  # moss
-		"campfire":
-			for k in 6:
-				var a := k * TAU / 6.0
-				_blob(img, o, cx + cos(a) * 14.0, foot - 6 + sin(a) * 6.0, 4, 3, STONE)
-			_limb(img, o, int(cx) - 8, foot - 9, 16, 3, DIRT)
-			_blob(img, o, cx, foot - 16, 6, 10, GOLD, 2.0, 0.2)
-			_blob(img, o, cx, foot - 13, 4, 6, TUNIC, 2.0, 0.3)
-		"bush":
-			for b in [[-8, -10, 12, 10], [8, -10, 12, 10], [0, -16, 13, 11]]:
-				_blob(img, o, cx + b[0], foot + b[1], b[2], b[3], GRASS, 2.0, 0.05)
-			for k in 5:
-				_px(img, o, int(cx) - 10 + k * 5, foot - 12 - (k % 2) * 6, _c(TUNIC, 4))
-	_object_outline(img)
-	for y in range(foot - 5, foot + 6):
-		for x in size.x:
-			var n := Vector2((x + 0.5 - cx) / (size.x * 0.42), (y + 0.5 - foot) / 5.0)
-			if n.length_squared() <= 1.0 and img.get_pixel(x, y).a == 0.0:
-				img.set_pixel(x, y, SHADOW)
-	return img
-
-
-func _object_outline(img: Image) -> void:
-	var edge := {}
-	for y in img.get_height():
-		for x in img.get_width():
-			if img.get_pixel(x, y).a > 0.0:
-				continue
-			for n in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-				var p: Vector2i = Vector2i(x, y) + n
-				if p.x >= 0 and p.y >= 0 and p.x < img.get_width() and p.y < img.get_height() \
-						and img.get_pixelv(p).a > 0.0:
-					edge[Vector2i(x, y)] = Color.html(OUTLINE).lerp(img.get_pixelv(p), 0.18)
-					break
-	for p in edge:
-		img.set_pixelv(p, edge[p])
 
 
 # --- Decals ------------------------------------------------------------------

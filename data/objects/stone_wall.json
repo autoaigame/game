@@ -3,6 +3,35 @@
 	"name": "Stone wall",
 	"blocks": true,
 	"cell_size": 1,
-	"sprite": "res://assets/objects/stone_wall.png",
+	"sprites": [
+		{
+			"file": "res://assets/objects/wall_0.png",
+			"anchor_px": [
+				52,
+				49
+			]
+		},
+		{
+			"file": "res://assets/objects/wall_1.png",
+			"anchor_px": [
+				51,
+				48
+			]
+		},
+		{
+			"file": "res://assets/objects/wall_2.png",
+			"anchor_px": [
+				53,
+				50
+			]
+		},
+		{
+			"file": "res://assets/objects/wall_3.png",
+			"anchor_px": [
+				53,
+				50
+			]
+		}
+	],
 	"densities": {}
 }
