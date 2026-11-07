@@ -13,6 +13,9 @@ const FADE_S := 0.15
 const UI_PREVIEW_MS := 150
 
 var sounds: Node  ## client/sound_director.gd, or null (no sound)
+## While the menu is closed, a key or button event is offered here first; true means it was used (the
+## start menu goes back a screen on Escape, client/login_ui.gd).
+var escape_first: Callable
 var _root := Control.new()
 var _tab_buttons := {}  ## tab id -> Button
 var _tab_pages := {}  ## tab id -> Control
@@ -90,9 +93,18 @@ func toggle() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if handle(event):
+		get_viewport().set_input_as_handled()
+
+
+## Acts on `event`; true when it was used.
+func handle(event: InputEvent) -> bool:
+	if not visible and escape_first.is_valid() and escape_first.call(event):
+		return true
 	if is_toggle(event) or (visible and event.is_action_pressed("ui_cancel")):
 		toggle()
-		get_viewport().set_input_as_handled()
+		return true
+	return false
 
 
 func _process(_delta: float) -> void:

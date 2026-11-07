@@ -1,5 +1,7 @@
-## Start menu, drawn over the world until the server welcomes us: name, one button, connection state.
-## Texts are in client/ui_text.gd, looks in client/ui_theme.gd.
+## Start menu, drawn over the world until the server welcomes us. Under the title band, one screen at a
+## time from a stack; the title and play screens show the connection state. The title screen (client/title_screen.gd) is the root;
+## Jouer opens the play screen (look, name, Entrer). A new screen is a Control given to add_screen(),
+## opened with go(id); Escape and Retour go back. Texts are in client/ui_text.gd, looks in client/ui_theme.gd.
 extends CanvasLayer
 
 enum State { CONNECTING, READY, JOINING, LOST }
@@ -7,19 +9,31 @@ const FOCUS_FIELD := 0
 const FOCUS_BUTTON := 1
 const FADE_IN_S := 0.3
 const FADE_OUT_S := 0.4
+const SCREEN_FADE_S := 0.15
+const ROOT_SCREEN := "title"
+const PLAY_SCREEN := "play"
+const ESCAPE_SETTINGS := "settings"  ## Escape opens the settings menu (it does so itself)
+const ESCAPE_BACK := "back"  ## Escape goes back a screen
 
 var client: Node  ## client/client.gd
 var sounds: Node  ## client/sound_director.gd, or null (no sound)
 var settings: Node  ## client/settings_menu.gd, or null
 var state := State.CONNECTING
 var _root := Control.new()
+var _screen_box := VBoxContainer.new()  ## holds every screen; only the top of the stack shows
+var _screens := {}  ## id -> Control
+var _stack: Array = [ROOT_SCREEN]
+var _screen_tween: Tween
+var _title: Node  ## client/title_screen.gd
 var _name_edit := LineEdit.new()
 var _button := Button.new()
-var _settings_button := Button.new()
+var _back_button := Button.new()
 var _hint := Label.new()
 var _hint_icon := TextureRect.new()
-var _status := Label.new()
+var _status := Label.new()  ## on the play screen
 var _status_icon := TextureRect.new()
+var _title_status := Label.new()  ## under the title screen's buttons
+var _title_status_icon := TextureRect.new()
 var _in_game := false
 var _tween: Tween
 var _focus_next: Control = null  ## control to focus on the next frame (once in the tree)
@@ -28,6 +42,37 @@ var _focus_next: Control = null  ## control to focus on the next frame (once in 
 ## Where the focus starts: on the button when a remembered name fills the field.
 static func initial_focus(remembered: String) -> int:
 	return FOCUS_BUTTON if remembered != "" else FOCUS_FIELD
+
+
+## `stack` with screen `id` on top (not twice in a row). The stack given is not changed.
+static func pushed(stack: Array, id: String) -> Array:
+	var s := stack.duplicate()
+	if s.is_empty() or s.back() != id:
+		s.append(id)
+	return s
+
+
+## `stack` without its top screen; the root screen always stays.
+static func popped(stack: Array) -> Array:
+	var s := stack.duplicate()
+	if s.size() > 1:
+		s.pop_back()
+	return s
+
+
+## What Escape does with `stack` shown: the settings on the root screen, back anywhere else.
+static func escape_action(stack: Array) -> String:
+	return ESCAPE_SETTINGS if stack.size() <= 1 else ESCAPE_BACK
+
+
+## Escape, a pad's B (the east button, Godot's ui_cancel has no pad button) or another ui_cancel
+## button, pressed (not a repeat). A pad's Start is not one: it opens the settings menu.
+static func is_back(event: InputEvent) -> bool:
+	if event is InputEventKey:
+		return event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE
+	if event is InputEventJoypadButton:
+		return event.pressed and (event.button_index == JOY_BUTTON_B or event.is_action_pressed("ui_cancel"))
+	return false
 
 
 static func button_enabled(s: State) -> bool:
@@ -66,10 +111,71 @@ func _ready() -> void:
 	if settings != null:
 		settings.opened.connect(_on_settings_opened)
 		settings.closed.connect(_on_settings_closed)
+		settings.escape_first = _on_escape
 	_root.modulate.a = 0.0
 	_fade_to(1.0, FADE_IN_S)
-	# focused on the first frame, once every control is in the tree
-	_focus_next = _button if initial_focus(remembered) == FOCUS_BUTTON else _name_edit
+	_show_top(false)
+
+
+## Opens screen `id` over the current one.
+func go(id: String) -> void:
+	_stack = pushed(_stack, id)
+	_show_top(true)
+
+
+## Back to the previous screen (never past the root).
+func back() -> void:
+	if _stack.size() <= 1:
+		return
+	_stack = popped(_stack)
+	_show_top(true)
+
+
+func top_screen() -> String:
+	return _stack.back()
+
+
+## Registers screen `id`, hidden until go(id). `first_focus` takes the focus when it shows.
+func add_screen(id: String, screen: Control, first_focus: Control) -> void:
+	screen.visible = false
+	screen.set_meta("first_focus", first_focus)
+	_screens[id] = screen
+	_screen_box.add_child(screen)
+
+
+## Escape or ui_cancel while the settings menu is closed: back a screen when not on the root.
+func _on_escape(event: InputEvent) -> bool:
+	if not _menu_up() or not is_back(event) or escape_action(_stack) != ESCAPE_BACK:
+		return false
+	_play_ui("click")
+	back()
+	return true
+
+
+## Whether the menu is in front: before joining, or back after the connection was lost in game.
+func _menu_up() -> bool:
+	return visible and (not _in_game or state == State.LOST)
+
+
+func _show_top(fade: bool) -> void:
+	var id: String = top_screen()
+	for k in _screens:
+		_screens[k].visible = k == id
+	var screen: Control = _screens[id]
+	if fade:
+		if _screen_tween != null:
+			_screen_tween.kill()
+		screen.modulate.a = 0.0
+		_screen_tween = create_tween()
+		_screen_tween.tween_property(screen, "modulate:a", 1.0, SCREEN_FADE_S)
+	# focused on the next frame, once the screen is in the tree and visible
+	_focus_next = _first_focus(id)
+
+
+func _first_focus(id: String) -> Control:
+	if id == PLAY_SCREEN:
+		return _button if initial_focus(_name_edit.text) == FOCUS_BUTTON else _name_edit
+	return _screens[id].get_meta("first_focus")
 
 
 func _process(_delta: float) -> void:
@@ -106,12 +212,28 @@ func _build() -> void:
 	var tagline := _label(UiText.TAGLINE, "TaglineLabel")
 	tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(tagline)
+	_screen_box.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	column.add_child(_screen_box)
+	var title_page := VBoxContainer.new()
+	title_page.add_theme_constant_override("separation", 10)
+	_title = load("res://client/title_screen.gd").new()
+	_title.sounds = sounds
+	_title.chosen.connect(_on_title_chosen)
+	title_page.add_child(_title)
+	var status_row := _icon_row(_title_status_icon, _title_status)
+	status_row.custom_minimum_size = Vector2(420, 0)
+	status_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	title_page.add_child(status_row)
+	_title_status.autowrap_mode = TextServer.AUTOWRAP_WORD
+	add_screen(ROOT_SCREEN, title_page, _title.first_button())
+	add_screen(PLAY_SCREEN, _build_play_screen(), _button)
 
-	# The character editor beside the name: the look is chosen before entering.
+
+## The look, the name and Entrer: the look is chosen before entering.
+func _build_play_screen() -> Control:
 	var pair := HBoxContainer.new()
 	pair.add_theme_constant_override("separation", 10)
 	pair.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	column.add_child(pair)
 	var look_panel := PanelContainer.new()
 	pair.add_child(look_panel)
 	var worn: Variant = client.get("look") if client != null else null
@@ -144,13 +266,13 @@ func _build() -> void:
 	_button.mouse_entered.connect(func(): _play("hover"))
 	_button.button_down.connect(func(): _play("click"))
 	box.add_child(_button)
-	_settings_button.text = UiText.SETTINGS
-	_settings_button.custom_minimum_size = Vector2(0, 36)
-	_settings_button.theme_type_variation = "TabButton"
-	_settings_button.pressed.connect(_open_settings)
-	_settings_button.mouse_entered.connect(func(): if sounds != null: sounds.ui("hover"))
-	_settings_button.button_down.connect(func(): if sounds != null: sounds.ui("click"))
-	box.add_child(_settings_button)
+	_back_button.text = UiText.BACK
+	_back_button.custom_minimum_size = Vector2(0, 36)
+	_back_button.theme_type_variation = "TabButton"
+	_back_button.pressed.connect(back)
+	_back_button.mouse_entered.connect(func(): _play_ui("hover"))
+	_back_button.button_down.connect(func(): _play_ui("click"))
+	box.add_child(_back_button)
 	var gap2 := Control.new()
 	gap2.custom_minimum_size = Vector2(0, 2)
 	box.add_child(gap2)
@@ -163,12 +285,13 @@ func _build() -> void:
 	var button_path := _button.get_path_to(_name_edit)
 	_button.focus_neighbor_top = button_path
 	_button.focus_previous = button_path
-	_button.focus_neighbor_bottom = _button.get_path_to(_settings_button)
-	_button.focus_next = _button.get_path_to(_settings_button)
-	_settings_button.focus_neighbor_top = _settings_button.get_path_to(_button)
-	_settings_button.focus_previous = _settings_button.get_path_to(_button)
-	_settings_button.focus_neighbor_bottom = _settings_button.get_path_to(_name_edit)
-	_settings_button.focus_next = _settings_button.get_path_to(_name_edit)
+	_button.focus_neighbor_bottom = _button.get_path_to(_back_button)
+	_button.focus_next = _button.get_path_to(_back_button)
+	_back_button.focus_neighbor_top = _back_button.get_path_to(_button)
+	_back_button.focus_previous = _back_button.get_path_to(_button)
+	_back_button.focus_neighbor_bottom = _back_button.get_path_to(_name_edit)
+	_back_button.focus_next = _back_button.get_path_to(_name_edit)
+	return pair
 
 
 func _label(text: String, variation: String) -> Label:
@@ -189,6 +312,16 @@ func _icon_row(icon: TextureRect, label: Label) -> HBoxContainer:
 	return row
 
 
+func _on_title_chosen(id: String) -> void:
+	match id:
+		"play":
+			go(PLAY_SCREEN)
+		"settings":
+			_open_settings()
+		"quit":
+			get_tree().quit()
+
+
 func _open_settings() -> void:
 	if settings != null:
 		settings.open()
@@ -199,23 +332,31 @@ func _on_settings_opened() -> void:
 	_root.visible = false
 
 
-## Back from the settings menu while this menu shows: the focus returns to its button.
+## Back from the settings menu while this menu shows: the focus returns to the title's Paramètres
+## button, or to the first control of the screen shown.
 func _on_settings_closed() -> void:
 	_root.visible = true
-	if visible and not _in_game:
-		_focus_next = _settings_button
+	if _menu_up():
+		_focus_next = _title.button("settings") if top_screen() == ROOT_SCREEN else _first_focus(top_screen())
 
 
 func _play(kind: String) -> void:
-	if sounds != null and not _button.disabled:
+	if not _button.disabled:
+		_play_ui(kind)
+
+
+func _play_ui(kind: String) -> void:
+	if sounds != null:
 		sounds.ui(kind)
 
 
 func _set_state(s: State) -> void:
 	state = s
 	var st := status_of(s)
-	_set_icon(_status_icon, st[0])
-	_status.text = (UiText.LOST_IN_GAME if _in_game else UiText.LOST) if s == State.LOST else st[1]
+	var text: String = (UiText.LOST_IN_GAME if _in_game else UiText.LOST) if s == State.LOST else st[1]
+	for row in [[_status_icon, _status], [_title_status_icon, _title_status]]:
+		_set_icon(row[0], st[0])
+		row[1].text = text
 	_button.disabled = not button_enabled(s)
 	_name_edit.editable = s != State.JOINING and s != State.LOST
 
@@ -259,14 +400,20 @@ func _on_rejected(reason: String) -> void:
 func _on_welcomed() -> void:
 	_in_game = true
 	ClientSettings.save_name(client.player_name)
-	_button.release_focus()
-	_name_edit.release_focus()
+	var f := get_viewport().gui_get_focus_owner()
+	if f != null and _root.is_ancestor_of(f):
+		f.release_focus()
 	_fade_to(0.0, FADE_OUT_S).finished.connect(func(): visible = false)
 
 
+## The menu comes back on its title screen, saying the connection is lost.
 func _on_lost() -> void:
+	var was_hidden := not visible
 	visible = true
 	_set_state(State.LOST)
+	if was_hidden or _in_game:
+		_stack = [ROOT_SCREEN]
+		_show_top(false)
 	_fade_to(1.0, FADE_IN_S)
 
 
