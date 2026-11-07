@@ -57,4 +57,4 @@ func test_not_a_carcass_or_unknown_player() -> void:
 
 func test_meat_items() -> void:
 	assert_true(ItemData.item("raw_meat")["food"] > 0)
-	assert_eq(ItemData.item("raw_meat").get("cooks_into", ""), "", "cooking comes later")
+	assert_eq(ItemData.item("raw_meat")["cooks_into"], "cooked_meat")

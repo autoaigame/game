@@ -209,6 +209,36 @@ func _pick_up(peer_id: int, mark_id: int) -> Dictionary:
 	return {"notice": "gathered", "item": "raw_meat", "count": n}
 
 
+## The player cooks one of an item on a campfire near them.
+func on_cook(peer_id: int, item: String) -> void:
+	var r := _cook(peer_id, item)
+	if r.is_empty():
+		return
+	if r["notice"] == "cooked":
+		_net.inventory.rpc_id(peer_id, _players[peer_id]["inventory"])
+	var args := r.duplicate()
+	args.erase("notice")
+	_net.notice.rpc_id(peer_id, r["notice"], args)
+
+
+## Cooks one `item` (one that cooks, that the player has) on a fire within Protocol.COOK_REACH:
+## {notice: cooked (item: what it became), no_fire or bag_full}, or {} for a request to ignore.
+func _cook(peer_id: int, item: String) -> Dictionary:
+	if not _players.has(peer_id):
+		return {}
+	var into: String = ItemData.item(item).get("cooks_into", "")
+	var p: Dictionary = _players[peer_id]
+	if into == "" or INV.count(p["inventory"], item) < 1:
+		return {}
+	if _fires_near(p["pos"], Protocol.COOK_REACH).is_empty():
+		return {"notice": "no_fire"}
+	if INV.count(p["inventory"], into) >= INV.MAX_STACK:
+		return {"notice": "bag_full"}
+	INV.remove(p["inventory"], item, 1)
+	INV.add(p["inventory"], into, 1)
+	return {"notice": "cooked", "item": into}
+
+
 ## Picked objects regrow.
 func _tick_gathering(dt: float) -> void:
 	for cell in _picked.keys():

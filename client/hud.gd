@@ -62,9 +62,18 @@ func bag_rows() -> Array:
 
 ## The "eat" button of an item's row, or null.
 func eat_button(item: String) -> Button:
+	return _row_button(item, "Eat")
+
+
+## The "cook" button of an item's row, or null.
+func cook_button(item: String) -> Button:
+	return _row_button(item, "Cook")
+
+
+func _row_button(item: String, button: String) -> Button:
 	for row in _bag_list.get_children():
 		if row.get_meta("item", "") == item and not row.is_queued_for_deletion():
-			return row.get_node_or_null("Eat")
+			return row.get_node_or_null(button)
 	return null
 
 
@@ -139,6 +148,14 @@ func _on_inventory(items: Dictionary) -> void:
 			var item_id := String(id)
 			eat.pressed.connect(func(): client.request_eat(item_id))
 			row.add_child(eat)
+		if it["cooks_into"] != "":
+			var cook := Button.new()
+			cook.name = "Cook"
+			cook.text = UiText.COOK
+			cook.focus_mode = Control.FOCUS_NONE
+			var raw_id := String(id)
+			cook.pressed.connect(func(): client.request_cook(raw_id))
+			row.add_child(cook)
 		row.set_meta("item", String(id))
 		_bag_list.add_child(row)
 	_bag_empty.visible = _bag_list.get_child_count() == 0
