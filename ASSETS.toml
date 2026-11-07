@@ -2,28 +2,10 @@
 
 [[asset]]
 path = "assets/tiles.png"
-author = "vitteloil, M3t4Data"
-origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
-license = "CC0-1.0"
-source = ""
-
-[[asset]]
-path = "assets/player.png"
-author = "vitteloil"
-origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
-license = "CC0-1.0"
-source = ""
-
-[[asset]]
-path = "assets/objects/bush.png"
 author = "M3t4Data"
 origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
+tool = "PixelLab create_tiles_pro: isometric 96 px tilesets of ground pairs (view angle 30, segmentation outline mode, 40-colour muted palette, seeds 4242 and 4243) and style-mode variations of each ground's full tile (seeds 4242 and 4243); by script: darker 2 px lower lip removed, grass and sand recoloured to their reference tiles (no halo), the lower ground cut out to transparent to make per-ground alpha masks, deep water derived from shallow water one ramp step darker, variants more than 6 % off the reference brightness dropped, all assembled into the atlas"
+prompt = "<A> to <B> transition: ..., irregular organic curving border (no straight edges), <band>. Realistic muted natural colours, fine subtle detail, soft light from the top-left, no outlines, no cartoon look. Flat ground. / 8 variations of the same <soil>: ... Seamless flat ground texture, no border, no rim, texture continues past the tile edges, subtle variation only, same colours and brightness as the reference."
 license = "CC0-1.0"
 source = ""
 
@@ -31,88 +13,394 @@ source = ""
 path = "assets/objects/oak.png"
 author = "M3t4Data"
 origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
+tool = "PixelLab create_1_direction_object (256 px, top-down view, 40-colour muted palette); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse drawn under it"
+prompt = "large realistic mature oak tree filling the canvas, dense muted olive-green foliage in soft clumps, thick grey-brown bark trunk with roots at the base, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
 license = "CC0-1.0"
 source = ""
 
 [[asset]]
-path = "assets/objects/pine.png"
+path = "assets/objects/fir.png"
 author = "M3t4Data"
 origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
+tool = "PixelLab create_1_direction_object (256 px, top-down view, 40-colour muted palette); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse drawn under it"
+prompt = "tall realistic conifer fir tree filling the canvas height, layered dark muted green needle branches in a natural uneven cone, grey-brown trunk visible at the base, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
 license = "CC0-1.0"
 source = ""
 
 [[asset]]
-path = "assets/objects/rock.png"
+path = "assets/objects/birch.png"
 author = "M3t4Data"
 origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
+tool = "PixelLab create_1_direction_object (256 px, top-down view, 40-colour muted palette); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse drawn under it"
+prompt = "tall realistic birch tree filling the canvas height, slender pale grey-white trunk with dark bark marks, light airy muted olive-yellow foliage in loose clumps, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background"
 license = "CC0-1.0"
 source = ""
 
 [[asset]]
-path = "assets/objects/campfire.png"
+path = "assets/objects/boulder_0.png"
 author = "M3t4Data"
 origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
+tool = "PixelLab create_1_direction_object (64 px, top-down view, 40-colour muted palette); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse drawn under it"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background Item: natural grey granite boulder, rounded and irregular, cracks and dull moss"
 license = "CC0-1.0"
 source = ""
 
 [[asset]]
-path = "assets/objects/standing_stone.png"
+path = "assets/objects/boulder_1.png"
 author = "M3t4Data"
 origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
+tool = "PixelLab create_1_direction_object (64 px, top-down view, 40-colour muted palette); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse drawn under it"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background Item: natural grey granite boulder, rounded and irregular, cracks and dull moss"
 license = "CC0-1.0"
 source = ""
 
 [[asset]]
-path = "assets/objects/stone_wall.png"
+path = "assets/objects/bush_0.png"
 author = "M3t4Data"
 origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
+tool = "PixelLab create_1_direction_object (64 px, top-down view, 40-colour muted palette); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse drawn under it"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background Item: dense low wild shrub bush, muted olive-green leaves"
 license = "CC0-1.0"
 source = ""
 
 [[asset]]
-path = "assets/decals/flowers.png"
+path = "assets/objects/bush_1.png"
 author = "M3t4Data"
 origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
+tool = "PixelLab create_1_direction_object (64 px, top-down view, 40-colour muted palette); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse drawn under it"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background Item: dense low wild shrub bush, muted olive-green leaves"
 license = "CC0-1.0"
 source = ""
 
 [[asset]]
-path = "assets/decals/leaves.png"
+path = "assets/objects/stump_0.png"
 author = "M3t4Data"
 origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
+tool = "PixelLab create_1_direction_object (64 px, top-down view, 40-colour muted palette); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse drawn under it"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background Item: old cut tree stump, grey-brown bark, pale weathered top with rings, small roots, low"
 license = "CC0-1.0"
 source = ""
 
 [[asset]]
-path = "assets/decals/pebble.png"
+path = "assets/objects/stump_1.png"
 author = "M3t4Data"
 origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
+tool = "PixelLab create_1_direction_object (64 px, top-down view, 40-colour muted palette); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse drawn under it"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background Item: old cut tree stump, grey-brown bark, pale weathered top with rings, small roots, low"
 license = "CC0-1.0"
 source = ""
 
 [[asset]]
-path = "assets/decals/tuft.png"
+path = "assets/objects/wall_0.png"
 author = "M3t4Data"
 origin = "generated"
-tool = "art/gen_art.gd (Godot 4.7.2)"
-prompt = ""
+tool = "PixelLab create_1_direction_object (64 px, top-down view, 40-colour muted palette); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse drawn under it"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background Item: low dry-stone wall segment of stacked grey fieldstones, knee high, long and low, running diagonally from bottom-left to top-right"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/wall_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (64 px, top-down view, 40-colour muted palette); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse drawn under it"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background Item: low dry-stone wall segment of stacked grey fieldstones, knee high, long and low, running diagonally from bottom-left to top-right"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/wall_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (64 px, top-down view, 40-colour muted palette); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse drawn under it"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background Item: low dry-stone wall segment of stacked grey fieldstones, knee high, long and low, running diagonally from bottom-left to top-right"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/objects/wall_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (64 px, top-down view, 40-colour muted palette); by script: trimmed, padded so the foot is centred 24 px above the bottom, translucent shadow ellipse drawn under it"
+prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background Item: low dry-stone wall segment of stacked grey fieldstones, knee high, long and low, running diagonally from bottom-left to top-right"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/grass_tuft_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/grass_tuft_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/grass_tuft_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/grass_tuft_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/dry_grass_tuft_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/dry_grass_tuft_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/dry_grass_tuft_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/flowers_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/flowers_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/flowers_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/flowers_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/pebbles_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/pebbles_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/pebbles_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/pebbles_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/leaves_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/leaves_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/leaves_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/leaves_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/twigs_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/twigs_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/twigs_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/twigs_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/mud_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/mud_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/mud_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/forest_litter_0.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/forest_litter_1.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/forest_litter_2.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/forest_litter_3.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_1_direction_object (32 px, top-down view, 40-colour muted palette, 64 candidates); candidate chosen by hand, trimmed"
+prompt = "small flat ground decal seen from an isometric top-down angle, realistic muted colours, soft light from the top-left, no outline, transparent background, nothing else on the canvas"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/player.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_character v3 (112 px, low top-down view, selective outline, high detail) and animate_character templates breathing-idle (4 frames) and walking (6 frames), 8 directions; by script: frames assembled into one sheet, pure-black pixels inside the lower body recoloured to the direction's denim or boot colour (fixes a black far leg and a black boot)"
+prompt = "ordinary adult male survivor, realistic proportions, faded washed-out blue jeans, muted khaki field jacket over a grey shirt, worn brown boots, short dark brown hair, stubble, dark grey backpack with straps, dull desaturated colours, soft light from the top-left, fine detail, no thick black cartoon outline"
 license = "CC0-1.0"
 source = ""

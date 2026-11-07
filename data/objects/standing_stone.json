@@ -3,6 +3,21 @@
 	"name": "Standing stone",
 	"blocks": true,
 	"cell_size": 1,
-	"sprite": "res://assets/objects/standing_stone.png",
+	"sprites": [
+		{
+			"file": "res://assets/objects/boulder_0.png",
+			"anchor_px": [
+				30,
+				45
+			]
+		},
+		{
+			"file": "res://assets/objects/boulder_1.png",
+			"anchor_px": [
+				32,
+				45
+			]
+		}
+	],
 	"densities": {}
 }

@@ -1,8 +1,18 @@
 {
 	"id": "pebble",
 	"name": "Pebbles",
-	"sprite": "res://assets/decals/pebble.png",
-	"grounds": ["sand", "dry_grass", "packed_dirt", "grass"],
+	"sprites": [
+		"res://assets/decals/pebbles_0.png",
+		"res://assets/decals/pebbles_1.png",
+		"res://assets/decals/pebbles_2.png",
+		"res://assets/decals/pebbles_3.png"
+	],
+	"grounds": [
+		"grass",
+		"dry_grass",
+		"packed_dirt",
+		"sand"
+	],
 	"cell_size": 3,
-	"density": 0.25
+	"density": 0.2
 }

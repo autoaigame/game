@@ -13,7 +13,7 @@ func _find_object(id: String) -> Variant:
 
 func test_objects_are_loaded_sorted_by_id() -> void:
 	var ids := WorldData.objects().map(func(o): return o["id"])
-	assert_eq(ids, ["bush", "campfire", "oak", "pine", "rock", "standing_stone", "stone_wall"])
+	assert_eq(ids, ["birch", "bush", "oak", "pine", "rock", "standing_stone", "stone_wall", "stump"])
 	assert_true(WorldData.object(WorldData.object_index("oak"))["blocks"])
 	assert_false(WorldData.object(WorldData.object_index("bush"))["blocks"])
 
@@ -43,9 +43,10 @@ func test_objects_do_not_depend_on_the_cache() -> void:
 	assert_true(first.any(func(o): return o != ""), "no object in the sample")
 
 
-## Over many grid cells, the share holding an oak follows the density of the biome at its position.
+## Over many grid cells, the share holding a pine follows the density of the biome at its position.
 func test_density_follows_the_biome() -> void:
-	var oak := WorldData.object_index("oak")
+	var oak := WorldData.object_index("pine")
+	var dens: PackedFloat64Array = WorldData.object(oak)["density"]
 	var hits := {}
 	var tries := {}
 	for gy in range(-60, 60, 2):
@@ -57,9 +58,11 @@ func test_density_follows_the_biome() -> void:
 			if WorldObjects.is_present(oak, g):
 				hits[b] = hits.get(b, 0) + 1
 	assert_true(tries.get("forest", 0) > 200, "forest sample %d" % tries.get("forest", 0))
-	assert_almost(hits.get("forest", 0) / float(tries["forest"]), 0.7, 0.08, "oaks in forest")
+	assert_almost(hits.get("forest", 0) / float(tries["forest"]), dens[WorldData.biome_index("forest")], 0.08,
+			"pines in forest")
 	if tries.get("grassland", 0) > 200:
-		assert_almost(hits.get("grassland", 0) / float(tries["grassland"]), 0.05, 0.04, "oaks in grassland")
+		assert_almost(hits.get("grassland", 0) / float(tries["grassland"]), dens[WorldData.biome_index("grassland")],
+				0.04, "pines in grassland")
 	for water in ["deep_water", "shallow_water", "river"]:
 		assert_eq(hits.get(water, 0), 0, "oak in " + water)
 

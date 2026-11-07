@@ -54,10 +54,78 @@ func test_objects_are_y_sorted_sprites_on_their_cells() -> void:
 	node.free()
 
 
-## Every object id has its sprite file, with room for the foot offset.
-func test_every_object_has_a_sprite() -> void:
+## Every object has one or more sprites, each file present with its anchor (the point standing on
+## the cell centre) inside the image.
+func test_every_object_has_sprites_with_anchors() -> void:
 	for o in WorldData.objects():
-		assert_true(ResourceLoader.exists(o["sprite"]), o["sprite"])
-		var tex: Texture2D = load(o["sprite"])
-		if tex != null:
-			assert_true(tex.get_height() > IsoLayer.OBJECT_FOOT_PX, o["id"])
+		assert_true(o["sprites"].size() > 0, o["id"])
+		for sp in o["sprites"]:
+			assert_true(ResourceLoader.exists(sp["file"]), sp["file"])
+			var tex: Texture2D = load(sp["file"]) if ResourceLoader.exists(sp["file"]) else null
+			if tex != null:
+				var a: Vector2i = sp["anchor_px"]
+				assert_true(Rect2i(Vector2i.ZERO, Vector2i(tex.get_size())).has_point(a), "%s anchor %s" % [sp["file"], a])
+
+
+## A sprite's anchor lands exactly on its cell centre.
+func test_object_anchor_on_the_cell_centre() -> void:
+	var oak := WorldData.object_index("oak")
+	var cell := Vector2i(7, -3)
+	var sprite := ChunkView.object_sprite(cell, oak)
+	var sp: Dictionary = WorldData.object(oak)["sprites"][ChunkView.sprite_variant(cell, oak)]
+	assert_false(sprite.centered)
+	assert_eq(sprite.position + sprite.offset + Vector2(sp["anchor_px"]), IsoLayer.cell_to_local(Vector2(cell)))
+	sprite.free()
+
+
+## Objects with several sprites pick one per cell from a hash: stable, all of them used.
+func test_sprite_variant_is_stable_and_spread() -> void:
+	var rock := WorldData.object_index("rock")
+	var n: int = WorldData.object(rock)["sprites"].size()
+	assert_true(n >= 2)
+	var seen := {}
+	for i in 200:
+		var c := Vector2i(i * 3, -i)
+		var v := ChunkView.sprite_variant(c, rock)
+		assert_eq(ChunkView.sprite_variant(c, rock), v)
+		assert_true(v >= 0 and v < n)
+		seen[v] = true
+	assert_eq(seen.size(), n)
+
+
+## Wall sprites run along the y axis of the grid; a wall continuing along x is mirrored.
+func test_walls_follow_their_neighbours() -> void:
+	var wall := WorldData.object_index("stone_wall")
+	assert_true(ChunkView.mirror_wall(true, false), "x run")
+	assert_false(ChunkView.mirror_wall(false, true), "y run")
+	assert_false(ChunkView.mirror_wall(true, true), "corner")
+	assert_false(ChunkView.mirror_wall(false, false), "alone")
+	var sprite := ChunkView.object_sprite(Vector2i(0, 0), wall, true)
+	assert_true(sprite.flip_h)
+	var sp: Dictionary = WorldData.object(wall)["sprites"][ChunkView.sprite_variant(Vector2i(0, 0), wall)]
+	# mirrored around the anchor: the anchor still lands on the cell centre
+	var w: float = sprite.texture.get_width()
+	assert_eq(sprite.position + sprite.offset + Vector2(w - sp["anchor_px"].x, sp["anchor_px"].y),
+			IsoLayer.cell_to_local(Vector2(0, 0)))
+	sprite.free()
+
+
+## On a real ruin, wall_neighbours sees the run of its plan: the top row runs along x, the left
+## column along y.
+func test_wall_neighbours_follow_the_ruin_plan() -> void:
+	var ruin := -1
+	for i in WorldData.places().size():
+		if WorldData.places()[i]["id"] == "ruin":
+			ruin = i
+	var origin: Variant = null
+	for ry in range(-12, 13):
+		for rx in range(-12, 13):
+			var r := Vector2i(rx, ry)
+			if origin == null and WorldPlaces.is_accepted(r) and WorldPlaces.candidate(r)["index"] == ruin:
+				origin = WorldPlaces.candidate(r)["origin"]
+	assert_true(origin != null, "no ruin found")
+	if origin == null:
+		return
+	var wall := WorldData.object_index("stone_wall")
+	assert_eq(ChunkView.wall_neighbours(origin + Vector2i(1, 0), wall), [true, false] as Array[bool], "top row")
+	assert_eq(ChunkView.wall_neighbours(origin + Vector2i(0, 2), wall), [false, true] as Array[bool], "left column")

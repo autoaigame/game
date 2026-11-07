@@ -2,7 +2,19 @@
 	"id": "pine",
 	"name": "Pine",
 	"blocks": true,
-	"cell_size": 4,
-	"sprite": "res://assets/objects/pine.png",
-	"densities": {"forest": 0.35, "highland": 0.25, "grassland": 0.02}
+	"cell_size": 3,
+	"sprites": [
+		{
+			"file": "res://assets/objects/fir.png",
+			"anchor_px": [
+				78,
+				250
+			]
+		}
+	],
+	"densities": {
+		"forest": 0.5,
+		"highland": 0.2,
+		"grassland": 0.01
+	}
 }

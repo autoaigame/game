@@ -1,8 +1,16 @@
 {
 	"id": "tuft",
 	"name": "Grass tuft",
-	"sprite": "res://assets/decals/tuft.png",
-	"grounds": ["grass", "dry_grass", "forest_floor"],
+	"sprites": [
+		"res://assets/decals/grass_tuft_0.png",
+		"res://assets/decals/grass_tuft_1.png",
+		"res://assets/decals/grass_tuft_2.png",
+		"res://assets/decals/grass_tuft_3.png"
+	],
+	"grounds": [
+		"grass",
+		"packed_dirt"
+	],
 	"cell_size": 2,
-	"density": 0.35
+	"density": 0.3
 }

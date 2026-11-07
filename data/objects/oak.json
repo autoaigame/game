@@ -2,7 +2,19 @@
 	"id": "oak",
 	"name": "Oak",
 	"blocks": true,
-	"cell_size": 3,
-	"sprite": "res://assets/objects/oak.png",
-	"densities": {"forest": 0.7, "grassland": 0.05, "steppe": 0.015}
+	"cell_size": 4,
+	"sprites": [
+		{
+			"file": "res://assets/objects/oak.png",
+			"anchor_px": [
+				136,
+				241
+			]
+		}
+	],
+	"densities": {
+		"forest": 0.1,
+		"grassland": 0.035,
+		"steppe": 0.01
+	}
 }

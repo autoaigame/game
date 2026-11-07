@@ -1,8 +1,16 @@
 {
 	"id": "flowers",
 	"name": "Flowers",
-	"sprite": "res://assets/decals/flowers.png",
-	"grounds": ["grass"],
+	"sprites": [
+		"res://assets/decals/flowers_0.png",
+		"res://assets/decals/flowers_1.png",
+		"res://assets/decals/flowers_2.png",
+		"res://assets/decals/flowers_3.png"
+	],
+	"grounds": [
+		"grass",
+		"dry_grass"
+	],
 	"cell_size": 3,
 	"density": 0.3
 }

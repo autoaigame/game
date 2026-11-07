@@ -2,7 +2,28 @@
 	"id": "rock",
 	"name": "Rock",
 	"blocks": true,
-	"cell_size": 7,
-	"sprite": "res://assets/objects/rock.png",
-	"densities": {"steppe": 0.25, "highland": 0.35, "grassland": 0.06, "beach": 0.08, "forest": 0.05}
+	"cell_size": 6,
+	"sprites": [
+		{
+			"file": "res://assets/objects/boulder_0.png",
+			"anchor_px": [
+				30,
+				45
+			]
+		},
+		{
+			"file": "res://assets/objects/boulder_1.png",
+			"anchor_px": [
+				32,
+				45
+			]
+		}
+	],
+	"densities": {
+		"steppe": 0.15,
+		"highland": 0.3,
+		"grassland": 0.04,
+		"beach": 0.06,
+		"forest": 0.04
+	}
 }

@@ -1,0 +1,27 @@
+{
+	"id": "stump",
+	"name": "Stump",
+	"blocks": true,
+	"cell_size": 6,
+	"sprites": [
+		{
+			"file": "res://assets/objects/stump_0.png",
+			"anchor_px": [
+				41,
+				47
+			]
+		},
+		{
+			"file": "res://assets/objects/stump_1.png",
+			"anchor_px": [
+				36,
+				47
+			]
+		}
+	],
+	"densities": {
+		"grassland": 0.03,
+		"forest": 0.08,
+		"steppe": 0.02
+	}
+}

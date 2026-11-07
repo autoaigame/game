@@ -1,0 +1,17 @@
+{
+	"id": "twigs",
+	"name": "Twigs",
+	"sprites": [
+		"res://assets/decals/twigs_0.png",
+		"res://assets/decals/twigs_1.png",
+		"res://assets/decals/twigs_2.png",
+		"res://assets/decals/twigs_3.png"
+	],
+	"grounds": [
+		"forest_floor",
+		"grass",
+		"packed_dirt"
+	],
+	"cell_size": 3,
+	"density": 0.2
+}

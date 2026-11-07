@@ -17,7 +17,7 @@
 	"legend": {
 		".": {"tile": "packed_dirt"},
 		"o": {"tile": "packed_dirt", "object": "standing_stone"},
-		"f": {"tile": "packed_dirt", "object": "campfire"}
+		"f": {"tile": "packed_dirt", "object": "stump"}
 	},
 	"rules": {
 		"biomes": ["grassland", "steppe", "forest", "highland"],
