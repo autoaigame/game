@@ -5,6 +5,7 @@ extends Node
 signal welcomed(cell: Vector2i)
 signal join_rejected(reason: String)
 signal snapshot_received(players: Array)
+signal creatures_received(creatures: Array)
 signal connection_lost
 
 ## ws(s):// URL of the server. On the web it defaults to the page's own host + /ws.
@@ -71,6 +72,10 @@ func on_rejected(reason: String) -> void:
 
 func on_snapshot(players: Array) -> void:
 	snapshot_received.emit(players)
+
+
+func on_creatures(creatures: Array) -> void:
+	creatures_received.emit(creatures)
 
 
 func _on_connected() -> void:
