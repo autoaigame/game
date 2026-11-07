@@ -133,3 +133,14 @@ func test_jobs_do_not_leak() -> void:
 	ref = weakref(job)
 	job = null
 	assert_true(ref.get_ref() == null, "cancelled job freed")
+
+
+## Cancelling frees the unfinished node once; cancelling again or stepping afterwards is harmless.
+func test_cancel_frees_the_node_once() -> void:
+	var job := ChunkJob.new(Vector2i(0, 0), null)
+	job.step()
+	var node := job.node
+	job.cancel()
+	assert_false(is_instance_valid(node), "node freed")
+	job.cancel()
+	assert_true(job.step(), "a cancelled job is done")
