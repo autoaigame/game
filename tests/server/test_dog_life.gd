@@ -91,5 +91,5 @@ func test_state_is_sent_to_clients() -> void:
 	var at := Vector2(MapData.spawn_cell())
 	server._players[1] = {"name": "ann", "pos": at, "target": Protocol.cell_of(at), "stopped": false, "dog": _dog(at)}
 	server._players[1]["dog"]["state"] = "sleep"
-	assert_eq(server._creature_snapshot()[0]["state"], "sleep")
+	assert_eq(server._creatures_for(1)[0]["state"], "sleep")
 	server.free()
