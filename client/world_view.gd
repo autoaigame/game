@@ -19,6 +19,7 @@ var _walk := {}  ## peer_id -> {server, shown: Vector2 in cells, walked: float i
 var _camera := Camera2D.new()
 var _my_pos := Vector2.ZERO  ## my position in the last snapshot, in cells
 var _key_dir := Vector2i.ZERO  ## direction of the held keys at the last frame
+var _gather_at: Variant = null  ## the bush the player walks to, to gather from it
 var _key_target := Vector2.ZERO  ## last target sent for the held keys
 var _zoom_target := CameraZoom.DEFAULT  ## the zoom the camera glides to (mouse wheel)
 var _drift_t := 0.0  ## seconds of slow camera drift behind the start menu
@@ -211,7 +212,16 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		client.request_move(Vector2(_layer.local_to_map(_layer.get_local_mouse_position())))
+		var cell := _layer.local_to_map(_layer.get_local_mouse_position())
+		_gather_at = Interact.gatherable_at(cell)
+		client.request_move(Vector2(_gather_at) if _gather_at != null else Vector2(cell))
+
+
+## Asks the server to gather once the player has walked up to the bush they clicked.
+func _gather_if_reached() -> void:
+	if _gather_at != null and Interact.reached(_my_pos, _gather_at):
+		client.request_gather(_gather_at)
+		_gather_at = null
 
 
 func _process(delta: float) -> void:
@@ -224,6 +234,7 @@ func _process(delta: float) -> void:
 	if client.my_peer_id == 0:
 		_drift_camera(delta)
 		return
+	_gather_if_reached()
 	var dir := KeyMove.direction(
 			Input.is_physical_key_pressed(KEY_W), Input.is_physical_key_pressed(KEY_S),
 			Input.is_physical_key_pressed(KEY_A), Input.is_physical_key_pressed(KEY_D))
@@ -232,6 +243,7 @@ func _process(delta: float) -> void:
 			client.request_stop()
 		_key_dir = dir
 		return
+	_gather_at = null
 	var target := KeyMove.held_target(_my_pos, dir)
 	if dir != _key_dir or not target.is_equal_approx(_key_target):
 		client.request_move(target)

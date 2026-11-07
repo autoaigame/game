@@ -7,6 +7,8 @@ class FakeClient:
 	extends Node
 	signal welcomed(cell: Vector2i)
 	signal status_received(status: Dictionary)
+	signal inventory_received(items: Dictionary)
+	signal notice_received(key: String, args: Dictionary)
 	var my_peer_id := 0
 
 
@@ -42,4 +44,32 @@ func test_warns_when_starving() -> void:
 	assert_false(hud.starving_label().visible)
 	hud.client.status_received.emit({"hunger": 0})
 	assert_true(hud.starving_label().visible)
+	hud.free()
+
+
+func test_bag_lists_items_and_toggles() -> void:
+	var hud := _hud()
+	hud.client.inventory_received.emit({"berries": 3})
+	assert_false(hud.bag().visible, "closed at first")
+	hud.toggle_bag()
+	assert_true(hud.bag().visible)
+	var rows: Array = hud.bag_rows()
+	assert_eq(rows.size(), 1)
+	assert_true(rows[0].contains("3"), "shows the count: %s" % rows[0])
+	assert_true(rows[0].contains(ItemData.item("berries")["name"]), "shows the name: %s" % rows[0])
+	hud.client.inventory_received.emit({})
+	assert_eq(hud.bag_rows().size(), 0)
+	assert_true(hud.bag_empty_label().visible, "says the bag is empty")
+	hud.toggle_bag()
+	assert_false(hud.bag().visible)
+	hud.free()
+
+
+func test_notice_shows_then_fades() -> void:
+	var hud := _hud()
+	hud.client.notice_received.emit("gathered", {"item": "berries", "count": 2})
+	assert_true(hud.notice_label().visible)
+	assert_true(hud.notice_label().text.contains("2"), hud.notice_label().text)
+	hud._age_notice(hud.NOTICE_S + 0.1)
+	assert_false(hud.notice_label().visible)
 	hud.free()

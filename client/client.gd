@@ -8,6 +8,8 @@ signal snapshot_received(players: Array)
 signal creatures_received(creatures: Array)
 signal marks_received(marks: Array)
 signal status_received(status: Dictionary)
+signal inventory_received(items: Dictionary)
+signal notice_received(key: String, args: Dictionary)
 signal connection_lost
 
 ## ws(s):// URL of the server. On the web it defaults to the page's own host + /ws.
@@ -66,6 +68,10 @@ func request_stop() -> void:
 	_net.stop.rpc_id(1)
 
 
+func request_gather(cell: Vector2i) -> void:
+	_net.gather.rpc_id(1, cell)
+
+
 func on_welcome(peer_id: int, cell: Vector2i) -> void:
 	my_peer_id = peer_id
 	welcomed.emit(cell)
@@ -89,6 +95,14 @@ func on_marks(marks: Array) -> void:
 
 func on_status(status: Dictionary) -> void:
 	status_received.emit(status)
+
+
+func on_inventory(items: Dictionary) -> void:
+	inventory_received.emit(items)
+
+
+func on_notice(key: String, args: Dictionary) -> void:
+	notice_received.emit(key, args)
 
 
 func _on_connected() -> void:
