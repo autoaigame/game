@@ -59,6 +59,14 @@ func bag_rows() -> Array:
 	return out
 
 
+## The "eat" button of an item's row, or null.
+func eat_button(item: String) -> Button:
+	for row in _bag_list.get_children():
+		if row.get_meta("item", "") == item and not row.is_queued_for_deletion():
+			return row.get_node_or_null("Eat")
+	return null
+
+
 func toggle_bag() -> void:
 	_bag.visible = not _bag.visible
 
@@ -110,6 +118,15 @@ func _on_inventory(items: Dictionary) -> void:
 		var label := Label.new()
 		label.text = "%d × %s" % [int(items[id]), it["name"]]
 		row.add_child(label)
+		if it["food"] > 0:
+			var eat := Button.new()
+			eat.name = "Eat"
+			eat.text = UiText.EAT
+			eat.focus_mode = Control.FOCUS_NONE
+			var item_id := String(id)
+			eat.pressed.connect(func(): client.request_eat(item_id))
+			row.add_child(eat)
+		row.set_meta("item", String(id))
 		_bag_list.add_child(row)
 	_bag_empty.visible = _bag_list.get_child_count() == 0
 

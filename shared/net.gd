@@ -35,6 +35,11 @@ func gather(cell: Vector2i) -> void:
 	_forward("on_gather", [multiplayer.get_remote_sender_id(), cell])
 
 
+@rpc("any_peer", "call_remote", "reliable")
+func eat(item: String) -> void:
+	_forward("on_eat", [multiplayer.get_remote_sender_id(), item])
+
+
 # server -> client
 @rpc("authority", "call_remote", "reliable")
 func welcome(peer_id: int, cell: Vector2i) -> void:

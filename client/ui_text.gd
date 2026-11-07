@@ -16,7 +16,9 @@ const NOTICES := {
 	"gathered": "+%d %s",
 	"bush_empty": "Ce buisson n'a plus de baies. Reviens plus tard.",
 	"too_far": "Trop loin.",
+	"ate": "Tu manges : %s",
 }
+const EAT := "Manger"
 const ENTER := "Entrer dans le monde"
 
 const CONNECTING := "Connexion au serveur…"
@@ -55,4 +57,6 @@ static func rejection(_reason: String, player_name: String) -> String:
 static func notice(key: String, args: Dictionary) -> String:
 	if key == "gathered":
 		return NOTICES[key] % [int(args.get("count", 0)), ItemData.item(String(args.get("item", ""))).get("name", "?")]
+	if key == "ate":
+		return NOTICES[key] % ItemData.item(String(args.get("item", ""))).get("name", "?")
 	return NOTICES.get(key, "")
