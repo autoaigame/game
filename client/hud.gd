@@ -8,6 +8,15 @@ const BAR_SIZE := Vector2(160, 14)
 const FULL := Color8(0xb8, 0x8a, 0x4a)
 const EMPTY := Color8(0x2e, 0x28, 0x22, 0xc0)
 const NOTICE_S := 3.0
+## The bag is BAG_W wide against the right edge (BAG_MARGIN from it) and grows to the left if it must;
+## each item's buttons sit on their own line under its name, in BUTTON_FONT, so they always fit.
+const BAG_W := 240.0
+const BAG_MAX_W := 300.0
+const BAG_MARGIN := 16.0
+const BAG_PAD := 10.0
+const BUTTON_FONT := 15
+const BUTTON_PAD := 12.0  ## each side of a button's text (client/ui_theme.gd)
+const BUTTON_GAP := 4.0
 
 var client: Node  ## client/client.gd
 
@@ -56,7 +65,7 @@ func bag_rows() -> Array:
 	var out := []
 	for row in _bag_list.get_children():
 		if not row.is_queued_for_deletion():
-			out.append((row.get_child(1) as Label).text)
+			out.append((row.get_node("Name").get_child(1) as Label).text)
 	return out
 
 
@@ -73,7 +82,7 @@ func cook_button(item: String) -> Button:
 func _row_button(item: String, button: String) -> Button:
 	for row in _bag_list.get_children():
 		if row.get_meta("item", "") == item and not row.is_queued_for_deletion():
-			return row.get_node_or_null(button)
+			return row.get_node_or_null("Actions/" + button)
 	return null
 
 
@@ -131,32 +140,32 @@ func _on_inventory(items: Dictionary) -> void:
 		var it := ItemData.item(String(id))
 		if it.is_empty():
 			continue
-		var row := HBoxContainer.new()
+		var row := VBoxContainer.new()
+		row.add_theme_constant_override("separation", 2)
+		var line := HBoxContainer.new()
+		line.name = "Name"
 		var icon := ColorRect.new()
 		icon.color = it["color"]
 		icon.custom_minimum_size = Vector2(14, 14)
 		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(icon)
+		line.add_child(icon)
 		var label := Label.new()
 		label.text = "%d × %s" % [int(items[id]), it["name"]]
-		row.add_child(label)
+		label.clip_text = true
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		line.add_child(label)
+		row.add_child(line)
+		var actions := HBoxContainer.new()
+		actions.name = "Actions"
+		actions.add_theme_constant_override("separation", int(BUTTON_GAP))
+		var item_id := String(id)
 		if it["food"] > 0:
-			var eat := Button.new()
-			eat.name = "Eat"
-			eat.text = UiText.EAT
-			eat.focus_mode = Control.FOCUS_NONE
-			var item_id := String(id)
-			eat.pressed.connect(func(): client.request_eat(item_id))
-			row.add_child(eat)
+			actions.add_child(_small_button("Eat", UiText.EAT, func(): client.request_eat(item_id)))
 		if it["cooks_into"] != "":
-			var cook := Button.new()
-			cook.name = "Cook"
-			cook.text = UiText.COOK
-			cook.focus_mode = Control.FOCUS_NONE
-			var raw_id := String(id)
-			cook.pressed.connect(func(): client.request_cook(raw_id))
-			row.add_child(cook)
-		row.set_meta("item", String(id))
+			actions.add_child(_small_button("Cook", UiText.COOK, func(): client.request_cook(item_id)))
+		if actions.get_child_count() > 0:
+			row.add_child(actions)
+		row.set_meta("item", item_id)
 		_bag_list.add_child(row)
 	_bag_empty.visible = _bag_list.get_child_count() == 0
 	_fire.disabled = int(items.get("sticks", 0)) < Protocol.FIRE_STICKS
@@ -208,10 +217,20 @@ func _build() -> void:
 	keys.add_theme_constant_override("outline_size", 4)
 	box.add_child(keys)
 	_bag = PanelContainer.new()
-	_bag.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
-	_bag.position = Vector2(-216, -80)
-	_bag.custom_minimum_size = Vector2(200, 0)
-	_bag.add_theme_stylebox_override("panel", _flat(EMPTY))
+	_bag.anchor_left = 1.0
+	_bag.anchor_right = 1.0
+	_bag.anchor_top = 0.5
+	_bag.anchor_bottom = 0.5
+	_bag.offset_right = -BAG_MARGIN
+	_bag.offset_left = -BAG_MARGIN - BAG_W
+	_bag.offset_top = -120.0
+	_bag.offset_bottom = -120.0
+	_bag.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_bag.grow_vertical = Control.GROW_DIRECTION_END
+	_bag.custom_minimum_size = Vector2(BAG_W, 0)
+	var panel := _flat(EMPTY)
+	panel.set_content_margin_all(BAG_PAD)
+	_bag.add_theme_stylebox_override("panel", panel)
 	_bag.visible = false
 	root.add_child(_bag)
 	var inner := VBoxContainer.new()
@@ -225,11 +244,8 @@ func _build() -> void:
 	_bag_empty.text = UiText.BAG_EMPTY
 	_bag_empty.add_theme_color_override("font_color", UiTheme.TEXT_DIM)
 	inner.add_child(_bag_empty)
-	_fire = Button.new()
-	_fire.text = UiText.BUILD_FIRE
-	_fire.focus_mode = Control.FOCUS_NONE
+	_fire = _small_button("Fire", UiText.BUILD_FIRE, func(): client.request_build_fire())
 	_fire.disabled = true
-	_fire.pressed.connect(func(): client.request_build_fire())
 	inner.add_child(_fire)
 	_notice = Label.new()
 	_notice.set_anchors_preset(Control.PRESET_CENTER_TOP)
@@ -240,6 +256,25 @@ func _build() -> void:
 	_notice.add_theme_constant_override("outline_size", 4)
 	_notice.visible = false
 	root.add_child(_notice)
+
+
+func _small_button(node_name: String, text: String, on_press: Callable) -> Button:
+	var b := Button.new()
+	b.name = node_name
+	b.text = text
+	b.focus_mode = Control.FOCUS_NONE
+	b.add_theme_font_size_override("font_size", BUTTON_FONT)
+	b.pressed.connect(on_press)
+	return b
+
+
+## How wide a line of the bag's buttons with these texts is, in pixels (the theme's font).
+static func buttons_width(texts: Array) -> float:
+	var font := ThemeDB.fallback_font
+	var w := 0.0
+	for t in texts:
+		w += font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, BUTTON_FONT).x + 2.0 * BUTTON_PAD
+	return w + BUTTON_GAP * maxi(texts.size() - 1, 0)
 
 
 static func _flat(c: Color) -> StyleBoxFlat:

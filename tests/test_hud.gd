@@ -137,3 +137,32 @@ func test_cook_button() -> void:
 	hud.cook_button("raw_meat").pressed.emit()
 	assert_eq(hud.client.cooked, ["raw_meat"])
 	hud.free()
+
+
+## The bag sits against the right edge and grows to the left, so it never leaves the screen; each
+## item's buttons sit under its name, and every line of buttons fits the bag's width (real font).
+func test_bag_stays_on_screen_and_its_buttons_fit() -> void:
+	var hud := _hud()
+	hud.client.inventory_received.emit({"raw_meat": 3, "berries": 12, "sticks": 4, "cooked_meat": 1})
+	var bag: PanelContainer = hud.bag()
+	assert_eq(bag.anchor_left, 1.0)
+	assert_eq(bag.anchor_right, 1.0)
+	assert_eq(bag.grow_horizontal, Control.GROW_DIRECTION_BEGIN, "grows to the left")
+	assert_almost(bag.offset_right, -hud.BAG_MARGIN)
+	assert_almost(bag.offset_right - bag.offset_left, hud.BAG_W)
+	var inner: float = hud.BAG_W - 2.0 * hud.BAG_PAD
+	assert_true(hud.buttons_width([UiText.EAT, UiText.COOK]) <= inner,
+			"eat + cook fit: %f" % hud.buttons_width([UiText.EAT, UiText.COOK]))
+	assert_true(hud.buttons_width([UiText.BUILD_FIRE]) <= inner, "fire button fits")
+	assert_true(hud.cook_button("raw_meat") != null and hud.eat_button("raw_meat") != null, "both shown for raw meat")
+	assert_eq(hud.cook_button("raw_meat").get_parent(), hud.eat_button("raw_meat").get_parent())
+	assert_true(hud.cook_button("raw_meat").get_parent().name == "Actions", "on their own line")
+	hud.free()
+
+
+## The width measure is real: a long text does not fit.
+func test_buttons_width_grows_with_text() -> void:
+	var hud := _hud()
+	assert_true(hud.buttons_width([UiText.EAT]) < hud.buttons_width([UiText.EAT, UiText.COOK]))
+	assert_true(hud.buttons_width(["Un très très long bouton qui ne tient pas"]) > hud.BAG_W)
+	hud.free()
