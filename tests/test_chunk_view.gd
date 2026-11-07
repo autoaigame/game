@@ -93,6 +93,47 @@ func test_sprite_variant_is_stable_and_spread() -> void:
 	assert_eq(seen.size(), n)
 
 
+## Trees, bushes and stumps come in several shapes so a forest is not one tree repeated, and every
+## shape shows up among the objects the world actually places.
+func test_trees_have_several_shapes_all_placed() -> void:
+	var wanted := {"oak": 5, "pine": 5, "birch": 5, "bush": 5, "stump": 5}
+	for id in wanted:
+		var i := WorldData.object_index(id)
+		var obj := WorldData.object(i)
+		var n: int = obj["sprites"].size()
+		assert_true(n >= wanted[id], "%s has %d sprites" % [id, n])
+		var seen := {}
+		for k in 6000:
+			var g := Vector2i(k % 80 - 40, k / 80 - 40)
+			if not WorldObjects.is_present(i, g):
+				continue
+			var cell := WorldObjects.position_in(i, g)
+			if MapData.object_index_at(cell) == i:
+				seen[ChunkView.sprite_variant(cell, i)] = true
+		assert_eq(seen.size(), n, "%s: shapes placed %s" % [id, seen.keys()])
+
+
+## No sprite floats or sinks: an opaque pixel stands within a few pixels of the anchor (the foot
+## of the trunk, the base of a rock), and nothing opaque hangs more than a few pixels below it. The
+## translucent ground shadow does not count.
+func test_object_sprites_stand_on_their_anchor() -> void:
+	for o in WorldData.objects():
+		for sp in o["sprites"]:
+			var img: Image = load(sp["file"]).get_image()
+			var a: Vector2i = sp["anchor_px"]
+			var near := false
+			var lowest := -1
+			for y in img.get_height():
+				for x in img.get_width():
+					if img.get_pixel(x, y).a < 0.5:
+						continue
+					lowest = maxi(lowest, y)
+					if absi(x - a.x) <= 12 and absi(y - a.y) <= 4:
+						near = true
+			assert_true(near, "%s: nothing opaque at its anchor %s" % [sp["file"], a])
+			assert_true(lowest - a.y <= 8, "%s: opaque down to row %d, anchor at %d" % [sp["file"], lowest, a.y])
+
+
 ## Wall sprites run along the y axis of the grid; a wall continuing along x is mirrored.
 func test_walls_follow_their_neighbours() -> void:
 	var wall := WorldData.object_index("stone_wall")

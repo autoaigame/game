@@ -10,6 +10,34 @@
 				136,
 				241
 			]
+		},
+		{
+			"file": "res://assets/objects/oak_1.png",
+			"anchor_px": [
+				129,
+				237
+			]
+		},
+		{
+			"file": "res://assets/objects/oak_2.png",
+			"anchor_px": [
+				86,
+				244
+			]
+		},
+		{
+			"file": "res://assets/objects/oak_3.png",
+			"anchor_px": [
+				152,
+				225
+			]
+		},
+		{
+			"file": "res://assets/objects/oak_4.png",
+			"anchor_px": [
+				55,
+				148
+			]
 		}
 	],
 	"densities": {

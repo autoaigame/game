@@ -10,6 +10,34 @@
 				78,
 				250
 			]
+		},
+		{
+			"file": "res://assets/objects/fir_1.png",
+			"anchor_px": [
+				86,
+				248
+			]
+		},
+		{
+			"file": "res://assets/objects/fir_2.png",
+			"anchor_px": [
+				80,
+				246
+			]
+		},
+		{
+			"file": "res://assets/objects/fir_3.png",
+			"anchor_px": [
+				129,
+				246
+			]
+		},
+		{
+			"file": "res://assets/objects/fir_4.png",
+			"anchor_px": [
+				43,
+				175
+			]
 		}
 	],
 	"densities": {
