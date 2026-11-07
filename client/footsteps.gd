@@ -1,5 +1,5 @@
-## Footsteps, the pure part: a step each time a foot lands in the drawn walk (WalkAnim's contact frames),
-## its sounds by the ground under the feet (res://data/sounds.json). Client display only.
+## Footsteps, the pure part: a step's sounds by the ground under the feet (res://data/sounds.json). The
+## steps themselves come from the feet of the drawn 3D walk (Character3D.step). Client display only.
 class_name Footsteps
 extends RefCounted
 
@@ -9,12 +9,6 @@ const SOUND_DIR := "res://assets/sounds/steps"
 
 static func sound_path(sound: String) -> String:
 	return SOUND_DIR.path_join(sound + ".ogg")
-
-
-## Footsteps this frame for a walker whose drawn walk phase went from phase_before to phase_after (w["phase"]
-## before and after WalkAnim.animate): one per foot landing, on WalkAnim.CONTACT_FRAMES.
-static func steps(phase_before: float, phase_after: float) -> int:
-	return WalkAnim.contacts_between(phase_before, phase_after)
 
 
 ## {tile index: [sound names]} from data/sounds.json "footsteps".

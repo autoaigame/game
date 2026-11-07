@@ -1,0 +1,15 @@
+{
+	"comment": "The kit's 40-colour palette (pixellab-kit/6-terne/0-palette), as ramps from dark to light. Every pixel of the game's art is one of these colours.",
+	"ramps": {
+		"olive_grass": ["2c3324", "3b4530", "4d5638", "616a43", "767d52", "8d9064"],
+		"dry_grass": ["6b6342", "857a54", "9e9268", "b8ac84"],
+		"dirt_mud": ["2e2822", "40372d", "54483a", "6a5c49"],
+		"sand": ["8a8270", "a39b86", "bdb59f", "d3ccb7"],
+		"water": ["1d2a2b", "283a3b", "34494a", "45605d", "5f7a74"],
+		"bark_wood": ["3a2f27", "51433a", "6b5a4c"],
+		"stone": ["44443f", "5d5c55", "77756c", "938f84", "b0ab9e"],
+		"skin": ["6e4b3b", "9a6d56", "c09576"],
+		"denim": ["2f3a46", "455466", "64758a"],
+		"khaki_cloth": ["4e4a33", "6e6948", "8f8a63"]
+	}
+}

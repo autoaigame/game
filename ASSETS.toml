@@ -397,15 +397,6 @@ license = "CC0-1.0"
 source = ""
 
 [[asset]]
-path = "assets/player.png"
-author = "M3t4Data"
-origin = "generated"
-tool = "PixelLab create_character v3 (112 px, low top-down view, selective outline, high detail), then animate_character mode skeleton-v3 (the template clip posed onto the same character, so idle and walk keep its size) with templates breathing-idle (4 frames) and walking-8-frames (8 frames), 8 directions, 160 px canvases; no seed is exposed by this mode. By script: frames assembled into one 128 px sheet, one offset per direction (all its frames) putting the standing feet on the anchor. Stride measured on the sheet through the game projection, cycle of two steps in cells: S 0.79, SE 1.35, E 1.04, NE 1.17, N 0.71, NW 1.26, W 0.99, SW 1.24 (WalkAnim.CYCLE_CELLS)"
-prompt = "ordinary adult male survivor, realistic proportions, faded washed-out blue jeans, muted khaki field jacket over a grey shirt, worn brown boots, short dark brown hair, stubble, dark grey backpack with straps, dull desaturated colours, soft light from the top-left, fine detail, no thick black cartoon outline"
-license = "CC0-1.0"
-source = ""
-
-[[asset]]
 path = "assets/ui/panel.png"
 author = "M3t4Data"
 origin = "generated"
@@ -1082,6 +1073,24 @@ path = "assets/ui/slot_selected.png"
 author = "vitteloil"
 origin = "original"
 tool = "drawn by script: art/ui_icons.gd (make art), Godot 4.7.2; written with Claude Code (anthropic/claude-opus-5-5)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/character/body.glb"
+author = "Quaternius (mannequin, skeleton and animations); M3t4Data (proportions, regions, colours)"
+origin = "third-party"
+tool = "Universal Animation Library (Standard) by Quaternius, AnimationLibrary_Godot_Standard.glb, modified by script (art/character/body.py, Blender 5.2.3 LTS): rest pose reshaped into a sturdy adult on the same skeleton (bone lengths and widths, head a quarter of the height, hands and feet), mesh moved by its own skin weights, clips idle, walk, jog and sprint adapted (hips location scaled, upper arms rotated outwards, hips lifted where a foot would sink), mesh cut along straight lines into body regions coloured in flat kit-palette colours"
+prompt = ""
+license = "CC0-1.0"
+source = "https://opengameart.org/content/universal-animation-library (also https://quaternius.com/packs/universalanimationlibrary.html)"
+
+[[asset]]
+path = "assets/character/body_clips.json"
+author = "M3t4Data"
+origin = "generated"
+tool = "art/character/body.py (Blender 5.2.3 LTS): clip durations, ground speed and stride from the backward travel of the ankles, each foot's mid-stance and contact"
 prompt = ""
 license = "CC0-1.0"
 source = ""

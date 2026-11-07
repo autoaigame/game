@@ -2,7 +2,6 @@
 extends Node2D
 
 var _tiles_tex: Texture2D = load(IsoLayer.TILES_ATLAS)
-const PLAYER_TEX := preload("res://assets/player.png")
 const DOG_TEX := preload("res://assets/dog.png")
 ## Where a dog holds its catch, from the dog's feet (facing right): just under its muzzle (art/dog_sheet.gd).
 const CARRY_AT := Vector2(20, -16)
@@ -21,7 +20,7 @@ var _actors := {}  ## peer_id -> Node2D
 ## speed (cells per second it moved between its last two updates)}
 var _creatures := {}
 var _marks := {}  ## mark id -> {node: MarkView, left: seconds}
-var _walk := {}  ## peer_id -> drawing state (WalkAnim.new_state)
+var _walk := {}  ## peer_id -> {"server", "shown"}: its last snapshot position and the one drawn, in cells
 var _camera := Camera2D.new()
 var _my_pos := Vector2.ZERO  ## my position in the last snapshot, in cells
 var _key_dir := Vector2i.ZERO  ## direction of the held keys at the last frame
@@ -59,7 +58,7 @@ func _on_snapshot(players: Array) -> void:
 			actor = _make_actor(p["name"], id == client.my_peer_id)
 			_actors[id] = actor
 			add_child(actor)
-			_walk[id] = WalkAnim.new_state(p["pos"])
+			_walk[id] = {"server": p["pos"], "shown": p["pos"]}
 			actor.position = IsoLayer.cell_to_local(p["pos"])
 		_walk[id]["server"] = p["pos"]  # drawn there smoothly by _animate_actors
 		if id == client.my_peer_id:
@@ -187,15 +186,18 @@ func _animate_actors(dt: float) -> void:
 	for id in _actors:
 		var w: Dictionary = _walk[id]
 		var actor: Node2D = _actors[id]
-		var sprite: Sprite2D = actor.get_node("Sprite")
-		var phase_before: float = w["phase"]
-		sprite.frame_coords = WalkAnim.animate(w, dt)
+		var before: Vector2 = w["shown"]
+		w["shown"] = WalkAnim.follow(before, w["server"], dt)
 		var pos := IsoLayer.cell_to_local(w["shown"])
 		actor.position = pos
-		if sounds != null and Footsteps.steps(phase_before, w["phase"]) > 0:
+		# A footstep each time a foot of the 3D model lands.
+		var model: Character3D = actor.get_node("Model3D")
+		if model.step(w["shown"] - before, dt) > 0 and sounds != null:
 			sounds.footstep(id, MapData.tile_at(Protocol.cell_of(w["shown"])), id == client.my_peer_id, actor)
 		if id == client.my_peer_id:
 			_camera.position = pos
+	for id in _actors:  # after the camera moved: the 3D models snap to whole screen pixels
+		_actors[id].get_node("Model3D").place(_actors[id].position, _actors[id].position, _camera.position)
 
 
 ## Builds the chunks around the player (or the spawn before joining) within a time budget per frame,
@@ -222,14 +224,9 @@ func _drift_camera(delta: float) -> void:
 
 func _make_actor(player_name: String, is_me: bool) -> Node2D:
 	var actor := Node2D.new()
-	var sprite := Sprite2D.new()
-	sprite.name = "Sprite"
-	sprite.texture = PLAYER_TEX
-	sprite.hframes = WalkAnim.SHEET_COLUMNS
-	sprite.vframes = WalkAnim.SHEET_ROWS
-	sprite.centered = false
-	sprite.offset = WalkAnim.sprite_offset()
-	actor.add_child(sprite)
+	var model := Character3D.new()
+	model.name = "Model3D"
+	actor.add_child(model)
 	var label := Label.new()
 	label.text = player_name
 	label.add_theme_font_size_override("font_size", 16)
