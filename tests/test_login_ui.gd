@@ -89,4 +89,27 @@ func test_settings_let_the_start_menu_use_escape_first() -> void:
 	assert_true(menu.handle(pad), "the start menu used the event")
 	assert_eq(seen, [pad])
 	assert_false(menu.is_open())
+	for n in [menu._root, menu._mute, menu._close]:  # built in _ready, which never ran
+		n.free()
 	menu.free()
+
+
+## Closing the settings gives the focus back to the title's Paramètres button, or to the first control
+## of another screen (the settings open from it with a pad's Start).
+func test_focus_after_the_settings() -> void:
+	assert_eq(LoginUi.focus_after_settings(["title"]), LoginUi.FOCUS_SETTINGS_BUTTON)
+	assert_eq(LoginUi.focus_after_settings(["title", "play"]), LoginUi.FOCUS_FIRST)
+
+
+## The connection lost in game brings the menu back on its title screen; lost before joining, the
+## screen shown stays.
+func test_stack_after_a_lost_connection() -> void:
+	assert_eq(LoginUi.stack_after_lost(["title", "play"], true), ["title"])
+	assert_eq(LoginUi.stack_after_lost(["title", "play"], false), ["title", "play"])
+	assert_eq(LoginUi.stack_after_lost(["title"], true), ["title"])
+
+
+## A refused name shows on the play screen, even if Retour was pressed while joining.
+func test_stack_after_a_refused_name() -> void:
+	assert_eq(LoginUi.stack_after_rejected(["title"]), ["title", "play"])
+	assert_eq(LoginUi.stack_after_rejected(["title", "play"]), ["title", "play"])

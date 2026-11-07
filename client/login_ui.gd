@@ -14,6 +14,8 @@ const ROOT_SCREEN := "title"
 const PLAY_SCREEN := "play"
 const ESCAPE_SETTINGS := "settings"  ## Escape opens the settings menu (it does so itself)
 const ESCAPE_BACK := "back"  ## Escape goes back a screen
+const FOCUS_SETTINGS_BUTTON := "settings_button"  ## the title's Paramètres button
+const FOCUS_FIRST := "first"  ## the first control of the screen shown
 
 var client: Node  ## client/client.gd
 var sounds: Node  ## client/sound_director.gd, or null (no sound)
@@ -65,7 +67,7 @@ static func escape_action(stack: Array) -> String:
 	return ESCAPE_SETTINGS if stack.size() <= 1 else ESCAPE_BACK
 
 
-## Escape, a pad's B (the east button, Godot's ui_cancel has no pad button) or another ui_cancel
+## Escape, a pad's B (the east button; in Godot 4.7 ui_cancel only holds Escape) or another ui_cancel
 ## button, pressed (not a repeat). A pad's Start is not one: it opens the settings menu.
 static func is_back(event: InputEvent) -> bool:
 	if event is InputEventKey:
@@ -73,6 +75,22 @@ static func is_back(event: InputEvent) -> bool:
 	if event is InputEventJoypadButton:
 		return event.pressed and (event.button_index == JOY_BUTTON_B or event.is_action_pressed("ui_cancel"))
 	return false
+
+
+## Where the focus goes when the settings menu closes over `stack`.
+static func focus_after_settings(stack: Array) -> String:
+	return FOCUS_SETTINGS_BUTTON if stack.size() <= 1 else FOCUS_FIRST
+
+
+## The stack once the connection is lost: back to the title screen when `reset` (the menu was hidden,
+## in game), otherwise the screen shown stays.
+static func stack_after_lost(stack: Array, reset: bool) -> Array:
+	return [ROOT_SCREEN] if reset else stack.duplicate()
+
+
+## The stack when the server refuses the name: the play screen shows, to say why.
+static func stack_after_rejected(stack: Array) -> Array:
+	return pushed([ROOT_SCREEN] if stack.is_empty() else stack, PLAY_SCREEN)
 
 
 static func button_enabled(s: State) -> bool:
@@ -178,8 +196,9 @@ func _first_focus(id: String) -> Control:
 	return _screens[id].get_meta("first_focus")
 
 
+## Gives the focus asked for once its control shows (the settings menu may hide this one meanwhile).
 func _process(_delta: float) -> void:
-	if _focus_next != null:
+	if _focus_next != null and _focus_next.is_visible_in_tree():
 		_focus_next.grab_focus()
 		_focus_next = null
 
@@ -337,7 +356,8 @@ func _on_settings_opened() -> void:
 func _on_settings_closed() -> void:
 	_root.visible = true
 	if _menu_up():
-		_focus_next = _title.button("settings") if top_screen() == ROOT_SCREEN else _first_focus(top_screen())
+		var to := focus_after_settings(_stack)
+		_focus_next = _title.button("settings") if to == FOCUS_SETTINGS_BUTTON else _first_focus(top_screen())
 
 
 func _play(kind: String) -> void:
@@ -393,7 +413,11 @@ func _on_connected() -> void:
 func _on_rejected(reason: String) -> void:
 	_set_state(State.READY)
 	_show_hint(UiText.rejection(reason, client.player_name))
-	_name_edit.grab_focus()
+	var to := stack_after_rejected(_stack)
+	if to != _stack:
+		_stack = to
+		_show_top(true)
+	_focus_next = _name_edit
 	_name_edit.select_all()
 
 
@@ -411,8 +435,9 @@ func _on_lost() -> void:
 	var was_hidden := not visible
 	visible = true
 	_set_state(State.LOST)
-	if was_hidden or _in_game:
-		_stack = [ROOT_SCREEN]
+	var to := stack_after_lost(_stack, was_hidden or _in_game)
+	if to != _stack:
+		_stack = to
 		_show_top(false)
 	_fade_to(1.0, FADE_IN_S)
 
