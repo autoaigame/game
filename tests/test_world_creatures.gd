@@ -91,7 +91,8 @@ func test_hole_mark_is_drawn() -> void:
 	view.client.marks_received.emit([{"id": 4, "kind": "hole", "pos": Vector2(1, 1), "left": 100.0}])
 	var node: MarkView = view._marks[4]["node"]
 	assert_eq(node.kind, "hole")
-	assert_true(MarkView.KINDS.has("hole") and MarkView.KINDS.has("pee") and MarkView.KINDS.has("fire"), "kinds drawn")
+	assert_true(MarkView.KINDS.has("hole") and MarkView.KINDS.has("pee") and MarkView.KINDS.has("fire") \
+			and MarkView.KINDS.has("carcass_rabbit") and MarkView.KINDS.has("carcass_pheasant"), "kinds drawn")
 	view.free()
 
 

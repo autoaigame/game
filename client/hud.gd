@@ -77,8 +77,16 @@ func toggle_bag() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if visible and event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_I:
-		toggle_bag()
+	if not visible or not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	match event.physical_keycode:
+		KEY_I:
+			toggle_bag()
+		KEY_H:
+			client.request_whistle()
+		_:
+			return
+	if is_inside_tree():
 		get_viewport().set_input_as_handled()
 
 
@@ -176,6 +184,12 @@ func _build() -> void:
 	_starving.add_theme_color_override("font_outline_color", Color.BLACK)
 	_starving.add_theme_constant_override("outline_size", 4)
 	box.add_child(_starving)
+	var keys := Label.new()
+	keys.text = UiText.KEYS_HINT
+	keys.add_theme_color_override("font_color", UiTheme.TEXT_DIM)
+	keys.add_theme_color_override("font_outline_color", Color.BLACK)
+	keys.add_theme_constant_override("outline_size", 4)
+	box.add_child(keys)
 	_bag = PanelContainer.new()
 	_bag.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
 	_bag.position = Vector2(-216, -80)

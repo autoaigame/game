@@ -21,7 +21,10 @@ const NOTICES := {
 	"fire_built": "Tu allumes un feu.",
 	"need_sticks": "Il te faut %d bâtons pour faire un feu." % Protocol.FIRE_STICKS,
 	"fire_here": "Il y a déjà un feu ici.",
+	"hunt": "Ton chien part en chasse !",
+	"no_prey": "Aucun animal à chasser près de toi.",
 }
+const KEYS_HINT := "I : sac   H : siffler le chien"
 const BUILD_FIRE := "Faire un feu (%d bâtons)" % Protocol.FIRE_STICKS
 const EAT := "Manger"
 const ENTER := "Entrer dans le monde"

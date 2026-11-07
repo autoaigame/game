@@ -16,6 +16,10 @@ class FakeClient:
 		eaten.append(item)
 
 	var fires := 0
+	var whistles := 0
+
+	func request_whistle() -> void:
+		whistles += 1
 
 	func request_build_fire() -> void:
 		fires += 1
@@ -104,4 +108,18 @@ func test_build_fire_button() -> void:
 	assert_false(hud.fire_button().disabled)
 	hud.fire_button().pressed.emit()
 	assert_eq(hud.client.fires, 1)
+	hud.free()
+
+
+## H whistles the dog to hunt, once joined.
+func test_h_whistles() -> void:
+	var hud := _hud()
+	var key := InputEventKey.new()
+	key.physical_keycode = KEY_H
+	key.pressed = true
+	hud._unhandled_input(key)
+	assert_eq(hud.client.whistles, 0, "not before joining")
+	hud.client.welcomed.emit(Vector2i.ZERO)
+	hud._unhandled_input(key)
+	assert_eq(hud.client.whistles, 1)
 	hud.free()
