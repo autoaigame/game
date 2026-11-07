@@ -18,6 +18,7 @@
     "ttf",
     "uid",
     "import",
+    "gdshader",
     "gitignore"
   ],
   "forbidden_extensions": [
@@ -50,7 +51,8 @@
     "tres",
     "godot",
     "cfg",
-    "import"
+    "import",
+    "gdshader"
   ],
   "denied_code_patterns": [
     "OS\\.(execute|execute_with_pipe|create_process|create_instance|shell_open|shell_show_in_file_manager|kill|get_environment|set_environment)",
