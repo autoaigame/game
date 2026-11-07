@@ -198,3 +198,77 @@ func test_never_stands_mid_stride() -> void:
 	for i in 20:
 		fc = WalkAnim.animate(w, DT)
 	assert_false(_is_walk(fc), "stands once the step is done")
+
+
+## Two foot contacts per cycle, one per step, half a cycle apart.
+func test_two_foot_contacts_per_cycle() -> void:
+	var c: Array[float] = WalkAnim.contact_phases()
+	assert_eq(c.size(), 2)
+	assert_almost(fposmod(c[1] - c[0], 1.0), 0.5, 0.001)
+	var n := 0
+	var phase := 0.0
+	for i in 1000:
+		var next := fposmod(phase + 0.003, 1.0)
+		n += WalkAnim.contacts_between(phase, next)
+		phase = next
+	assert_eq(n, 6, "3 cycles")
+
+
+func test_contacts_between_edges() -> void:
+	var c: float = WalkAnim.contact_phases()[0]
+	assert_eq(WalkAnim.contacts_between(0.3, 0.3), 0, "no move, no step")
+	assert_eq(WalkAnim.contacts_between(c - 0.01, c), 1, "landing exactly on the contact counts")
+	assert_eq(WalkAnim.contacts_between(c, c + 0.01), 0, "and only once")
+	assert_eq(WalkAnim.contacts_between(0.9, 0.3), 1, "wraps past the end of the cycle")
+	assert_eq(WalkAnim.contacts_between(0.0001, 0.0), 0, "settling back on a rest frame is no step")
+
+
+## Walking one cycle length gives two contacts; finishing the step after a stop can add one, and
+## standing adds none.
+func test_contacts_follow_the_drawn_walk() -> void:
+	var w := WalkAnim.new_state(Vector2(10, 10))
+	var steps := 0
+	var cycle: float = WalkAnim.CYCLE_CELLS[WalkAnim.FACINGS.find("east")]
+	var east := Vector2(1, -1).normalized()
+	for i in 120:
+		var before: float = w["phase"]
+		w["server"] = Vector2(10, 10) + east * minf(cycle * 2.0, (i + 1) * cycle / 50.0)
+		WalkAnim.animate(w, DT)
+		steps += WalkAnim.contacts_between(before, w["phase"])
+	assert_eq(steps, 4, "two cycles walked")
+	for i in 120:
+		var before: float = w["phase"]
+		WalkAnim.animate(w, DT)
+		steps += WalkAnim.contacts_between(before, w["phase"])
+	assert_eq(steps, 4, "standing")
+
+
+## The contact frames are where the feet are widest apart on the sheet: facing east and west, each is
+## the widest frame of its half-cycle along the bottom of the sprite.
+func test_contact_frames_are_the_widest_strides() -> void:
+	var img: Image = load("res://assets/player.png").get_image()
+	var f := WalkAnim.FRAME_SIZE
+	for name in ["east", "west"]:
+		var col := WalkAnim.sheet_column(WalkAnim.FACINGS.find(name))
+		var spans := []
+		for i in WalkAnim.WALK_FRAMES:
+			var y0 := (WalkAnim.WALK_FIRST_ROW + i) * f.y
+			var bottom := -1
+			for y in f.y:
+				for x in f.x:
+					if img.get_pixel(col * f.x + x, y0 + y).a > 0.5:
+						bottom = y
+						break
+			var lo := f.x
+			var hi := -1
+			for y in range(bottom - 12, bottom + 1):
+				for x in f.x:
+					if img.get_pixel(col * f.x + x, y0 + y).a > 0.5:
+						lo = mini(lo, x)
+						hi = maxi(hi, x)
+			spans.append(hi - lo)
+		for c in WalkAnim.CONTACT_FRAMES:
+			var half := c / (WalkAnim.WALK_FRAMES / 2) * (WalkAnim.WALK_FRAMES / 2)
+			for i in range(half, half + WalkAnim.WALK_FRAMES / 2):
+				assert_true(spans[c] >= spans[i], "%s: frame %d (%d px) wider than contact %d (%d px)" %
+						[name, i, spans[i], c, spans[c]])

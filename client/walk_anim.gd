@@ -58,6 +58,8 @@ const FOOT_PX := 14
 const HEAD_PX := 105
 ## Walk frames with both feet on the ground, side by side: a walk starts and ends on one of them.
 const REST_FRAMES: Array[int] = [0, 4]
+## Walk frames where the front heel lands (the feet widest apart): one footstep each, for sounds.
+const CONTACT_FRAMES: Array[int] = [2, 6]
 ## One walk cycle (two steps) per this many cells walked, per facing (FACINGS order): the stride drawn
 ## on the sheet, measured on screen through the game's projection, plus up to 10 % (ASSETS.toml). The
 ## sprite's own perspective flattens depth more than the 2:1 view, so north and south take shorter
@@ -173,6 +175,30 @@ static func _from_south(f: int) -> int:
 ## Walk frame (0..WALK_FRAMES-1) at a phase of the cycle.
 static func walk_frame(phase: float) -> int:
 	return int(phase * WALK_FRAMES) % WALK_FRAMES
+
+
+## Phases of the walk cycle (0..1) where a foot lands: the start of each CONTACT_FRAMES frame.
+static func contact_phases() -> Array[float]:
+	var out: Array[float] = []
+	for c in CONTACT_FRAMES:
+		out.append(float(c) / WALK_FRAMES)
+	return out
+
+
+## Footsteps between two phases of the drawn walk (w["phase"] before and after animate): how many
+## contact phases were passed going forwards, wrapping at 1. A contact reached exactly counts once, on
+## arrival. The phase moves forwards by far less than half a cycle per frame; the only step back is
+## the stop settling on the start of its feet-together frame, which is no footstep.
+static func contacts_between(from_phase: float, to_phase: float) -> int:
+	var span := fposmod(to_phase - from_phase, 1.0)
+	if span >= 0.5:
+		return 0
+	var n := 0
+	for c in contact_phases():
+		var ahead := fposmod(c - from_phase, 1.0)
+		if ahead > 0.0 and ahead <= span:
+			n += 1
+	return n
 
 
 ## Phase after finishing the step in progress by at most advance cycles: it stops on the start of the
