@@ -45,6 +45,27 @@ const QUIT := "Quitter"
 const BACK := "Retour"
 const ENTER := "Entrer dans le monde"
 const SETTINGS := "Paramètres"
+const CREDITS := "Crédits"
+
+## The credits screen (client/credits_screen.gd), from data/credits.json.
+const CREDITS_COMMUNITY := "Ce jeu est construit par sa communauté : chacun propose ses changements en pull request, et celles qui recueillent assez de votes entrent dans le jeu."
+const CREDITS_PEOPLE := "Contributeurs"
+const CREDITS_THIRD_PARTY := "Ressources tierces"
+const CREDITS_TOOLS := "Outils de génération"
+const CREDITS_FILES := "%d fichiers : %s"
+const CREDITS_ONE_FILE := "1 fichier : %s"
+const CREDITS_LICENSE := "Licence : %s"
+const CREDITS_LICENSES_LABEL := "Licences : %s"
+const CREDITS_SOURCE := "Source : %s"
+const CREDITS_HINT := "Haut et bas pour faire défiler, Échap pour revenir"
+## What an asset is (art/credits.gd kind()).
+const CREDITS_KINDS := {"character": "personnage", "decals": "détails du sol", "dog": "chien",
+		"items": "objets du sac", "music": "musique", "objects": "décor", "sounds": "sons", "tiles": "sols",
+		"ui": "interface"}
+## Licences of ASSETS.toml, in words.
+const CREDITS_LICENSES := {"CC0-1.0": "CC0 1.0 (domaine public)",
+		"LicenseRef-ElevenLabs-in-game-only": "sons ElevenLabs, dans ce jeu seulement",
+		"LicenseRef-Suno-in-game-only": "musique Suno, dans ce jeu seulement"}
 
 const SETTINGS_TITLE := "Paramètres"
 const TAB_SOUND := "Son"
