@@ -1338,3 +1338,21 @@ tool = "art/character/faces.py: drawn texel by texel as an index texture (zone a
 prompt = ""
 license = "CC0-1.0"
 source = ""
+
+[[asset]]
+path = "assets/models/zombie.glb"
+author = "M3t4Data"
+origin = "original"
+tool = "Blender 5.2.3 LTS, by script only (art/models/zombie.py with art/models/rig_kit.py): mesh of tubes, boxes and joint balls on a skeleton made by the script, weights blended round each joint by position (the same for every volume that reaches it), clips idle, walk, attack and death computed from curves (two-bone IK on foot paths, sine waves with phase lags, eased keys), sampled on every frame; flat colours of data/palette.json. No imported mesh, skeleton or animation"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/models/zombie_clips.json"
+author = "M3t4Data"
+origin = "generated"
+tool = "art/models/zombie.py (Blender 5.2.3 LTS): clip durations, walk speed, stride and contacts, attack hit time, and the checks measured on the deformed mesh (soles, sliding feet, crossings, cracks at the joints, IK reach, blended vertices)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
