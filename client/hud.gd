@@ -26,6 +26,8 @@ var _notice_label: Label
 var _notice_left := 0.0
 var _my_pos: Variant = null  ## where I stand (last snapshot), or null before the first
 var _fires: Array = []  ## positions of the fires the server sent
+var _seen_labels := {}  ## physical key -> its label, for every key the player pressed
+var _hint_caps := {}  ## physical key -> the Label of its key cap
 
 
 func _ready() -> void:
@@ -62,6 +64,23 @@ func notice_icon() -> TextureRect:
 
 func toggle_bag() -> void:
 	_bag.visible = not _bag.visible
+
+
+## The letter shown on the key cap of a hinted physical key.
+func key_hint(physical: Key) -> String:
+	return _hint_caps[physical].text
+
+
+## Learns the layout from every key press (the browser cannot tell it), and renames the hints.
+func _input(event: InputEvent) -> void:
+	if not (event is InputEventKey and event.pressed):
+		return
+	var label: Key = event.key_label if event.key_label != KEY_NONE else event.keycode
+	if label == KEY_NONE or _seen_labels.get(event.physical_keycode) == label:
+		return
+	_seen_labels[event.physical_keycode] = label
+	for k in _hint_caps:
+		_hint_caps[k].text = UiText.key_name(k, _seen_labels)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -196,7 +215,9 @@ func _build() -> void:
 	keys.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	corner.add_child(keys)
 	for k in UiText.KEYS:
-		keys.add_child(_key_cap(UiText.key_name(k[0])))
+		var cap := _key_cap(UiText.key_name(k[0]))
+		_hint_caps[k[0]] = cap.get_child(0)
+		keys.add_child(cap)
 		var what := Label.new()
 		what.text = k[1]
 		what.add_theme_font_size_override("font_size", 14)

@@ -180,6 +180,38 @@ func test_key_hints_follow_the_layout() -> void:
 		assert_eq(UiText.key_name(KEY_E), "E")
 
 
+func _keyboard_key(physical: Key, label: Key) -> InputEventKey:
+	var key := InputEventKey.new()
+	key.physical_keycode = physical
+	key.key_label = label
+	key.pressed = true
+	return key
+
+
+## Without a layout lookup (browser), the keys the player presses teach the layout.
+func test_key_names_learn_the_layout_from_presses() -> void:
+	if DisplayServer.get_name() in UiText.LAYOUT_AWARE:
+		return
+	assert_eq(UiText.key_name(KEY_Q, {}), "Q")
+	assert_eq(UiText.key_name(KEY_Q, {KEY_Q: KEY_A}), "A", "the key itself was pressed")
+	assert_eq(UiText.key_name(KEY_Q, {KEY_W: KEY_Z}), "A", "Z up: AZERTY")
+	assert_eq(UiText.key_name(KEY_Q, {KEY_A: KEY_Q}), "A", "Q left: AZERTY")
+	assert_eq(UiText.key_name(KEY_Q, {KEY_W: KEY_W, KEY_A: KEY_A}), "Q", "QWERTY stays Q")
+	assert_eq(UiText.key_name(KEY_E, {KEY_W: KEY_Z}), "E")
+
+
+## Walking with Z on AZERTY renames the whistle hint to A.
+func test_hint_updates_after_walking_on_azerty() -> void:
+	if DisplayServer.get_name() in UiText.LAYOUT_AWARE:
+		return
+	var hud := _hud()
+	assert_eq(hud.key_hint(KEY_Q), "Q")
+	hud._input(_keyboard_key(KEY_W, KEY_Z))
+	assert_eq(hud.key_hint(KEY_Q), "A")
+	assert_eq(hud.key_hint(KEY_E), "E")
+	hud.free()
+
+
 ## A notice about an item shows its icon.
 func test_notice_shows_the_item_icon() -> void:
 	var hud := _hud()
