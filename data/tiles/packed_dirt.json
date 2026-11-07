@@ -3,5 +3,7 @@
 	"name": "Packed dirt",
 	"walkable": true,
 	"priority": 6,
-	"atlas": 6
+	"atlas": 6,
+	"full_variants": 4,
+	"mask_variants": 1
 }

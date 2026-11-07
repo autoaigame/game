@@ -3,5 +3,7 @@
 	"name": "Dry grass",
 	"walkable": true,
 	"priority": 4,
-	"atlas": 4
+	"atlas": 4,
+	"full_variants": 4,
+	"mask_variants": 1
 }

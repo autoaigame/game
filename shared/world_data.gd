@@ -1,4 +1,4 @@
-## Game data for world generation, read once from res://data/ (tiles, biomes, objects, places). Shared by the server
+## Game data for world generation, read once from res://data/ (tiles, biomes, objects, places, decals). Shared by the server
 ## and the client, so both build the same world. Ids are text and never renamed: saves and other data
 ## refer to them. Tile indices (what MapData.tile_at returns) follow the tiles' priorities.
 class_name WorldData
@@ -15,9 +15,12 @@ static var _gen := {}  ## the rest of biomes.json (seed, noise settings, table)
 static var _objects: Array[Dictionary] = []  ## sorted by id; index = object index
 static var _object_index := {}  ## id -> index
 static var _places: Array[Dictionary] = []  ## sorted by id; index = place index
+static var _decals: Array[Dictionary] = []  ## sorted by id; index = decal index
 
 
-## Tile records: {id, name, walkable, priority, atlas}, lowest priority first.
+## Tile records: {id, name, walkable, priority, atlas, full_variants, mask_variants}, lowest priority
+## first. full_variants: how many versions of the full tile the atlas row holds (picked per drawn tile).
+## mask_variants: reserved for versions of each transition tile, only 1 is supported for now.
 static func tiles() -> Array[Dictionary]:
 	_ensure()
 	return _tiles
@@ -71,6 +74,13 @@ static func places() -> Array[Dictionary]:
 	return _places
 
 
+## Ground decals, sorted by id: {id, name, sprite, grounds: {tile index: true}, cell_size, density,
+## salt}. Drawing only: decals never block and the server ignores them.
+static func decals() -> Array[Dictionary]:
+	_ensure()
+	return _decals
+
+
 ## Generation settings from biomes.json.
 static func gen() -> Dictionary:
 	_ensure()
@@ -83,7 +93,11 @@ static func _ensure() -> void:
 	_loaded = true
 	for rec in _read_dir(DATA_DIR.path_join("tiles")):
 		_tiles.append({"id": String(rec["id"]), "name": String(rec["name"]),
-				"walkable": bool(rec["walkable"]), "priority": int(rec["priority"]), "atlas": int(rec["atlas"])})
+				"walkable": bool(rec["walkable"]), "priority": int(rec["priority"]), "atlas": int(rec["atlas"]),
+				"full_variants": maxi(1, int(rec.get("full_variants", 1))),
+				"mask_variants": maxi(1, int(rec.get("mask_variants", 1)))})
+		if _tiles.back()["mask_variants"] != 1:
+			push_error("data: tile %s: mask_variants other than 1 is not supported yet" % rec["id"])
 	_tiles.sort_custom(func(a, b): return a["priority"] < b["priority"])
 	for i in _tiles.size():
 		_tile_index[_tiles[i]["id"]] = i
@@ -115,6 +129,15 @@ static func _ensure() -> void:
 		_object_index[_objects[i]["id"]] = i
 	for rec in _read_dir(DATA_DIR.path_join("places")):
 		_places.append(_place(rec))
+	for rec in _read_dir(DATA_DIR.path_join("decals")):
+		var grounds := {}
+		for g in rec["grounds"]:
+			if tile_index(g) < 0:
+				push_error("data: decal %s names unknown ground %s" % [rec["id"], g])
+			grounds[tile_index(g)] = true
+		_decals.append({"id": String(rec["id"]), "name": String(rec["name"]), "sprite": String(rec["sprite"]),
+				"grounds": grounds, "cell_size": maxi(1, int(rec["cell_size"])), "density": float(rec["density"]),
+				"salt": WorldNoise.hash_text("decal:" + String(rec["id"]))})
 
 
 ## A place record from its JSON: the plan is rows of characters, " " is outside the place.

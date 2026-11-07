@@ -1,0 +1,8 @@
+{
+	"id": "flowers",
+	"name": "Flowers",
+	"sprite": "res://assets/decals/flowers.png",
+	"grounds": ["grass"],
+	"cell_size": 3,
+	"density": 0.3
+}

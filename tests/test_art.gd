@@ -7,7 +7,7 @@ func test_tiles_are_high_resolution() -> void:
 	assert_eq(IsoLayer.TILE_SIZE, Vector2i(128, 64))
 
 
-## One row per ground (data/tiles "atlas"), one column per DualGrid corner mask.
+## One row per ground (data/tiles "atlas"), one column per DualGrid corner mask, then full variants.
 func test_tiles_atlas_has_a_row_per_ground_and_a_column_per_mask() -> void:
 	var tex: Texture2D = load("res://assets/tiles.png")
 	assert_eq(tex.get_width(), IsoLayer.TILE_SIZE.x * IsoLayer.ATLAS_COLUMNS)
@@ -30,7 +30,7 @@ func test_mask_tiles_follow_the_corner_bits() -> void:
 	for row in img.get_height() / h:
 		var empty := img.get_region(Rect2i(0, row * h, w, h))
 		assert_true(empty.is_invisible(), "row %d mask 0 is not empty" % row)
-		for mask in range(1, IsoLayer.ATLAS_COLUMNS):
+		for mask in range(1, IsoLayer.MASK_COLUMNS):
 			for i in 4:
 				var p: Vector2i = probes[i] + Vector2i(mask * w, row * h)
 				var opaque := img.get_pixelv(p).a == 1.0
@@ -83,3 +83,49 @@ func test_tiles_cover_the_plane_exactly_once() -> void:
 				seen[key] = true
 		assert_eq(overlaps, 0, "row %d overlaps itself" % row)
 		assert_eq(seen.size(), w * h / 2, "row %d leaves gaps" % row)
+
+
+## Each ground has its declared number of full tile variants, all different, each covering the plane
+## exactly once; the unused variant columns are empty.
+func test_full_variants_are_drawn() -> void:
+	var img: Image = load("res://assets/tiles.png").get_image()
+	var w := IsoLayer.TILE_SIZE.x
+	var h := IsoLayer.TILE_SIZE.y
+	for t in WorldData.tiles():
+		var row: int = t["atlas"]
+		var seen := {}
+		for v in IsoLayer.MAX_FULL_VARIANTS:
+			var col := IsoLayer.atlas_column(DualGrid.FULL, v)
+			var tile := img.get_region(Rect2i(col * w, row * h, w, h))
+			if v >= t["full_variants"]:
+				assert_true(tile.is_invisible(), "%s variant %d should be empty" % [t["id"], v])
+				continue
+			assert_false(seen.has(tile.get_data()), "%s variant %d repeats another" % [t["id"], v])
+			seen[tile.get_data()] = true
+			var opaque := 0
+			for y in h:
+				for x in w:
+					if tile.get_pixel(x, y).a > 0.0:
+						opaque += 1
+			assert_eq(opaque, w * h / 2, "%s variant %d does not fill its diamond" % [t["id"], v])
+
+
+## Variants agree with variant 0 along the tile edges, so any two of them join without a seam.
+func test_full_variants_share_their_edges() -> void:
+	var img: Image = load("res://assets/tiles.png").get_image()
+	var w := IsoLayer.TILE_SIZE.x
+	var h := IsoLayer.TILE_SIZE.y
+	for t in WorldData.tiles():
+		var row: int = t["atlas"]
+		for v in range(1, t["full_variants"]):
+			var col := IsoLayer.atlas_column(DualGrid.FULL, v)
+			var diff := 0
+			for y in h:
+				for x in w:
+					var a := (x + 0.5 - w / 2.0) / w + (y + 0.5 - h / 2.0) / h
+					var b := (y + 0.5 - h / 2.0) / h - (x + 0.5 - w / 2.0) / w
+					if 0.5 - maxf(absf(a), absf(b)) > 0.02 or absf(a) >= 0.5 or absf(b) >= 0.5:
+						continue
+					if img.get_pixel(col * w + x, row * h + y) != img.get_pixel(15 * w + x, row * h + y):
+						diff += 1
+			assert_eq(diff, 0, "%s variant %d differs from variant 0 on its edge" % [t["id"], v])

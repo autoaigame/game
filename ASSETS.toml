@@ -80,3 +80,39 @@ tool = "art/gen_art.gd (Godot 4.7.2)"
 prompt = ""
 license = "CC0-1.0"
 source = ""
+
+[[asset]]
+path = "assets/decals/flowers.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "art/gen_art.gd (Godot 4.7.2)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/leaves.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "art/gen_art.gd (Godot 4.7.2)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/pebble.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "art/gen_art.gd (Godot 4.7.2)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/decals/tuft.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "art/gen_art.gd (Godot 4.7.2)"
+prompt = ""
+license = "CC0-1.0"
+source = ""

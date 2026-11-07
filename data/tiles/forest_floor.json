@@ -3,5 +3,7 @@
 	"name": "Forest floor",
 	"walkable": true,
 	"priority": 5,
-	"atlas": 5
+	"atlas": 5,
+	"full_variants": 4,
+	"mask_variants": 1
 }
