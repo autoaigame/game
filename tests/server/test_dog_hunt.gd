@@ -163,7 +163,7 @@ func test_fetch_survives_a_put_back() -> void:
 	assert_eq(DOG.update(dog, at, 0.1), [{"kind": "deliver", "carry": "pheasant"}])
 
 
-## With a full stack of raw meat, the catch is dropped at the owner's feet instead (picked up later).
+## With a full stack of raw meat, the dog drops its catch at its feet instead (picked up later).
 func test_catch_dropped_when_bag_is_full() -> void:
 	var server := _server_with_rabbit(Vector2i(30, 0))
 	server._players[1]["inventory"] = {"raw_meat": server.INV.MAX_STACK}
