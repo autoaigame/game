@@ -28,16 +28,44 @@ static func follow(shown: Vector2, server: Vector2, dt: float) -> Vector2:
 	return shown + to_server / dist * step
 
 
-## Screen moves count as sideways only when clearly flatter than a grid axis (which is exactly 2:1 on
-## screen), so walking along an axis never flickers between two facings.
-const SIDEWAYS_RATIO := 2.5
+## Facings, defined on screen, in the order and with the names of PixelLab's 8 directions.
+const FACINGS: Array[String] = ["south", "south-east", "east", "north-east", "north", "north-west", "west",
+		"south-west"]
+## Past the edge of its sector, a facing holds for this many more degrees, so drawn positions landing a
+## hair either side of a direction never flicker between two facings.
+const FACING_HYSTERESIS_DEG := 10.0
+
+## Player sprite sheet (assets/player.png): one frame of FRAME_SIZE px per column and row. The one place
+## to change for a new sheet: SHEET_COLUMNS columns, and the column drawn for each facing. An 8-column
+## sheet in FACINGS order (docs/art-guide.md) takes SHEET_COLUMNS = 8 and FACING_COLUMN = [0, 1, ... 7].
+const FRAME_SIZE := Vector2i(64, 96)
+const SHEET_COLUMNS := 4
+## Today's sheet: 0 down, 1 left, 2 right, 3 up. Diagonals show the back going up, the front going down.
+const FACING_COLUMN: Array[int] = [0, 0, 2, 3, 3, 3, 1, 0]
 
 
-## Sprite column from a screen movement: 0 down, 1 left, 2 right, 3 up.
-static func facing(screen_delta: Vector2) -> int:
-	if absf(screen_delta.x) > absf(screen_delta.y) * SIDEWAYS_RATIO:
-		return 1 if screen_delta.x < 0 else 2
-	return 3 if screen_delta.y < 0 else 0
+## Facing (index in FACINGS) from a screen movement. Angles are measured with the screen's height doubled,
+## so the 2:1 view counts as flat: grid axes fall at 45 degrees, in the middle of their sector like the
+## pure screen directions. previous: the facing last frame (-1: none); kept within the hysteresis margin,
+## and when nothing moved.
+static func facing(screen_delta: Vector2, previous: int = -1) -> int:
+	if screen_delta == Vector2.ZERO:
+		return maxi(previous, 0)
+	var deg := rad_to_deg(atan2(-screen_delta.y * 2.0, screen_delta.x))  # counter-clockwise from east
+	if previous >= 0 and absf(angle_difference(deg_to_rad(deg), deg_to_rad(_facing_deg(previous)))) \
+			<= deg_to_rad(22.5 + FACING_HYSTERESIS_DEG):
+		return previous
+	return posmod(roundi((deg + 90.0) / 45.0), FACINGS.size())
+
+
+## Centre of a facing's sector, in degrees counter-clockwise from east (south is -90).
+static func _facing_deg(f: int) -> float:
+	return -90.0 + 45.0 * f
+
+
+## Sprite sheet column for a facing.
+static func sheet_column(f: int) -> int:
+	return FACING_COLUMN[f]
 
 
 ## Sprite row (walk frame) after walking this many cells.
