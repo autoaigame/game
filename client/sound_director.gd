@@ -1,15 +1,21 @@
 ## Plays the game's sound: layered ambience (client/ambience_mix.gd), footsteps (client/footsteps.gd) and menu
-## sounds, on the buses Ambiance, Effets and UI under Master. Silent until start(), called once the
+## sounds, on the buses Musique (empty for now), Ambiance, Effets and UI under Master. Silent until start(), called once the
 ## player enters the world (browsers only allow sound after a click). Client display only.
-## Keys in the world: M mutes, - and + change the volume (both remembered), F3 shows the ambience
-## layers, F4 forces an ambience (auto, then each one, debug-only ones included).
+## Keys in the world: M mutes, - and + change the master level, F3 shows the ambience layers, F4 forces an
+## ambience (auto, then each one, debug-only ones included). The levels of every bus and the mute are the
+## settings (client/audio_settings.gd), set here or from the settings menu and remembered.
 extends Node
 
-const BUSES: Array[String] = ["Ambiance", "Effets", "UI"]
+## The settings changed (from a key or the menu); `settings` is a copy.
+signal settings_changed(settings: Dictionary)
+
+const BUSES: Array[String] = ["Musique", "Ambiance", "Effets", "UI"]
 const UI_DIR := "res://assets/sounds/ui"
 ## How often the grounds around the player are counted again, in seconds.
 const PICK_EVERY_S := 0.5
 const VOLUME_STEP := 0.1
+## Settings are written this long after the last change, so dragging a slider saves once.
+const SAVE_DELAY_S := 0.5
 ## Another player's footsteps fade out over this distance, in px.
 const OTHERS_STEP_RANGE_PX := 900.0
 ## One-shots play this far either side of the screen centre at full pan, in px of the screen.
@@ -32,8 +38,8 @@ var _steps := {}  ## tile index -> [sound names]
 var _step_last := {}  ## peer id -> last variant
 var _sounds_cfg := {}
 var _streams := {}  ## path -> AudioStream
-var _muted := false
-var _volume := ClientSettings.DEFAULT_VOLUME
+var _settings := AudioSettings.defaults()
+var _save_in := -1.0  ## s until the pending save, < 0 = none
 var _debug := CanvasLayer.new()
 var _debug_label := Label.new()
 
@@ -44,10 +50,8 @@ func _ready() -> void:
 	_ambiences = AmbienceMix.load_all()
 	_steps = Footsteps.load_table()
 	_sounds_cfg = Footsteps.read_data()
-	var a := ClientSettings.load_audio()
-	_muted = a["muted"]
-	_volume = a["volume"]
-	_apply_master()
+	_settings = ClientSettings.load_audio()
+	AudioSettings.apply(_settings)
 	_debug.layer = 20
 	_debug.visible = false
 	_debug_label.position = Vector2(12, 12)
@@ -107,6 +111,10 @@ func set_listener_cell(cell: Vector2i) -> void:
 
 
 func _process(delta: float) -> void:
+	if _save_in >= 0.0:
+		_save_in -= delta
+		if _save_in < 0.0:
+			ClientSettings.save_audio(_settings)
 	if not started:
 		return
 	_pick_t -= delta
@@ -220,22 +228,43 @@ func _stream(path: String, loop: bool) -> AudioStream:
 	return _streams[path]
 
 
+## A copy of the current settings.
+func settings() -> Dictionary:
+	return _settings.duplicate()
+
+
+## Sets `channel` (AudioSettings.CHANNELS) to `level` 0..1, heard at once.
+func set_level(channel: String, level: float) -> void:
+	if not AudioSettings.BUS.has(channel):
+		return
+	_settings[channel] = clampf(level, 0.0, 1.0)
+	_changed()
+
+
+func set_muted(muted: bool) -> void:
+	_settings["muted"] = muted
+	_changed()
+
+
 func toggle_mute() -> void:
-	_muted = not _muted
-	_apply_master()
-	ClientSettings.save_audio(_muted, _volume)
+	set_muted(not _settings["muted"])
 
 
 func change_volume(step: float) -> void:
-	_volume = clampf(snappedf(_volume + step, 0.01), 0.0, 1.0)
-	_apply_master()
-	ClientSettings.save_audio(_muted, _volume)
+	set_level("master", AudioSettings.stepped(_settings["master"], step))
 
 
-func _apply_master() -> void:
-	var m := AudioServer.get_bus_index("Master")
-	AudioServer.set_bus_mute(m, _muted)
-	AudioServer.set_bus_volume_db(m, linear_to_db(_volume) if _volume > 0.0 else AmbienceMix.SILENT_DB)
+func _changed() -> void:
+	AudioSettings.apply(_settings)
+	_save_in = SAVE_DELAY_S
+	settings_changed.emit(settings())
+
+
+## Writes a pending change now (the page may close before the delay).
+func _notification(what: int) -> void:
+	if (what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_PREDELETE) and _save_in >= 0.0:
+		_save_in = -1.0
+		ClientSettings.save_audio(_settings)
 
 
 ## Debug: cycles the forced ambience: automatic, then each ambience in id order.
@@ -249,7 +278,8 @@ func cycle_forced() -> void:
 
 
 func _debug_text() -> String:
-	var lines := ["Son %s, volume %d %%   [M] muet  [-/+] volume  [F4] forcer" % ["coupé" if _muted else "actif", roundi(_volume * 100)],
+	var lines := ["Son %s, volume %d %%   [M] muet  [-/+] volume  [F4] forcer" % ["coupé" if _settings["muted"] else "actif",
+			AudioSettings.to_percent(_settings["master"])],
 			"Ambiance : %s (%s)" % [_current, "forcée" if forced != "" else "auto, sols à %d cases" % AmbienceMix.RADIUS_CELLS]]
 	var counts := AmbienceMix.ground_counts(_cell)
 	for a in _ambiences:
