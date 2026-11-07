@@ -14,7 +14,8 @@ var _builder: ChunkBuilder
 var _clock := ChunkBuilder.WallClock.new()
 var _chunk_nodes := {}  ## chunk -> Node2D
 var _actors := {}  ## peer_id -> Node2D
-## creature id -> {node, server, shown (cells), pose (from the server, "idle" if none), walked (cells), t (s in pose)}
+## creature id -> {node, server, shown (cells), pose (from the server, "idle" if none), walked (cells), t (s in pose),
+## speed (cells per second it moved between its last two updates)}
 var _creatures := {}
 var _marks := {}  ## mark id -> {node: MarkView, left: seconds}
 var _walk := {}  ## peer_id -> drawing state (WalkAnim.new_state)
@@ -76,11 +77,12 @@ func _on_creatures(list: Array) -> void:
 			var node := _make_creature(c["kind"])
 			node.position = IsoLayer.cell_to_local(c["pos"])
 			add_child(node)
-			_creatures[id] = {"node": node, "server": c["pos"], "shown": c["pos"], "pose": "idle", "walked": 0.0, "t": 0.0}
+			_creatures[id] = {"node": node, "server": c["pos"], "shown": c["pos"], "pose": "idle", "walked": 0.0, "t": 0.0, "speed": 0.0}
 		var pose: String = c.get("state", "idle")
 		if pose != _creatures[id]["pose"]:
 			_creatures[id]["pose"] = pose
 			_creatures[id]["t"] = 0.0
+		_creatures[id]["speed"] = WalkAnim.speed_between(_creatures[id]["server"], c["pos"])
 		_creatures[id]["server"] = c["pos"]
 	for id in _creatures.keys():
 		if not seen.has(id):
@@ -137,7 +139,7 @@ func _animate_creatures(dt: float) -> void:
 	for id in _creatures:
 		var c: Dictionary = _creatures[id]
 		var before: Vector2 = c["shown"]
-		c["shown"] = WalkAnim.follow(before, c["server"], dt)
+		c["shown"] = WalkAnim.follow(before, c["server"], dt, c["speed"])
 		var node: Node2D = c["node"]
 		node.position = IsoLayer.cell_to_local(c["shown"])
 		var screen_dx := IsoLayer.cell_to_local(c["shown"]).x - IsoLayer.cell_to_local(before).x
