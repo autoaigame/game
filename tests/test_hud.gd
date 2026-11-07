@@ -9,6 +9,8 @@ class FakeClient:
 	signal status_received(status: Dictionary)
 	signal inventory_received(items: Dictionary)
 	signal notice_received(key: String, args: Dictionary)
+	signal snapshot_received(players: Array)
+	signal marks_received(marks: Array)
 	var my_peer_id := 0
 	var eaten: Array = []
 
@@ -64,21 +66,60 @@ func test_warns_when_starving() -> void:
 	hud.free()
 
 
-func test_bag_lists_items_and_toggles() -> void:
+func test_bag_shows_items_and_toggles() -> void:
 	var hud := _hud()
 	hud.client.inventory_received.emit({"berries": 3})
 	assert_false(hud.bag().visible, "closed at first")
 	hud.toggle_bag()
 	assert_true(hud.bag().visible)
-	var rows: Array = hud.bag_rows()
-	assert_eq(rows.size(), 1)
-	assert_true(rows[0].contains("3"), "shows the count: %s" % rows[0])
-	assert_true(rows[0].contains(ItemData.item("berries")["name"]), "shows the name: %s" % rows[0])
+	assert_eq(hud.bag().shown(), [["berries", 3]])
 	hud.client.inventory_received.emit({})
-	assert_eq(hud.bag_rows().size(), 0)
-	assert_true(hud.bag_empty_label().visible, "says the bag is empty")
+	assert_eq(hud.bag().shown(), [])
 	hud.toggle_bag()
 	assert_false(hud.bag().visible)
+	hud.free()
+
+
+## Escape closes the open bag.
+func test_escape_closes_the_bag() -> void:
+	var hud := _hud()
+	hud.client.welcomed.emit(Vector2i.ZERO)
+	hud.toggle_bag()
+	var key := InputEventKey.new()
+	key.physical_keycode = KEY_ESCAPE
+	key.pressed = true
+	hud._unhandled_input(key)
+	assert_false(hud.bag().visible)
+	hud.free()
+
+
+## The bag's buttons ask the server.
+func test_bag_actions_reach_the_server() -> void:
+	var hud := _hud()
+	hud.client.inventory_received.emit({"raw_meat": 1, "sticks": Protocol.FIRE_STICKS})
+	hud.bag().pick("raw_meat")
+	hud.bag().eat_button().pressed.emit()
+	hud.bag().set_near_fire(true)
+	hud.bag().cook_button().pressed.emit()
+	hud.bag().fire_button().pressed.emit()
+	assert_eq(hud.client.eaten, ["raw_meat"])
+	assert_eq(hud.client.cooked, ["raw_meat"])
+	assert_eq(hud.client.fires, 1)
+	hud.free()
+
+
+## The bag knows a fire is near from the fires the server sends and where I stand.
+func test_bag_knows_when_a_fire_is_near() -> void:
+	var hud := _hud()
+	hud.client.my_peer_id = 7
+	hud.client.inventory_received.emit({"raw_meat": 1})
+	hud.client.snapshot_received.emit([{"id": 7, "name": "me", "pos": Vector2(10, 10)}])
+	hud.client.marks_received.emit([{"id": 1, "kind": "fire", "pos": Vector2(10 + Protocol.COOK_REACH + 0.5, 10), "left": 60.0}])
+	assert_true(hud.bag().cook_button().disabled, "too far")
+	hud.client.snapshot_received.emit([{"id": 7, "name": "me", "pos": Vector2(11, 10)}])
+	assert_false(hud.bag().cook_button().disabled, "close enough")
+	hud.client.marks_received.emit([])
+	assert_true(hud.bag().cook_button().disabled, "the fire went out")
 	hud.free()
 
 
@@ -89,29 +130,6 @@ func test_notice_shows_then_fades() -> void:
 	assert_true(hud.notice_label().text.contains("2"), hud.notice_label().text)
 	hud._age_notice(hud.NOTICE_S + 0.1)
 	assert_false(hud.notice_label().visible)
-	hud.free()
-
-
-## Food rows have an "eat" button that asks the server; other items do not.
-func test_eat_button_on_food() -> void:
-	var hud := _hud()
-	hud.client.inventory_received.emit({"berries": 3})
-	var btn: Button = hud.eat_button("berries")
-	assert_true(btn != null, "berries can be eaten")
-	btn.pressed.emit()
-	assert_eq(hud.client.eaten, ["berries"])
-	hud.free()
-
-
-## With enough sticks, the bag offers to build a fire.
-func test_build_fire_button() -> void:
-	var hud := _hud()
-	hud.client.inventory_received.emit({"sticks": Protocol.FIRE_STICKS - 1})
-	assert_true(hud.fire_button().disabled, "not enough sticks")
-	hud.client.inventory_received.emit({"sticks": Protocol.FIRE_STICKS})
-	assert_false(hud.fire_button().disabled)
-	hud.fire_button().pressed.emit()
-	assert_eq(hud.client.fires, 1)
 	hud.free()
 
 
@@ -129,40 +147,12 @@ func test_h_whistles() -> void:
 	hud.free()
 
 
-## Raw meat has a "cook" button; berries do not.
-func test_cook_button() -> void:
+## A notice about an item shows its icon.
+func test_notice_shows_the_item_icon() -> void:
 	var hud := _hud()
-	hud.client.inventory_received.emit({"raw_meat": 1, "berries": 2})
-	assert_true(hud.cook_button("berries") == null, "berries do not cook")
-	hud.cook_button("raw_meat").pressed.emit()
-	assert_eq(hud.client.cooked, ["raw_meat"])
-	hud.free()
-
-
-## The bag sits against the right edge and grows to the left, so it never leaves the screen; each
-## item's buttons sit under its name, and every line of buttons fits the bag's width (real font).
-func test_bag_stays_on_screen_and_its_buttons_fit() -> void:
-	var hud := _hud()
-	hud.client.inventory_received.emit({"raw_meat": 3, "berries": 12, "sticks": 4, "cooked_meat": 1})
-	var bag: PanelContainer = hud.bag()
-	assert_eq(bag.anchor_left, 1.0)
-	assert_eq(bag.anchor_right, 1.0)
-	assert_eq(bag.grow_horizontal, Control.GROW_DIRECTION_BEGIN, "grows to the left")
-	assert_almost(bag.offset_right, -hud.BAG_MARGIN)
-	assert_almost(bag.offset_right - bag.offset_left, hud.BAG_W)
-	var inner: float = hud.BAG_W - 2.0 * hud.BAG_PAD
-	assert_true(hud.buttons_width([UiText.EAT, UiText.COOK]) <= inner,
-			"eat + cook fit: %f" % hud.buttons_width([UiText.EAT, UiText.COOK]))
-	assert_true(hud.buttons_width([UiText.BUILD_FIRE]) <= inner, "fire button fits")
-	assert_true(hud.cook_button("raw_meat") != null and hud.eat_button("raw_meat") != null, "both shown for raw meat")
-	assert_eq(hud.cook_button("raw_meat").get_parent(), hud.eat_button("raw_meat").get_parent())
-	assert_true(hud.cook_button("raw_meat").get_parent().name == "Actions", "on their own line")
-	hud.free()
-
-
-## The width measure is real: a long text does not fit.
-func test_buttons_width_grows_with_text() -> void:
-	var hud := _hud()
-	assert_true(hud.buttons_width([UiText.EAT]) < hud.buttons_width([UiText.EAT, UiText.COOK]))
-	assert_true(hud.buttons_width(["Un très très long bouton qui ne tient pas"]) > hud.BAG_W)
+	hud.client.notice_received.emit("gathered", {"item": "berries", "count": 2})
+	assert_true(hud.notice_icon().visible)
+	assert_true(hud.notice_icon().texture != null)
+	hud.client.notice_received.emit("no_prey", {})
+	assert_false(hud.notice_icon().visible, "none without an item")
 	hud.free()

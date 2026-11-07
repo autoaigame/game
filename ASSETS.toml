@@ -1013,3 +1013,75 @@ tool = "drawn by script: art/dog_sheet.gd (make art), Godot 4.7.2; written with 
 prompt = ""
 license = "CC0-1.0"
 source = ""
+
+[[asset]]
+path = "assets/items/berries.png"
+author = "vitteloil"
+origin = "original"
+tool = "drawn by script: art/ui_icons.gd (make art), Godot 4.7.2; written with Claude Code (anthropic/claude-opus-5-5)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/items/raw_meat.png"
+author = "vitteloil"
+origin = "original"
+tool = "drawn by script: art/ui_icons.gd (make art), Godot 4.7.2; written with Claude Code (anthropic/claude-opus-5-5)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/items/cooked_meat.png"
+author = "vitteloil"
+origin = "original"
+tool = "drawn by script: art/ui_icons.gd (make art), Godot 4.7.2; written with Claude Code (anthropic/claude-opus-5-5)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/items/sticks.png"
+author = "vitteloil"
+origin = "original"
+tool = "drawn by script: art/ui_icons.gd (make art), Godot 4.7.2; written with Claude Code (anthropic/claude-opus-5-5)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/ui/icon_fire.png"
+author = "vitteloil"
+origin = "original"
+tool = "drawn by script: art/ui_icons.gd (make art), Godot 4.7.2; written with Claude Code (anthropic/claude-opus-5-5)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/ui/icon_hunger.png"
+author = "vitteloil"
+origin = "original"
+tool = "drawn by script: art/ui_icons.gd (make art), Godot 4.7.2; written with Claude Code (anthropic/claude-opus-5-5)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/ui/slot.png"
+author = "vitteloil"
+origin = "original"
+tool = "drawn by script: art/ui_icons.gd (make art), Godot 4.7.2; written with Claude Code (anthropic/claude-opus-5-5)"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/ui/slot_selected.png"
+author = "vitteloil"
+origin = "original"
+tool = "drawn by script: art/ui_icons.gd (make art), Godot 4.7.2; written with Claude Code (anthropic/claude-opus-5-5)"
+prompt = ""
+license = "CC0-1.0"
+source = ""

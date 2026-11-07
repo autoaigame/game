@@ -10,7 +10,7 @@ const NAME_HINT := "Lettres, chiffres, _ et - (%d au plus)"
 ## In-game HUD (client/hud.gd).
 const HUNGER := "Faim"
 const STARVING := "Affamé : tu marches plus lentement"
-const BAG := "Sac (I)"
+const BAG := "Sac"
 const BAG_EMPTY := "Ton sac est vide."
 const NOTICES := {
 	"gathered": "+%d %s",
@@ -29,8 +29,14 @@ const NOTICES := {
 	"bag_full": "Ton sac est plein.",
 }
 const COOK := "Cuire"
-const KEYS_HINT := "I : sac   H : siffler le chien"
-const BUILD_FIRE := "Faire un feu (%d bâtons)" % Protocol.FIRE_STICKS
+## Key hints (key, what it does), shown as key caps under the hunger bar.
+const KEYS := [["I", "Sac"], ["H", "Siffler le chien"]]
+## The bag window (client/bag_view.gd).
+const FOOD_DESC := "Nourrit : +%d"
+const COOKS_DESC := "Sur un feu, devient : %s"
+const STICKS_DESC := "Sert à faire un feu."
+const CRAFT := "Fabriquer"
+const FIRE_RECIPE := "Faire un feu"
 const EAT := "Manger"
 const ENTER := "Entrer dans le monde"
 const SETTINGS := "Paramètres"

@@ -4,6 +4,7 @@
 extends SceneTree
 
 const DOG_SHEET := preload("res://art/dog_sheet.gd")
+const UI_ICONS := preload("res://art/ui_icons.gd")
 
 
 func _initialize() -> void:
@@ -12,5 +13,13 @@ func _initialize() -> void:
 		push_error("art: cannot write assets/dog.png (%s)" % error_string(err))
 		quit(1)
 		return
-	print("art: wrote assets/dog.png; the rest of assets/ comes from the PixelLab kit (docs/art-guide.md)")
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://assets/items"))
+	var icons: Dictionary = UI_ICONS.all()
+	for path in icons:
+		err = (icons[path] as Image).save_png(path)
+		if err != OK:
+			push_error("art: cannot write %s (%s)" % [path, error_string(err)])
+			quit(1)
+			return
+	print("art: wrote assets/dog.png and the bag's icons; the rest of assets/ comes from the PixelLab kit (docs/art-guide.md)")
 	quit()
