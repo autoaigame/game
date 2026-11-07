@@ -14,9 +14,6 @@ const FOLLOW_MIN := 0.5
 const CATCH_UP := 1.5
 ## Farther than this from the snapshot (spawn, reconnect, lost snapshots): jump there at once.
 const SNAP_CELLS := 3.0
-## Walk rows of the sheet play one cycle (two steps) over this distance, so the feet keep pace with
-## the ground at Protocol.SPEED_CELLS_PER_S.
-const WALK_CYCLE_CELLS := 1.25
 ## The drawn player catches up with each snapshot before the next one arrives, then waits for it: a
 ## walker counts as stopped only after standing still this long (over two snapshot intervals, plus
 ## network jitter), so the standing pose never flashes between walk frames.
@@ -47,18 +44,27 @@ const FACING_HYSTERESIS_DEG := 10.0
 
 ## Player sprite sheet (assets/player.png, from the PixelLab kit): one FRAME_SIZE frame per column and
 ## row. Columns: the 8 facings in FACINGS order. Rows: IDLE_FRAMES idle frames, then WALK_FRAMES walk
-## frames (one cycle of two steps).
-const FRAME_SIZE := Vector2i(112, 112)
+## frames (one cycle of two steps). Idle and walk were posed on the same skeleton, at the same size.
+const FRAME_SIZE := Vector2i(128, 128)
 const SHEET_COLUMNS := 8
 const FACING_COLUMN: Array[int] = [0, 1, 2, 3, 4, 5, 6, 7]
 const IDLE_FRAMES := 4
-const WALK_FRAMES := 6
+const WALK_FRAMES := 8
 const WALK_FIRST_ROW := IDLE_FRAMES
 const SHEET_ROWS := IDLE_FRAMES + WALK_FRAMES
 ## The feet stand this many px above the bottom of a frame, horizontally centred.
-const FOOT_PX := 2
-## The top of the head is this many px above the feet: the name is drawn just above it.
-const HEAD_PX := 100
+const FOOT_PX := 14
+## The top of the head is at most this many px above the feet: the name is drawn just above it.
+const HEAD_PX := 105
+## Walk frames with both feet on the ground, side by side: a walk starts and ends on one of them.
+const REST_FRAMES: Array[int] = [0, 4]
+## One walk cycle (two steps) per this many cells walked, per facing (FACINGS order): the stride drawn
+## on the sheet, measured on screen through the game's projection, plus up to 10 % (ASSETS.toml). The
+## sprite's own perspective flattens depth more than the 2:1 view, so north and south take shorter
+## cycles than east and west.
+const CYCLE_CELLS: Array[float] = [0.85, 1.35, 1.1, 1.35, 0.85, 1.35, 1.1, 1.35]
+## A turn of more than one sector shows each facing in between for this long.
+const TURN_STEP_S := 0.05
 const NAME_GAP_PX := 4
 const NAME_SIZE := Vector2(240, 24)
 
@@ -97,25 +103,90 @@ static func sheet_column(f: int) -> int:
 	return FACING_COLUMN[f]
 
 
-## New drawing state for one player: w = {server, shown: Vector2 in cells, walked: cells, facing: FACINGS
-## index or -1, still: s}, updated in place for a frame of dt seconds. Returns the sheet frame to draw.
+## Drawing state of a player standing at pos (cells): server and shown positions, walk phase (cycles,
+## 0..1), facing shown and heading (FACINGS index, -1: none yet), time since the last turn step, time
+## still and time standing (s).
+static func new_state(pos: Vector2) -> Dictionary:
+	return {"server": pos, "shown": pos, "phase": 0.0, "facing": -1, "heading": -1, "turn_t": TURN_STEP_S,
+			"still": STOP_GRACE_S, "idle_t": 0.0}
+
+
+## Updates w (see new_state) for a frame of dt seconds. Returns the sheet frame to draw.
+## Walking: the phase follows the distance at the heading's CYCLE_CELLS. Stopped: the step in progress
+## finishes at walking pace up to a feet-together frame, which holds until the stop is sure, then the
+## idle rows start. Turning: the facing shown moves one sector per TURN_STEP_S towards the heading.
 static func animate(w: Dictionary, dt: float) -> Vector2i:
 	var before: Vector2 = w["shown"]
 	w["shown"] = follow(before, w["server"], dt)
 	var moved: float = (w["shown"] - before).length()
-	var walking := moved > 0.0
-	if walking:
-		w["walked"] += moved
+	if moved > 0.0:
 		var screen := IsoLayer.cell_to_local(w["shown"]) - IsoLayer.cell_to_local(before)
-		w["facing"] = facing(screen, w["facing"])
-	w["still"] = 0.0 if walking else w["still"] + dt
-	var row := walk_row(w["walked"]) if w["still"] < STOP_GRACE_S else idle_row(w["still"] - STOP_GRACE_S)
+		w["heading"] = facing(screen, w["heading"])
+		w["phase"] = fposmod(w["phase"] + moved / CYCLE_CELLS[w["heading"]], 1.0)
+		w["still"] = 0.0
+	else:
+		w["still"] += dt
+		if w["heading"] >= 0:
+			w["phase"] = finish_step(w["phase"], Protocol.SPEED_CELLS_PER_S / CYCLE_CELLS[w["heading"]] * dt)
+	_turn(w, dt)
+	var standing: bool = w["still"] >= STOP_GRACE_S and walk_frame(w["phase"]) in REST_FRAMES
+	if not standing:
+		w["idle_t"] = 0.0
+		return Vector2i(sheet_column(maxi(w["facing"], 0)), WALK_FIRST_ROW + walk_frame(w["phase"]))
+	var row := idle_row(w["idle_t"])
+	w["idle_t"] += dt
 	return Vector2i(sheet_column(maxi(w["facing"], 0)), row)
 
 
-## Sprite row (walk frame) after walking this many cells.
-static func walk_row(walked: float) -> int:
-	return WALK_FIRST_ROW + int(walked / WALK_CYCLE_CELLS * WALK_FRAMES) % WALK_FRAMES
+## Moves the facing shown towards the heading: one sector at once, then one per TURN_STEP_S. The
+## shorter way round; a half-turn passes the side facing the camera (south).
+static func _turn(w: Dictionary, dt: float) -> void:
+	var target: int = w["heading"]
+	if target < 0:
+		return
+	if w["facing"] < 0 or w["facing"] == target:
+		w["facing"] = target
+		w["turn_t"] = TURN_STEP_S
+		return
+	w["turn_t"] += dt
+	while w["facing"] != target and w["turn_t"] >= TURN_STEP_S:
+		w["turn_t"] -= TURN_STEP_S
+		w["facing"] = turn_step(w["facing"], target)
+
+
+## Next facing from f towards target, one sector.
+static func turn_step(f: int, target: int) -> int:
+	var d := posmod(target - f, 8)
+	if d == 0:
+		return f
+	if d == 4:  # half-turn: through whichever neighbour is closer to south
+		var cw := posmod(f + 1, 8)
+		var ccw := posmod(f - 1, 8)
+		return ccw if _from_south(ccw) < _from_south(cw) else cw
+	return posmod(f + (1 if d < 4 else -1), 8)
+
+
+static func _from_south(f: int) -> int:
+	return mini(f, 8 - f)
+
+
+## Walk frame (0..WALK_FRAMES-1) at a phase of the cycle.
+static func walk_frame(phase: float) -> int:
+	return int(phase * WALK_FRAMES) % WALK_FRAMES
+
+
+## Phase after finishing the step in progress by at most advance cycles: it stops on the start of the
+## next REST_FRAMES frame. On one already, it goes back to its start (the same picture), so the next
+## walk shows the whole frame.
+static func finish_step(phase: float, advance: float) -> float:
+	if walk_frame(phase) in REST_FRAMES:
+		return float(walk_frame(phase)) / WALK_FRAMES
+	var next := 1.0
+	for r in REST_FRAMES:
+		var at := float(r) / WALK_FRAMES
+		if at > phase and at < next:
+			next = at
+	return fposmod(minf(phase + advance, next), 1.0)
 
 
 ## Sprite row (idle frame) after standing still for this many seconds.

@@ -37,13 +37,12 @@ func test_follow_still_when_there() -> void:
 	assert_eq(WalkAnim.follow(Vector2(3, 4), Vector2(3, 4), 1.0 / 60.0), Vector2(3, 4))
 
 
-## The walk rows (WALK_FIRST_ROW onwards) play one cycle, two steps, every WALK_CYCLE_CELLS walked.
-func test_walk_cycle_plays_every_frame_by_distance() -> void:
-	var per_frame := WalkAnim.WALK_CYCLE_CELLS / WalkAnim.WALK_FRAMES
+## The walk frames play in order over one cycle (two steps) of the phase.
+func test_walk_cycle_plays_every_frame_by_phase() -> void:
+	var per_frame := 1.0 / WalkAnim.WALK_FRAMES
 	for i in WalkAnim.WALK_FRAMES:
-		assert_eq(WalkAnim.walk_row(per_frame * (i + 0.5)), WalkAnim.WALK_FIRST_ROW + i, "frame %d" % i)
-	assert_eq(WalkAnim.walk_row(0.0), WalkAnim.WALK_FIRST_ROW)
-	assert_eq(WalkAnim.walk_row(WalkAnim.WALK_CYCLE_CELLS), WalkAnim.WALK_FIRST_ROW, "the cycle starts over")
+		assert_eq(WalkAnim.walk_frame(per_frame * (i + 0.5)), i, "frame %d" % i)
+	assert_eq(WalkAnim.walk_frame(0.0), 0)
 
 
 ## Standing still, the idle rows (0..IDLE_FRAMES-1) play in time, looping.
@@ -56,7 +55,7 @@ func test_idle_plays_in_time() -> void:
 
 func test_sheet_rows_are_idle_then_walk() -> void:
 	assert_eq(WalkAnim.IDLE_FRAMES, 4)
-	assert_eq(WalkAnim.WALK_FRAMES, 6)
+	assert_eq(WalkAnim.WALK_FRAMES, 8)
 	assert_eq(WalkAnim.WALK_FIRST_ROW, WalkAnim.IDLE_FRAMES)
 	assert_eq(WalkAnim.SHEET_ROWS, WalkAnim.IDLE_FRAMES + WalkAnim.WALK_FRAMES)
 
@@ -170,7 +169,7 @@ static func _draw_walk(jitter_s: float, walk_s: float, total_s: float) -> Array:
 		arrivals.append([t + 0.03 + rng.randf_range(-jitter_s, jitter_s), p])
 		t += tick
 	arrivals.sort_custom(func(a, b): return a[0] < b[0])
-	var w := {"server": Vector2.ZERO, "shown": Vector2.ZERO, "walked": 0.0, "facing": -1, "still": 0.0}
+	var w := WalkAnim.new_state(Vector2.ZERO)
 	var frames := []
 	var next := 0
 	for f in int(total_s * 60.0):
