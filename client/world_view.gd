@@ -3,6 +3,7 @@ extends Node2D
 
 var _tiles_tex: Texture2D = load(IsoLayer.TILES_ATLAS)
 const PLAYER_TEX := preload("res://assets/player.png")
+const DOG_TEX := preload("res://assets/dog.png")
 
 var client: Node  ## client/client.gd
 var _layer: TileMapLayer
@@ -11,7 +12,8 @@ var _builder: ChunkBuilder
 var _clock := ChunkBuilder.WallClock.new()
 var _chunk_nodes := {}  ## chunk -> Node2D
 var _actors := {}  ## peer_id -> Node2D
-var _creatures := {}  ## creature id -> {node: Node2D, server: Vector2, shown: Vector2} (positions in cells)
+## creature id -> {node, server, shown (cells), pose (from the server, "idle" if none), walked (cells), t (s in pose)}
+var _creatures := {}
 var _walk := {}  ## peer_id -> {server, shown: Vector2 in cells, walked: float in cells, facing: WalkAnim.FACINGS index, still: s}
 var _camera := Camera2D.new()
 var _my_pos := Vector2.ZERO  ## my position in the last snapshot, in cells
@@ -68,7 +70,11 @@ func _on_creatures(list: Array) -> void:
 			var node := _make_creature(c["kind"])
 			node.position = IsoLayer.cell_to_local(c["pos"])
 			add_child(node)
-			_creatures[id] = {"node": node, "server": c["pos"], "shown": c["pos"]}
+			_creatures[id] = {"node": node, "server": c["pos"], "shown": c["pos"], "pose": "idle", "walked": 0.0, "t": 0.0}
+		var pose: String = c.get("state", "idle")
+		if pose != _creatures[id]["pose"]:
+			_creatures[id]["pose"] = pose
+			_creatures[id]["t"] = 0.0
 		_creatures[id]["server"] = c["pos"]
 	for id in _creatures.keys():
 		if not seen.has(id):
@@ -77,7 +83,16 @@ func _on_creatures(list: Array) -> void:
 
 
 func _make_creature(_kind: String) -> Node2D:
-	return DogPlaceholder.new()
+	var node := Node2D.new()
+	var sprite := Sprite2D.new()
+	sprite.name = "Sprite"
+	sprite.texture = DOG_TEX
+	sprite.hframes = DogAnim.COLUMNS
+	sprite.vframes = DogAnim.ROWS.size()
+	sprite.centered = false
+	sprite.offset = DogAnim.sprite_offset()
+	node.add_child(sprite)
+	return node
 
 
 ## Draws every creature between updates, gliding like players and facing where it walks (display only).
@@ -91,6 +106,11 @@ func _animate_creatures(dt: float) -> void:
 		var screen_dx := IsoLayer.cell_to_local(c["shown"]).x - IsoLayer.cell_to_local(before).x
 		if absf(screen_dx) > 0.01:
 			node.scale.x = -1.0 if screen_dx < 0.0 else 1.0
+		var moved: float = (c["shown"] - before).length()
+		c["walked"] += moved
+		c["t"] += dt
+		var speed := moved / dt if dt > 0.0 else 0.0
+		(node.get_node("Sprite") as Sprite2D).frame_coords = DogAnim.frame(c["pose"], moved > 0.0005, speed, c["walked"], c["t"])
 
 
 ## Draws every player between snapshots and animates its walk (display only).
