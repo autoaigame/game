@@ -222,14 +222,9 @@ func _step(dt: float) -> void:
 	_move_dogs(dt)
 	if MARKS.tick(_marks, dt):
 		_marks_changed = true
-	var snap: Array = []
 	for id in _players:
-		var p: Dictionary = _players[id]
-		snap.append({"id": id, "name": p["name"], "pos": p["pos"]})
-	var creatures := _creature_snapshot()
-	for id in _players:
-		_net.snapshot.rpc_id(id, snap)
-		_net.creatures.rpc_id(id, creatures)
+		_net.snapshot.rpc_id(id, _snapshot_for(id))
+		_net.creatures.rpc_id(id, _creatures_for(id))
 		var status := _status_to_send(_players[id])
 		if not status.is_empty():
 			_net.status.rpc_id(id, status)
@@ -258,12 +253,26 @@ func _add_events(events: Array) -> void:
 		_marks_changed = true
 
 
-## The creatures clients draw: {id, kind, owner (peer id or 0), pos, state}. A dog's id is its owner's peer id.
-func _creature_snapshot() -> Array:
+## The players a player is sent: {id, name, pos}, those within Protocol.INTEREST_RADIUS (and itself).
+func _snapshot_for(viewer: int) -> Array:
+	var at: Vector2 = _players[viewer]["pos"]
+	var out: Array = []
+	for id in _players:
+		var p: Dictionary = _players[id]
+		if id == viewer or at.distance_to(p["pos"]) <= Protocol.INTEREST_RADIUS:
+			out.append({"id": id, "name": p["name"], "pos": p["pos"]})
+	return out
+
+
+## The creatures a player is sent: {id, kind, owner (peer id or 0), pos, state}, those within
+## Protocol.INTEREST_RADIUS (and its own dog). A dog's id is its owner's peer id.
+func _creatures_for(viewer: int) -> Array:
+	var at: Vector2 = _players[viewer]["pos"]
 	var out: Array = []
 	for id in _players:
 		var dog: Dictionary = _players[id]["dog"]
-		out.append({"id": id, "kind": "dog", "owner": id, "pos": dog["pos"], "state": dog["state"]})
+		if id == viewer or at.distance_to(dog["pos"]) <= Protocol.INTEREST_RADIUS:
+			out.append({"id": id, "kind": "dog", "owner": id, "pos": dog["pos"], "state": dog["state"]})
 	return out
 
 
