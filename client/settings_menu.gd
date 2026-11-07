@@ -1,13 +1,15 @@
 ## Settings menu over the world or the start menu, opened and closed with Escape (or a pad's Start).
 ## The world keeps running (multiplayer): only my keys stop moving me while it is open (world_view.gd).
-## One tab per entry of TABS; only the sound tab exists for now. Texts in client/ui_text.gd.
+## One tab per entry of TABS: sound, display (fullscreen) and controls (read-only key list). Texts in
+## client/ui_text.gd.
 extends CanvasLayer
 
 signal opened
 signal closed
 
-## id -> title; a tab is built by _build_<id>_tab(). Later: "controls", "display".
-const TABS := [{"id": "sound", "title": UiText.TAB_SOUND}]
+## id -> title; a tab is built by _build_<id>_tab().
+const TABS := [{"id": "sound", "title": UiText.TAB_SOUND}, {"id": "display", "title": UiText.TAB_DISPLAY},
+		{"id": "controls", "title": UiText.TAB_CONTROLS}]
 const FADE_S := 0.15
 ## The Interface slider plays a menu sound at most this often while it moves, in ms.
 const UI_PREVIEW_MS := 150
@@ -16,12 +18,16 @@ var sounds: Node  ## client/sound_director.gd, or null (no sound)
 ## While the menu is closed, a key or button event is offered here first; true means it was used (the
 ## start menu goes back a screen on Escape, client/login_ui.gd).
 var escape_first: Callable
+var settings_path := ClientSettings.PATH  ## where the fullscreen choice is kept (tests use their own)
 var _root := Control.new()
 var _tab_buttons := {}  ## tab id -> Button
 var _tab_pages := {}  ## tab id -> Control
 var _sliders := {}  ## channel -> HSlider
 var _values := {}  ## channel -> Label
 var _mute := CheckBox.new()
+var _fullscreen := CheckBox.new()
+var _seen_labels := {}  ## physical key -> label, from the key presses (UiText.key_name)
+var _cap_labels := {}  ## physical key -> [Label] of the controls tab
 var _close := Button.new()
 var _tween: Tween
 var _ui_preview_at := 0
@@ -53,6 +59,8 @@ func _ready() -> void:
 	layer = 15
 	_build()
 	visible = false
+	if ClientSettings.fullscreen_at_launch(OS.has_feature("web"), settings_path):
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	if sounds != null:
 		sounds.settings_changed.connect(_show_settings)
 
@@ -66,6 +74,7 @@ func open() -> void:
 		return
 	visible = true
 	_show_settings(sounds.settings() if sounds != null else AudioSettings.defaults())
+	_fullscreen.set_pressed_no_signal(is_fullscreen())  # the player may have left it with F11 or the browser
 	_select_tab(TABS[0]["id"])
 	_root.modulate.a = 0.0
 	_fade_to(1.0)
@@ -85,6 +94,21 @@ func close() -> void:
 	closed.emit()
 
 
+func fullscreen_box() -> CheckBox:
+	return _fullscreen
+
+
+static func is_fullscreen() -> bool:
+	var mode := DisplayServer.window_get_mode()
+	return mode == DisplayServer.WINDOW_MODE_FULLSCREEN or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN
+
+
+## On the web this runs from the click on the box, which the browser requires for fullscreen.
+func set_fullscreen(on: bool) -> void:
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if on else DisplayServer.WINDOW_MODE_WINDOWED)
+	ClientSettings.save_fullscreen(on, settings_path)
+
+
 func toggle() -> void:
 	if visible:
 		close()
@@ -93,6 +117,8 @@ func toggle() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if UiText.learn_key(_seen_labels, event):
+		_name_caps()
 	if handle(event):
 		get_viewport().set_input_as_handled()
 
@@ -215,6 +241,56 @@ func _build_sound_tab() -> Control:
 	_with_sounds(_mute)
 	page.add_child(_mute)
 	return page
+
+
+func _build_display_tab() -> Control:
+	var page := VBoxContainer.new()
+	_fullscreen.text = UiText.FULLSCREEN
+	_fullscreen.toggled.connect(set_fullscreen)
+	_with_sounds(_fullscreen)
+	page.add_child(_fullscreen)
+	return page
+
+
+## One line per control: its key caps, then what it does. Nothing here takes the focus.
+func _build_controls_tab() -> Control:
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 16)
+	grid.add_theme_constant_override("v_separation", 6)
+	for row in UiText.controls():
+		var caps := HBoxContainer.new()
+		caps.add_theme_constant_override("separation", 4)
+		caps.custom_minimum_size = Vector2(170, 0)
+		for c in row["caps"]:
+			var cap := _label(UiText.cap_text(c), "")
+			cap.add_theme_stylebox_override("normal", _cap_box())
+			caps.add_child(cap)
+			if not c is String:
+				_cap_labels.get_or_add(c, []).append(cap)
+		grid.add_child(caps)
+		var what := _label(row["action"], "")
+		what.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		grid.add_child(what)
+	return grid
+
+
+func _cap_box() -> StyleBoxFlat:
+	var box := StyleBoxFlat.new()
+	box.bg_color = Color(0, 0, 0, 0.25)
+	box.border_color = Color(1, 1, 1, 0.35)
+	box.set_border_width_all(1)
+	box.set_corner_radius_all(3)
+	box.content_margin_left = 6
+	box.content_margin_right = 6
+	return box
+
+
+## Renames the key caps after the layout learned from the key presses.
+func _name_caps() -> void:
+	for k in _cap_labels:
+		for cap in _cap_labels[k]:
+			cap.text = UiText.cap_text(k, _seen_labels)
 
 
 func _on_slider(channel: String, percent: float) -> void:
