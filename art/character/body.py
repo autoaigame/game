@@ -491,6 +491,10 @@ def split_regions(me):
     return out
 
 
+# A foot counts as planted while its ball is within this height (m) of its lowest point in the clip.
+PLANT_M = 0.015
+
+
 def measure(me, rig, dom):
     scene = bpy.context.scene
     fps = scene.render.fps
@@ -547,16 +551,27 @@ def measure(me, rig, dom):
             f = f0 + (f1 - f0) * i / n
             scene.frame_set(int(math.floor(f)), subframe=f - math.floor(f))
             samples.append({s: rig.matrix_world @ rig.pose.bones["DEF-foot.%s" % s].head for s in "LR"})
+            for s in "LR":
+                samples[-1]["ball" + s] = rig.matrix_world @ rig.pose.bones["DEF-toe.%s" % s].head
         hips_y = (rig.matrix_world @ rig.pose.bones["DEF-hips"].head).y
         dur = (f1 - f0) / fps
         entry = {"duration_s": round(dur, 4)}
         if name != "idle":
-            travel, mids, lands = 0.0, {}, {}
+            mids, lands, planted = {}, {}, []
             for side in "LR":
+                # Ground speed: how fast the planted foot goes back under the body (+y). The ball of the
+                # foot (the toe bone's head) is the part on the ground longest; it counts as planted
+                # while it is within PLANT_M of its lowest height. Not the foot's whole back-and-forth
+                # (twice its travel per cycle): in a run the foot is down for much less than half the
+                # cycle, and that sum gave a run less than half its real speed.
+                ball = [s["ball" + side] for s in samples]
+                low = min(p.z for p in ball)
+                for i in range(n):
+                    a, b = ball[i - 1], ball[i]
+                    if a.z <= low + PLANT_M and b.z <= low + PLANT_M:
+                        planted.append((b.y - a.y) * n / dur)
                 for i in range(n):
                     a, b = samples[i - 1][side], samples[i][side]
-                    if b.y > a.y:
-                        travel += b.y - a.y
                     if a.y < hips_y <= b.y and side not in mids:
                         mids[side] = i / n
                     # The foot lands where it stops swinging forward (-y) and starts moving back with
@@ -564,7 +579,9 @@ def measure(me, rig, dom):
                     c = samples[(i + 1) % n][side]
                     if b.y <= a.y and c.y > b.y and side not in lands:
                         lands[side] = i / n
-            entry.update({"ground_speed_m_s": round(travel / dur, 4), "stride_m": round(travel, 4),
+            planted.sort()
+            speed = planted[len(planted) // 2]  # the median: heel strike and push-off are slower
+            entry.update({"ground_speed_m_s": round(speed, 4), "stride_m": round(speed * dur, 4),
                     "left_mid_stance": round(mids["L"], 4), "right_mid_stance": round(mids["R"], 4),
                     "left_contact": round(lands["L"], 4), "right_contact": round(lands["R"], 4)})
         clips[name] = entry
