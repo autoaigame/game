@@ -6,6 +6,11 @@ const DEFAULT_PORT := 9000
 const TICK_HZ := 15
 const SPEED_CELLS_PER_S := 4.0
 const NAME_MAX_LEN := 16
+## A player gathers from a bush at most this far from its cell, in cells.
+const GATHER_REACH := 1.6
+## A campfire costs FIRE_STICKS sticks and burns FIRE_S seconds.
+const FIRE_STICKS := 3
+const FIRE_S := 300.0
 
 static var _name_re: RegEx
 
