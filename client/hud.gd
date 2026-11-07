@@ -1,33 +1,31 @@
-## In-game HUD, shown once joined: the hunger bar (bottom left), with a warning when starving; the
-## bag (I opens and closes it); short notices from the server (top centre).
-## Values come from the server (status message); the HUD only shows them.
+## In-game HUD, shown once joined, in the menu's style (client/ui_theme.gd): the hunger bar in a
+## framed box (bottom left) with a warning when starving and the key hints as key caps; the bag
+## window (client/bag_view.gd: I opens and closes it, Escape closes it); short notices from the
+## server on a parchment band (top centre), with the item's icon when there is one.
+## Values come from the server (status, inventory, marks); the HUD only shows them.
 extends CanvasLayer
 
 const HUNGER_MAX := 100.0
-const BAR_SIZE := Vector2(160, 14)
+const BAR_SIZE := Vector2(170, 14)
 const FULL := Color8(0xb8, 0x8a, 0x4a)
-const EMPTY := Color8(0x2e, 0x28, 0x22, 0xc0)
+const FULL_LIT := Color8(0xd0, 0xa4, 0x62)
+const BAR_BACK := Color8(0x2c, 0x31, 0x24)
+const BAR_RIM := Color8(0x1f, 0x22, 0x1a)
 const NOTICE_S := 3.0
-## The bag is BAG_W wide against the right edge (BAG_MARGIN from it) and grows to the left if it must;
-## each item's buttons sit on their own line under its name, in BUTTON_FONT, so they always fit.
-const BAG_W := 240.0
-const BAG_MAX_W := 300.0
 const BAG_MARGIN := 16.0
-const BAG_PAD := 10.0
-const BUTTON_FONT := 15
-const BUTTON_PAD := 12.0  ## each side of a button's text (client/ui_theme.gd)
-const BUTTON_GAP := 4.0
+const BAG_W := 300.0
 
 var client: Node  ## client/client.gd
 
 var _bar: ProgressBar
 var _starving: Label
-var _bag: PanelContainer
-var _bag_list: VBoxContainer
-var _bag_empty: Label
-var _fire: Button
-var _notice: Label
+var _bag: BagView
+var _notice: PanelContainer
+var _notice_icon: TextureRect
+var _notice_label: Label
 var _notice_left := 0.0
+var _my_pos: Variant = null  ## where I stand (last snapshot), or null before the first
+var _fires: Array = []  ## positions of the fires the server sent
 
 
 func _ready() -> void:
@@ -36,8 +34,10 @@ func _ready() -> void:
 	_build()
 	client.welcomed.connect(func(_cell: Vector2i): visible = true)
 	client.status_received.connect(_on_status)
-	client.inventory_received.connect(_on_inventory)
+	client.inventory_received.connect(func(items: Dictionary): _bag.set_items(items))
 	client.notice_received.connect(_on_notice)
+	client.snapshot_received.connect(_on_snapshot)
+	client.marks_received.connect(_on_marks)
 
 
 func hunger_bar() -> ProgressBar:
@@ -48,46 +48,16 @@ func starving_label() -> Label:
 	return _starving
 
 
-func bag() -> PanelContainer:
+func bag() -> BagView:
 	return _bag
 
 
-func bag_empty_label() -> Label:
-	return _bag_empty
-
-
 func notice_label() -> Label:
-	return _notice
+	return _notice_label
 
 
-## The bag's rows as shown ("3 × Baies").
-func bag_rows() -> Array:
-	var out := []
-	for row in _bag_list.get_children():
-		if not row.is_queued_for_deletion():
-			out.append((row.get_node("Name").get_child(1) as Label).text)
-	return out
-
-
-## The "eat" button of an item's row, or null.
-func eat_button(item: String) -> Button:
-	return _row_button(item, "Eat")
-
-
-## The "cook" button of an item's row, or null.
-func cook_button(item: String) -> Button:
-	return _row_button(item, "Cook")
-
-
-func _row_button(item: String, button: String) -> Button:
-	for row in _bag_list.get_children():
-		if row.get_meta("item", "") == item and not row.is_queued_for_deletion():
-			return row.get_node_or_null("Actions/" + button)
-	return null
-
-
-func fire_button() -> Button:
-	return _fire
+func notice_icon() -> TextureRect:
+	return _notice_icon
 
 
 func toggle_bag() -> void:
@@ -102,6 +72,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			toggle_bag()
 		KEY_H:
 			client.request_whistle()
+		KEY_ESCAPE:
+			if not _bag.visible:
+				return
+			_bag.visible = false
 		_:
 			return
 	if is_inside_tree():
@@ -118,57 +92,46 @@ func _age_notice(dt: float) -> void:
 	_notice_left -= dt
 	_notice.modulate.a = clampf(_notice_left, 0.0, 1.0)
 	_notice.visible = _notice_left > 0.0
+	_notice_label.visible = _notice.visible
 
 
 func _on_notice(key: String, args: Dictionary) -> void:
 	var text := UiText.notice(key, args)
 	if text == "":
 		return
-	_notice.text = text
+	_notice_label.text = text
+	var item := String(args.get("item", ""))
+	_notice_icon.visible = item != "" and not ItemData.item(item).is_empty()
+	_notice_icon.texture = BagView.icon_of(item) if _notice_icon.visible else null
 	_notice.visible = true
+	_notice_label.visible = true
 	_notice.modulate.a = 1.0
 	_notice_left = NOTICE_S
 
 
-func _on_inventory(items: Dictionary) -> void:
-	for row in _bag_list.get_children():
-		_bag_list.remove_child(row)
-		row.queue_free()
-	var ids := items.keys()
-	ids.sort()
-	for id in ids:
-		var it := ItemData.item(String(id))
-		if it.is_empty():
-			continue
-		var row := VBoxContainer.new()
-		row.add_theme_constant_override("separation", 2)
-		var line := HBoxContainer.new()
-		line.name = "Name"
-		var icon := ColorRect.new()
-		icon.color = it["color"]
-		icon.custom_minimum_size = Vector2(14, 14)
-		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		line.add_child(icon)
-		var label := Label.new()
-		label.text = "%d × %s" % [int(items[id]), it["name"]]
-		label.clip_text = true
-		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		line.add_child(label)
-		row.add_child(line)
-		var actions := HBoxContainer.new()
-		actions.name = "Actions"
-		actions.add_theme_constant_override("separation", int(BUTTON_GAP))
-		var item_id := String(id)
-		if it["food"] > 0:
-			actions.add_child(_small_button("Eat", UiText.EAT, func(): client.request_eat(item_id)))
-		if it["cooks_into"] != "":
-			actions.add_child(_small_button("Cook", UiText.COOK, func(): client.request_cook(item_id)))
-		if actions.get_child_count() > 0:
-			row.add_child(actions)
-		row.set_meta("item", item_id)
-		_bag_list.add_child(row)
-	_bag_empty.visible = _bag_list.get_child_count() == 0
-	_fire.disabled = int(items.get("sticks", 0)) < Protocol.FIRE_STICKS
+func _on_snapshot(players: Array) -> void:
+	for p in players:
+		if p["id"] == client.my_peer_id:
+			_my_pos = p["pos"]
+	_update_fire()
+
+
+func _on_marks(marks: Array) -> void:
+	_fires = []
+	for m in marks:
+		if m["kind"] == "fire":
+			_fires.append(m["pos"])
+	_update_fire()
+
+
+## Tells the bag whether a fire is within Protocol.COOK_REACH (the server checks the same).
+func _update_fire() -> void:
+	var near := false
+	if _my_pos != null:
+		for f in _fires:
+			if (_my_pos as Vector2).distance_to(f) <= Protocol.COOK_REACH:
+				near = true
+	_bag.set_near_fire(near)
 
 
 func _on_status(status: Dictionary) -> void:
@@ -184,101 +147,128 @@ func _build() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.theme = UiTheme.build()
 	add_child(root)
-	var box := VBoxContainer.new()
-	box.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	box.position = Vector2(16, -64)
-	box.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(box)
+
+	var corner := VBoxContainer.new()
+	corner.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	corner.offset_left = 16
+	corner.offset_bottom = -16
+	corner.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	corner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	corner.add_theme_constant_override("separation", 6)
+	root.add_child(corner)
+	var frame := PanelContainer.new()
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.add_theme_stylebox_override("panel", UiTheme.box("panel", 0))
+	corner.add_child(frame)
+	var line := HBoxContainer.new()
+	line.add_theme_constant_override("separation", 8)
+	frame.add_child(line)
+	var icon := TextureRect.new()
+	icon.texture = UiTheme.icon("hunger")
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+	icon.custom_minimum_size = Vector2(32, 32)
+	line.add_child(icon)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 2)
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	line.add_child(col)
 	var label := Label.new()
 	label.text = UiText.HUNGER
-	label.add_theme_color_override("font_outline_color", Color.BLACK)
-	label.add_theme_constant_override("outline_size", 4)
-	box.add_child(label)
+	label.add_theme_font_size_override("font_size", 14)
+	col.add_child(label)
 	_bar = ProgressBar.new()
 	_bar.max_value = HUNGER_MAX
 	_bar.value = HUNGER_MAX
 	_bar.show_percentage = false
 	_bar.custom_minimum_size = BAR_SIZE
-	_bar.add_theme_stylebox_override("fill", _flat(FULL))
-	_bar.add_theme_stylebox_override("background", _flat(EMPTY))
-	box.add_child(_bar)
+	_bar.add_theme_stylebox_override("fill", _bar_box(FULL, FULL_LIT))
+	_bar.add_theme_stylebox_override("background", _bar_box(BAR_BACK, BAR_RIM))
+	col.add_child(_bar)
 	_starving = Label.new()
 	_starving.text = UiText.STARVING
 	_starving.visible = false
+	_starving.add_theme_font_size_override("font_size", 14)
 	_starving.add_theme_color_override("font_color", Color8(0xd9, 0x8a, 0x6a))
-	_starving.add_theme_color_override("font_outline_color", Color.BLACK)
-	_starving.add_theme_constant_override("outline_size", 4)
-	box.add_child(_starving)
-	var keys := Label.new()
-	keys.text = UiText.KEYS_HINT
-	keys.add_theme_color_override("font_color", UiTheme.TEXT_DIM)
-	keys.add_theme_color_override("font_outline_color", Color.BLACK)
-	keys.add_theme_constant_override("outline_size", 4)
-	box.add_child(keys)
-	_bag = PanelContainer.new()
+	col.add_child(_starving)
+	var keys := HBoxContainer.new()
+	keys.add_theme_constant_override("separation", 6)
+	keys.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	corner.add_child(keys)
+	for k in UiText.KEYS:
+		keys.add_child(_key_cap(k[0]))
+		var what := Label.new()
+		what.text = k[1]
+		what.add_theme_font_size_override("font_size", 14)
+		what.add_theme_constant_override("outline_size", 4)
+		what.add_theme_color_override("font_outline_color", UiTheme.TEXT_DARK)
+		keys.add_child(what)
+
+	_bag = BagView.new()
 	_bag.anchor_left = 1.0
 	_bag.anchor_right = 1.0
 	_bag.anchor_top = 0.5
 	_bag.anchor_bottom = 0.5
 	_bag.offset_right = -BAG_MARGIN
 	_bag.offset_left = -BAG_MARGIN - BAG_W
-	_bag.offset_top = -120.0
-	_bag.offset_bottom = -120.0
+	_bag.offset_top = -230.0
 	_bag.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_bag.grow_vertical = Control.GROW_DIRECTION_END
 	_bag.custom_minimum_size = Vector2(BAG_W, 0)
-	var panel := _flat(EMPTY)
-	panel.set_content_margin_all(BAG_PAD)
-	_bag.add_theme_stylebox_override("panel", panel)
 	_bag.visible = false
+	_bag.eat.connect(func(id): client.request_eat(id))
+	_bag.cook.connect(func(id): client.request_cook(id))
+	_bag.build_fire.connect(func(): client.request_build_fire())
 	root.add_child(_bag)
-	var inner := VBoxContainer.new()
-	_bag.add_child(inner)
-	var title := Label.new()
-	title.text = UiText.BAG
-	inner.add_child(title)
-	_bag_list = VBoxContainer.new()
-	inner.add_child(_bag_list)
-	_bag_empty = Label.new()
-	_bag_empty.text = UiText.BAG_EMPTY
-	_bag_empty.add_theme_color_override("font_color", UiTheme.TEXT_DIM)
-	inner.add_child(_bag_empty)
-	_fire = _small_button("Fire", UiText.BUILD_FIRE, func(): client.request_build_fire())
-	_fire.disabled = true
-	inner.add_child(_fire)
-	_notice = Label.new()
+
+	_notice = PanelContainer.new()
+	_notice.theme_type_variation = "TitleBand"
 	_notice.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	_notice.position = Vector2(-200, 24)
-	_notice.custom_minimum_size = Vector2(400, 0)
-	_notice.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_notice.add_theme_color_override("font_outline_color", Color.BLACK)
-	_notice.add_theme_constant_override("outline_size", 4)
+	_notice.offset_top = 20
+	_notice.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_notice.custom_minimum_size = Vector2(0, UiTheme.TITLE_BAND_H)
+	_notice.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_notice.visible = false
 	root.add_child(_notice)
+	var notice_line := HBoxContainer.new()
+	notice_line.add_theme_constant_override("separation", 6)
+	notice_line.alignment = BoxContainer.ALIGNMENT_CENTER
+	_notice.add_child(notice_line)
+	_notice_icon = TextureRect.new()
+	_notice_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_notice_icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+	_notice_icon.custom_minimum_size = Vector2(32, 32)
+	_notice_icon.visible = false
+	notice_line.add_child(_notice_icon)
+	_notice_label = Label.new()
+	_notice_label.add_theme_color_override("font_color", UiTheme.TEXT_DARK)
+	_notice_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	notice_line.add_child(_notice_label)
 
 
-func _small_button(node_name: String, text: String, on_press: Callable) -> Button:
-	var b := Button.new()
-	b.name = node_name
-	b.text = text
-	b.focus_mode = Control.FOCUS_NONE
-	b.add_theme_font_size_override("font_size", BUTTON_FONT)
-	b.pressed.connect(on_press)
-	return b
+## A key cap: the key's letter on a small parchment square (the name field's box).
+func _key_cap(key: String) -> PanelContainer:
+	var cap := PanelContainer.new()
+	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var b := UiTheme.box("field_normal", 0)
+	b.content_margin_left = 7
+	b.content_margin_right = 7
+	b.content_margin_top = 1
+	b.content_margin_bottom = 1
+	cap.add_theme_stylebox_override("panel", b)
+	var l := Label.new()
+	l.text = key
+	l.add_theme_font_size_override("font_size", 14)
+	l.add_theme_color_override("font_color", UiTheme.TEXT_DARK)
+	cap.add_child(l)
+	return cap
 
 
-## How wide a line of the bag's buttons with these texts is, in pixels (the theme's font).
-static func buttons_width(texts: Array) -> float:
-	var font := ThemeDB.fallback_font
-	var w := 0.0
-	for t in texts:
-		w += font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, BUTTON_FONT).x + 2.0 * BUTTON_PAD
-	return w + BUTTON_GAP * maxi(texts.size() - 1, 0)
-
-
-static func _flat(c: Color) -> StyleBoxFlat:
+## A bar part: `c` inside a 1 px `rim`.
+static func _bar_box(c: Color, rim: Color) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color = c
-	s.set_corner_radius_all(2)
+	s.border_color = rim
+	s.set_border_width_all(1)
+	s.border_width_bottom = 2
 	return s
