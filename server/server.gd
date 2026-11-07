@@ -8,6 +8,7 @@ const MARKS := preload("res://server/marks.gd")
 const HUNGER := preload("res://server/hunger.gd")
 const INV := preload("res://server/inventory.gd")
 const GATHER := preload("res://server/gather.gd")
+const WILD := preload("res://server/wildlife.gd")
 
 var _db: RefCounted
 var _net: Node
@@ -16,6 +17,7 @@ var _net: Node
 var _players := {}
 var _marks: Dictionary = MARKS.new_marks()
 var _marks_changed := false
+var _wild: Dictionary = WILD.new_wild()
 var _picked := {}  ## gathered object cell -> seconds until it regrows
 var _rng := RandomNumberGenerator.new()
 var _tick_acc := 0.0
@@ -24,6 +26,7 @@ var _save_acc := 0.0
 
 func _ready() -> void:
 	_rng.randomize()
+	_wild = WILD.new_wild(_rng.randi())
 	var args := _parse_args()
 	_db = load("res://server/db.gd").new()
 	if not _db.open(args.get("db", "user://game.db")):
@@ -220,6 +223,7 @@ func _step(dt: float) -> void:
 	_tick_gathering(dt)
 	_move_players(dt)
 	_move_dogs(dt)
+	_move_wildlife(dt)
 	if MARKS.tick(_marks, dt):
 		_marks_changed = true
 	for id in _players:
@@ -233,6 +237,20 @@ func _step(dt: float) -> void:
 		var marks := MARKS.snapshot(_marks)
 		for id in _players:
 			_net.marks.rpc_id(id, marks)
+
+
+func _move_wildlife(dt: float) -> void:
+	WILD.populate(_wild, _players.values().map(func(p): return p["pos"]), dt)
+	WILD.update(_wild, _threats(), dt)
+
+
+## What wild animals flee from: every player and every dog.
+func _threats() -> Array:
+	var out := []
+	for p in _players.values():
+		out.append(p["pos"])
+		out.append(p["dog"]["pos"])
+	return out
 
 
 func _move_dogs(dt: float) -> void:
@@ -265,7 +283,8 @@ func _snapshot_for(viewer: int) -> Array:
 
 
 ## The creatures a player is sent: {id, kind, owner (peer id or 0), pos, state}, those within
-## Protocol.INTEREST_RADIUS (and its own dog). A dog's id is its owner's peer id.
+## Protocol.INTEREST_RADIUS (and its own dog). A dog's id is its owner's peer id; wild animals have
+## negative ids (server/wildlife.gd).
 func _creatures_for(viewer: int) -> Array:
 	var at: Vector2 = _players[viewer]["pos"]
 	var out: Array = []
@@ -273,6 +292,7 @@ func _creatures_for(viewer: int) -> Array:
 		var dog: Dictionary = _players[id]["dog"]
 		if id == viewer or at.distance_to(dog["pos"]) <= Protocol.INTEREST_RADIUS:
 			out.append({"id": id, "kind": "dog", "owner": id, "pos": dog["pos"], "state": dog["state"]})
+	out.append_array(WILD.snapshot_near(_wild, at, Protocol.INTEREST_RADIUS))
 	return out
 
 

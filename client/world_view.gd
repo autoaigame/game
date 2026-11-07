@@ -114,7 +114,11 @@ func _age_marks(dt: float) -> void:
 		(m["node"] as Node2D).modulate.a = clampf(m["left"] / MarkView.FADE_S, 0.0, 1.0)
 
 
-func _make_creature(_kind: String) -> Node2D:
+func _make_creature(kind: String) -> Node2D:
+	if kind != "dog":
+		var animal := AnimalView.new()
+		animal.kind = kind
+		return animal
 	var node := Node2D.new()
 	var sprite := Sprite2D.new()
 	sprite.name = "Sprite"
@@ -141,6 +145,9 @@ func _animate_creatures(dt: float) -> void:
 		var moved: float = (c["shown"] - before).length()
 		c["walked"] += moved
 		c["t"] += dt
+		if node is AnimalView:
+			(node as AnimalView).set_motion(c["walked"], moved > 0.0005)
+			continue
 		var speed := moved / dt if dt > 0.0 else 0.0
 		(node.get_node("Sprite") as Sprite2D).frame_coords = DogAnim.frame(c["pose"], moved > 0.0005, speed, c["walked"], c["t"])
 
