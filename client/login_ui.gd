@@ -87,7 +87,7 @@ func _build() -> void:
 	var band := PanelContainer.new()
 	band.theme_type_variation = "TitleBand"
 	band.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	band.custom_minimum_size = Vector2(300, 0)
+	band.custom_minimum_size = Vector2(300, UiTheme.TITLE_BAND_H)
 	column.add_child(band)
 	var title := _label(UiText.TITLE, "TitleLabel")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

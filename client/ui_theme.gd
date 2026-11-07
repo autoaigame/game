@@ -8,7 +8,9 @@ const TEXT_LIGHT := Color8(0xd3, 0xcc, 0xb7)
 const TEXT_DARK := Color8(0x2e, 0x28, 0x22)
 const TEXT_DIM := Color8(0x93, 0x8f, 0x84)
 const FONT_SIZE := 16
-const TITLE_SIZE := 32
+const TITLE_SIZE := 26
+## The title band art is made to be shown exactly this high (its torn ends do not tile vertically).
+const TITLE_BAND_H := 40
 const BUTTON_SIZE := 20
 
 ## file -> [margin left, top, right, bottom], content padding added inside.
@@ -64,7 +66,10 @@ static func build() -> Theme:
 	t.set_color("selection_color", "LineEdit", Color8(0x8d, 0x90, 0x64))
 	t.set_font_size("font_size", "LineEdit", 18)
 	t.set_type_variation("TitleBand", "PanelContainer")
-	t.set_stylebox("panel", "TitleBand", box("title_band", 10))
+	var band := box("title_band", 10)
+	band.content_margin_top = 2
+	band.content_margin_bottom = 2
+	t.set_stylebox("panel", "TitleBand", band)
 	t.set_type_variation("TitleLabel", "Label")
 	t.set_font_size("font_size", "TitleLabel", TITLE_SIZE)
 	t.set_color("font_color", "TitleLabel", TEXT_DARK)
@@ -72,7 +77,7 @@ static func build() -> Theme:
 	t.set_font_size("font_size", "HintLabel", 14)
 	t.set_color("font_color", "HintLabel", TEXT_DIM)
 	t.set_type_variation("ErrorLabel", "Label")
-	t.set_color("font_color", "ErrorLabel", Color8(0xe0, 0xb8, 0x90))
+	t.set_color("font_color", "ErrorLabel", Color8(0xc0, 0x95, 0x76))
 	t.set_type_variation("TaglineLabel", "Label")
 	t.set_constant("outline_size", "TaglineLabel", 6)
 	t.set_color("font_outline_color", "TaglineLabel", TEXT_DARK)

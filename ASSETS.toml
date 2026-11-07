@@ -404,3 +404,111 @@ tool = "PixelLab create_character v3 (112 px, low top-down view, selective outli
 prompt = "ordinary adult male survivor, realistic proportions, faded washed-out blue jeans, muted khaki field jacket over a grey shirt, worn brown boots, short dark brown hair, stubble, dark grey backpack with straps, dull desaturated colours, soft light from the top-left, fine detail, no thick black cartoon outline"
 license = "CC0-1.0"
 source = ""
+
+[[asset]]
+path = "assets/ui/panel.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_image_pro_flash 64x64, seed 31, palette 'terne survival' (40 colours); post-processed with ImageMagick: corners kept, edges and centre rebuilt by tiling a short pattern for a seamless 9-slice; canvas centre added by script"
+prompt = "empty rectangular picture frame made of worn dark weathered wood planks, frame bars 12 pixels thick, tiny iron nail heads only at the four corners, flat front view, the frame fills the whole canvas edge to edge, the hole in the middle is filled with plain dark olive khaki canvas cloth, very calm, almost uniform. Game UI 9-slice panel. No objects, no scene, no text, crisp pixel edges, muted."
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/ui/button_normal.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_image_pro_flash 48x24, seed 22, palette 'terne survival' (40 colours); post-processed with ImageMagick: corners kept, edges and centre rebuilt by tiling a short pattern for a seamless 9-slice"
+prompt = "flat front view game UI button filling the whole canvas: a rectangular plate of patinated olive-grey steel, 1 pixel dark outline, light bevel on top and left edge, darker bevel bottom and right, small rivet in each corner, plain flat center. No text, crisp pixel edges, muted survival style."
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/ui/button_hover.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "derived from button_normal (PixelLab create_image_pro_flash, seed 22) by in-palette colour replacement"
+prompt = "flat front view game UI button filling the whole canvas: a rectangular plate of patinated olive-grey steel, 1 pixel dark outline, light bevel on top and left edge, darker bevel bottom and right, small rivet in each corner, plain flat center. No text, crisp pixel edges, muted survival style."
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/ui/button_pressed.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "derived from button_normal (PixelLab create_image_pro_flash, seed 22): flipped vertically, in-palette colour replacement"
+prompt = "flat front view game UI button filling the whole canvas: a rectangular plate of patinated olive-grey steel, 1 pixel dark outline, light bevel on top and left edge, darker bevel bottom and right, small rivet in each corner, plain flat center. No text, crisp pixel edges, muted survival style."
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/ui/button_disabled.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "derived from button_normal (PixelLab create_image_pro_flash, seed 22) by in-palette colour replacement"
+prompt = "flat front view game UI button filling the whole canvas: a rectangular plate of patinated olive-grey steel, 1 pixel dark outline, light bevel on top and left edge, darker bevel bottom and right, small rivet in each corner, plain flat center. No text, crisp pixel edges, muted survival style."
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/ui/field_normal.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_image_pro_flash 32x24, seed 23, palette 'terne survival' (40 colours), used as a template and redrawn by script"
+prompt = "flat front view game UI text input field filling the whole canvas: a strip of worn beige paper, inset look with a dark shadow line on top and left edge, 1 pixel dark outline, plain flat light center. No text, crisp pixel edges."
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/ui/field_focus.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_image_pro_flash 32x24, seed 23, palette 'terne survival' (40 colours), used as a template and redrawn by script"
+prompt = "flat front view game UI text input field filling the whole canvas: a strip of worn beige paper, inset look with a dark shadow line on top and left edge, 1 pixel dark outline, plain flat light center. No text, crisp pixel edges."
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/ui/title_band.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "PixelLab create_image_pro_flash 96x56, seed 25, palette 'terne survival' (40 colours); post-processed with ImageMagick: corners kept, edges and centre rebuilt by tiling a short pattern for a seamless 9-slice"
+prompt = "flat front view game UI title banner: one wide horizontal strip of light grey duct tape filling the canvas width, with irregular torn ragged ends on the left and right, subtle crinkle texture, plain flat even middle area for a title. No text, crisp pixel edges, muted survival style."
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/ui/focus.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "ImageMagick script written by an AI agent (Claude), palette terne survival colours, no PixelLab generation"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/ui/icon_wait.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "drawn pixel by pixel (XPM) by an AI agent (Claude), palette terne survival colours, no PixelLab generation"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/ui/icon_ok.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "drawn pixel by pixel (XPM) by an AI agent (Claude), palette terne survival colours, no PixelLab generation"
+prompt = ""
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/ui/icon_error.png"
+author = "M3t4Data"
+origin = "generated"
+tool = "drawn pixel by pixel (XPM) by an AI agent (Claude), palette terne survival colours, no PixelLab generation"
+prompt = ""
+license = "CC0-1.0"
+source = ""
