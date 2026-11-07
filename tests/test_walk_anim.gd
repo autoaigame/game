@@ -153,3 +153,47 @@ func test_name_above_the_head() -> void:
 	assert_almost(r.position.x + r.size.x / 2.0, 0.0, 0.01)
 	assert_true(r.end.y <= -WalkAnim.HEAD_PX, "name bottom %f, head %d" % [r.end.y, WalkAnim.HEAD_PX])
 	assert_true(r.end.y >= -WalkAnim.HEAD_PX - 24, "name too far above the head")
+
+
+## Draws a player walking in a straight line for walk_s seconds, then standing: the server ticks at
+## Protocol.TICK_HZ, each snapshot arrives 30 ms late give or take jitter_s (seeded), frames at 60 fps.
+## Returns one entry per frame: [time in s, sheet frame, drawn position in cells].
+static func _draw_walk(jitter_s: float, walk_s: float, total_s: float) -> Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 3
+	var dir := Vector2(1, -1).normalized()
+	var tick := 1.0 / Protocol.TICK_HZ
+	var arrivals := []
+	var t := 0.0
+	while t < total_s:
+		var p := dir * Protocol.SPEED_CELLS_PER_S * minf(t, walk_s)
+		arrivals.append([t + 0.03 + rng.randf_range(-jitter_s, jitter_s), p])
+		t += tick
+	arrivals.sort_custom(func(a, b): return a[0] < b[0])
+	var w := {"server": Vector2.ZERO, "shown": Vector2.ZERO, "walked": 0.0, "facing": -1, "still": 0.0}
+	var frames := []
+	var next := 0
+	for f in int(total_s * 60.0):
+		var now := f / 60.0
+		while next < arrivals.size() and arrivals[next][0] <= now:
+			w["server"] = arrivals[next][1]
+			next += 1
+		var fc := WalkAnim.animate(w, 1.0 / 60.0)
+		frames.append([now, fc, w["shown"]])
+	return frames
+
+
+## While walking steadily, every frame shows a walk frame: the drawn player catching up with a snapshot
+## and waiting for the next must not flash the standing pose.
+func test_walking_never_flashes_the_idle_pose() -> void:
+	for jitter in [0.0, 0.015, 0.03]:
+		for fr in _draw_walk(jitter, 2.0, 3.0):
+			if fr[0] > 0.15 and fr[0] < 2.0:
+				assert_true(fr[1].y >= WalkAnim.WALK_FIRST_ROW, "jitter %s: idle row %d at %.3f s" % [jitter, fr[1].y, fr[0]])
+
+
+## Once the player has stopped, it stands (idle rows) instead of walking on the spot.
+func test_stops_walking_after_stopping() -> void:
+	for fr in _draw_walk(0.015, 1.0, 2.0):
+		if fr[0] > 1.5:
+			assert_true(fr[1].y < WalkAnim.IDLE_FRAMES, "walk row %d at %.3f s" % [fr[1].y, fr[0]])

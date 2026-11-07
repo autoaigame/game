@@ -11,6 +11,10 @@ const SNAP_CELLS := 3.0
 ## Walk rows of the sheet play one cycle (two steps) over this distance, so the feet keep pace with
 ## the ground at Protocol.SPEED_CELLS_PER_S.
 const WALK_CYCLE_CELLS := 1.25
+## The drawn player catches up with each snapshot before the next one arrives, then waits for it: a
+## walker counts as stopped only after standing still this long (over two snapshot intervals, plus
+## network jitter), so the standing pose never flashes between walk frames.
+const STOP_GRACE_S := 0.15
 ## Standing still, the idle rows play at this many frames per second.
 const IDLE_FPS := 4.0
 
@@ -98,7 +102,7 @@ static func animate(w: Dictionary, dt: float) -> Vector2i:
 		var screen := IsoLayer.cell_to_local(w["shown"]) - IsoLayer.cell_to_local(before)
 		w["facing"] = facing(screen, w["facing"])
 	w["still"] = 0.0 if walking else w["still"] + dt
-	var row := walk_row(w["walked"]) if walking else idle_row(w["still"])
+	var row := walk_row(w["walked"]) if w["still"] < STOP_GRACE_S else idle_row(w["still"] - STOP_GRACE_S)
 	return Vector2i(sheet_column(maxi(w["facing"], 0)), row)
 
 
