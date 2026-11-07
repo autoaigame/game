@@ -1,4 +1,4 @@
-## A short-lived mark on the ground (a pee spot, a dug hole, a campfire), drawn over the ground and its
+## A short-lived mark on the ground (a pee spot, a dug hole, a campfire, a caught animal), drawn over the ground and its
 ## decals, under objects and creatures; a fire flickers. The view fades it out over its last FADE_S seconds.
 class_name MarkView
 extends Node2D
@@ -20,7 +20,7 @@ const FLAME_MID := Color8(0xf0, 0xa8, 0x3a)
 const FLAME_IN := Color8(0xfb, 0xe0, 0x8a)
 const FLICKER_HZ := 8.0
 
-const KINDS: Array[String] = ["pee", "hole", "fire"]  ## the kinds _draw knows
+const KINDS: Array[String] = ["pee", "hole", "fire", "carcass_rabbit", "carcass_pheasant"]  ## the kinds _draw knows
 
 var kind := ""
 var _t := 0.0
@@ -48,6 +48,17 @@ func _draw() -> void:
 			_ellipse(Vector2(1, 1), Vector2(6, 2.5), HOLE_IN)
 		"fire":
 			_draw_fire()
+		"carcass_rabbit":  # lying on its side
+			_ellipse(Vector2(0, 1), Vector2(9, 3), Color(0, 0, 0, 0.22))
+			_ellipse(Vector2(-1, -2), Vector2(7, 3.5), AnimalView.FUR)
+			_ellipse(Vector2(5, -3), Vector2(3, 2.5), AnimalView.FUR)
+			_ellipse(Vector2(9, -2), Vector2(3.5, 1.2), AnimalView.FUR_DARK)  # ears flat
+			_ellipse(Vector2(-7, -2), Vector2(2, 2), AnimalView.FUR_LIGHT)
+		"carcass_pheasant":
+			_ellipse(Vector2(0, 1), Vector2(9, 3), Color(0, 0, 0, 0.22))
+			draw_line(Vector2(-4, -1), Vector2(-13, 1), AnimalView.PLUMAGE_DARK, 2)
+			_ellipse(Vector2(0, -2), Vector2(6, 3.5), AnimalView.PLUMAGE)
+			_ellipse(Vector2(7, -1), Vector2(2.2, 1.8), AnimalView.NECK)
 
 
 func _draw_fire() -> void:
