@@ -185,8 +185,8 @@ AI agent), or modelled by hand in Blender on the body and exported as glTF with 
 - `tests/test_character_garments.gd`: on every body shape, the skin under a garment and a garment under
   another (the top under the jacket) stay under it, in 12 poses of the four animations.
 
-Look at your part in the game before opening the pull request, from the front and the back, standing
-and running, and say in the PR what you checked.
+Look at your part in the game before opening the pull request: the editor of the start menu shows it
+turning, and C opens the editor in game, where you can run with it. Say in the PR what you checked.
 
 ## Licence and provenance
 

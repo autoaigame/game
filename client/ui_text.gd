@@ -43,6 +43,9 @@ const SETTINGS := "Paramètres"
 
 const SETTINGS_TITLE := "Paramètres"
 const TAB_SOUND := "Son"
+const LOOK_TITLE := "Apparence (C pour fermer)"
+const LOOK_COLOUR := "Couleur (clic droit : précédente)"
+const LOOK_NONE := "—"
 const SOUND_CHANNELS := {"master": "Général", "music": "Musique", "ambience": "Ambiance", "effects": "Effets",
 		"ui": "Interface"}
 const MUTE := "Couper le son (M)"

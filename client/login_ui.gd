@@ -107,10 +107,21 @@ func _build() -> void:
 	tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(tagline)
 
+	# The character editor beside the name: the look is chosen before entering.
+	var pair := HBoxContainer.new()
+	pair.add_theme_constant_override("separation", 10)
+	pair.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	column.add_child(pair)
+	var look_panel := PanelContainer.new()
+	pair.add_child(look_panel)
+	var worn: Variant = client.get("look") if client != null else null
+	var editor := LookEditor.new(worn if worn is Array else [])
+	editor.look_changed.connect(func(l: Array): if client != null and client.has_method("set_look"): client.set_look(l))
+	look_panel.add_child(editor)
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(440, 0)
-	panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	column.add_child(panel)
+	panel.custom_minimum_size = Vector2(340, 0)
+	panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	pair.add_child(panel)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 	panel.add_child(box)
