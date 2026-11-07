@@ -5,6 +5,7 @@ var _tiles_tex: Texture2D = load(IsoLayer.TILES_ATLAS)
 const PLAYER_TEX := preload("res://assets/player.png")
 
 var client: Node  ## client/client.gd
+var sounds: Node  ## client/sound_director.gd, or null (no sound)
 var _layer: TileMapLayer
 var _streamer := ChunkStreamer.new(2, 3, 1)
 var _builder: ChunkBuilder
@@ -63,9 +64,12 @@ func _animate_actors(dt: float) -> void:
 		var w: Dictionary = _walk[id]
 		var actor: Node2D = _actors[id]
 		var sprite: Sprite2D = actor.get_node("Sprite")
+		var phase_before: float = w["phase"]
 		sprite.frame_coords = WalkAnim.animate(w, dt)
 		var pos := IsoLayer.cell_to_local(w["shown"])
 		actor.position = pos
+		if sounds != null and Footsteps.steps(phase_before, w["phase"]) > 0:
+			sounds.footstep(id, MapData.tile_at(Protocol.cell_of(w["shown"])), id == client.my_peer_id, actor)
 		if id == client.my_peer_id:
 			_camera.position = pos
 
@@ -137,6 +141,8 @@ func _process(delta: float) -> void:
 	if client.my_peer_id == 0:
 		_drift_camera(delta)
 		return
+	if sounds != null:
+		sounds.set_listener_cell(Protocol.cell_of(_my_pos))
 	var dir := KeyMove.direction(
 			Input.is_physical_key_pressed(KEY_W), Input.is_physical_key_pressed(KEY_S),
 			Input.is_physical_key_pressed(KEY_A), Input.is_physical_key_pressed(KEY_D))

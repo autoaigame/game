@@ -1,0 +1,17 @@
+{
+	"id": "uneasy",
+	"name": "Inquiétant",
+	"grounds": [],
+	"debug_only": true,
+	"fade_s": 6.0,
+	"beds": [
+		{"sound": "uneasy_bed", "volume_db": 4.0},
+		{"sound": "wind_dark", "volume_db": -10.0}
+	],
+	"events": [
+		{"sounds": ["crow"], "interval_s": [10.0, 25.0],
+			"volume_db": -16.0, "volume_jitter_db": 5.0, "pan": 0.9, "pitch": 0.05},
+		{"sounds": ["owl"], "interval_s": [18.0, 40.0],
+			"volume_db": -18.0, "volume_jitter_db": 4.0, "pan": 0.9, "pitch": 0.03}
+	]
+}

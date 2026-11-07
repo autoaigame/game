@@ -36,11 +36,17 @@ func _ready() -> void:
 
 
 func _add_views() -> void:
+	var sounds: Node = load("res://client/sound_director.gd").new()
+	sounds.name = "Sounds"
+	sounds.client = self
+	add_child(sounds)
 	var view: Node2D = load("res://client/world_view.gd").new()
 	view.client = self
+	view.sounds = sounds
 	add_child(view)
 	var ui: CanvasLayer = load("res://client/login_ui.gd").new()
 	ui.client = self
+	ui.sounds = sounds
 	add_child(ui)
 
 

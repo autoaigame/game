@@ -674,3 +674,323 @@ tool = "PixelLab create_1_direction_object (64 px, top-down view, 40-colour mute
 prompt = "realistic natural outdoor object on the ground, seen from a slightly elevated three-quarter view, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, transparent background Item: hollow decayed tree stump, dark hollow top, grey-brown bark, small roots, low"
 license = "CC0-1.0"
 source = ""
+
+[[asset]]
+path = "assets/sounds/ambience/bird_robin.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 120 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A single songbird singing one short melodic phrase, like a robin, medium distance, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/ambience/bird_finch.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 120 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A small finch chirping a few quick high notes then stopping, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/ambience/bird_blackbird.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 120 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A blackbird singing a short fluty phrase in the distance, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/ambience/bird_dove.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 120 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A wood pigeon cooing softly in the distance, one call, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/ambience/bird_tit.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 120 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A great tit calling its two note teacher call a few times, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/ambience/leaves_breeze.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 200 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A brief rustle of tree leaves moved by a small breeze, rising then fading, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/ambience/leaves_grass.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 200 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "Dry grass and small bushes rustling briefly, short soft movement, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/ambience/crow.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 120 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A single crow cawing twice far away, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/ambience/owl.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: cut to the sound, high-pass 120 Hz, low-pass 14 kHz, spectral denoise, 0.15 s fade-out, peak -1 dBFS, mono, Vorbis q3"
+prompt = "A distant tawny owl hooting once, isolated sound on a completely silent background, clean close recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/ambience/wind_breeze.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: band-pass 60 Hz to 4000 Hz, -24 LUFS, 1.5 s crossfade at the loop point, Vorbis q3"
+prompt = "Soft gentle breeze outdoors, a warm airy whoosh rising and falling slowly in long smooth swells, soft mid-range air movement, calm and diffuse, no whistle, no gusts, no hiss, no static, no birds, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/ambience/wind_dark.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: band-pass 60 Hz to 4000 Hz, -24 LUFS, 1.5 s crossfade at the loop point, Vorbis q3"
+prompt = "Calm diffuse wind ambience, a soft hollow breath of air moving over open land, gentle slow waves of airflow, dark and smooth but clearly present, no whistle, no hiss, no static, no birds, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/ambience/insects.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: band-pass 2000 Hz to 14000 Hz, spectral denoise, -24 LUFS, 1.5 s crossfade at the loop point, Vorbis q3"
+prompt = "Distant crickets and grasshoppers chirping softly in a summer field, steady and quiet, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/ambience/uneasy_bed.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v3); by script: high-pass 70 Hz, low-pass 14 kHz, spectral denoise, gain capped to keep the noise floor under -62 dBFS, 1.5 s crossfade at the loop point, Vorbis q4"
+prompt = "Quiet uneasy wilderness at dusk, deep calm silence, a single distant crow now and then, faint creak of an old tree, sparse dry leaf movement, lonely, clean recording, no wind noise, no hiss, no static, no white noise, no music, no voices"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/steps/grass_1.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: step 2 cut from a 5 s walk by onset detection, silence trimmed, loudest 50 ms at -14 dBFS RMS, peak at most -1 dBFS, mono, Vorbis q4"
+prompt = "Slow footsteps of one person walking on fresh green grass, boots, close perspective, evenly spaced steps with short pauses between them, dry studio recording, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/steps/grass_2.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: step 3 cut from a 5 s walk by onset detection, silence trimmed, loudest 50 ms at -14 dBFS RMS, peak at most -1 dBFS, mono, Vorbis q4"
+prompt = "Slow footsteps of one person walking on fresh green grass, boots, close perspective, evenly spaced steps with short pauses between them, dry studio recording, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/steps/grass_3.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: step 4 cut from a 5 s walk by onset detection, silence trimmed, loudest 50 ms at -14 dBFS RMS, peak at most -1 dBFS, mono, Vorbis q4"
+prompt = "Slow footsteps of one person walking on fresh green grass, boots, close perspective, evenly spaced steps with short pauses between them, dry studio recording, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/steps/grass_4.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: step 5 cut from a 5 s walk by onset detection, silence trimmed, loudest 50 ms at -14 dBFS RMS, peak at most -1 dBFS, mono, Vorbis q4"
+prompt = "Slow footsteps of one person walking on fresh green grass, boots, close perspective, evenly spaced steps with short pauses between them, dry studio recording, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/steps/dry_grass_1.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: step 2 cut from a 5 s walk by onset detection, silence trimmed, loudest 50 ms at -14 dBFS RMS, peak at most -1 dBFS, mono, Vorbis q4"
+prompt = "Slow footsteps of one person walking on dry crunchy grass and straw, boots, close perspective, evenly spaced steps with short pauses between them, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/steps/dry_grass_2.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: step 3 cut from a 5 s walk by onset detection, silence trimmed, loudest 50 ms at -14 dBFS RMS, peak at most -1 dBFS, mono, Vorbis q4"
+prompt = "Slow footsteps of one person walking on dry crunchy grass and straw, boots, close perspective, evenly spaced steps with short pauses between them, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/steps/dry_grass_3.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: step 5 cut from a 5 s walk by onset detection, silence trimmed, loudest 50 ms at -14 dBFS RMS, peak at most -1 dBFS, mono, Vorbis q4"
+prompt = "Slow footsteps of one person walking on dry crunchy grass and straw, boots, close perspective, evenly spaced steps with short pauses between them, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/steps/dry_grass_4.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: step 5 cut from a 5 s walk by onset detection, silence trimmed, loudest 50 ms at -14 dBFS RMS, peak at most -1 dBFS, mono, Vorbis q4"
+prompt = "Foley footsteps walking slowly through dry brittle straw grass, crisp crunch on each boot step, separated steps with pauses, close, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/steps/forest_1.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: step 2 cut from a 5 s walk by onset detection, silence trimmed, loudest 50 ms at -14 dBFS RMS, peak at most -1 dBFS, mono, Vorbis q4"
+prompt = "Slow distinct boot steps through crunchy autumn leaf litter and brittle twigs in woodland, loud and close, separated steps, foley recording, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/steps/forest_2.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: step 3 cut from a 5 s walk by onset detection, silence trimmed, loudest 50 ms at -14 dBFS RMS, peak at most -1 dBFS, mono, Vorbis q4"
+prompt = "Slow distinct boot steps through crunchy autumn leaf litter and brittle twigs in woodland, loud and close, separated steps, foley recording, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/steps/forest_3.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: step 5 cut from a 5 s walk by onset detection, silence trimmed, loudest 50 ms at -14 dBFS RMS, peak at most -1 dBFS, mono, Vorbis q4"
+prompt = "Slow distinct boot steps through crunchy autumn leaf litter and brittle twigs in woodland, loud and close, separated steps, foley recording, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/steps/forest_4.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: step 6 cut from a 5 s walk by onset detection, silence trimmed, loudest 50 ms at -14 dBFS RMS, peak at most -1 dBFS, mono, Vorbis q4"
+prompt = "Slow distinct boot steps through crunchy autumn leaf litter and brittle twigs in woodland, loud and close, separated steps, foley recording, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/steps/sand_1.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: step 1 cut from a 5 s walk by onset detection, silence trimmed, loudest 50 ms at -14 dBFS RMS, peak at most -1 dBFS, mono, Vorbis q4"
+prompt = "Slow footsteps of one person walking on soft dry sand, boots, close perspective, evenly spaced steps with short pauses between them, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/steps/sand_2.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: step 3 cut from a 5 s walk by onset detection, silence trimmed, loudest 50 ms at -14 dBFS RMS, peak at most -1 dBFS, mono, Vorbis q4"
+prompt = "Slow footsteps of one person walking on soft dry sand, boots, close perspective, evenly spaced steps with short pauses between them, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/steps/sand_3.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: step 5 cut from a 5 s walk by onset detection, silence trimmed, loudest 50 ms at -14 dBFS RMS, peak at most -1 dBFS, mono, Vorbis q4"
+prompt = "Slow footsteps of one person walking on soft dry sand, boots, close perspective, evenly spaced steps with short pauses between them, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/steps/sand_4.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: step 6 cut from a 5 s walk by onset detection, silence trimmed, loudest 50 ms at -14 dBFS RMS, peak at most -1 dBFS, mono, Vorbis q4"
+prompt = "Slow footsteps of one person walking on soft dry sand, boots, close perspective, evenly spaced steps with short pauses between them, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/ui/hover.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: silence trimmed, loudest 50 ms at -20 dBFS RMS, mono, Vorbis q4"
+prompt = "Tiny soft wooden tick for button hover, delicate and quiet, short, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/ui/click.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: silence trimmed, loudest 50 ms at -14 dBFS RMS, mono, Vorbis q4"
+prompt = "Muted soft menu click, short tick of paper and wood, subtle, dry, game UI sound, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""
+
+[[asset]]
+path = "assets/sounds/ui/enter.ogg"
+author = "M3t4Data"
+origin = "generated"
+tool = "ElevenLabs text to sound effects API (eleven_text_to_sound_v2); by script: silence trimmed, -20 LUFS, mono, Vorbis q4"
+prompt = "Subtle start game sound, soft muffled whoosh and a gentle low thud, understated, realistic, no music"
+license = "LicenseRef-ElevenLabs-in-game-only"
+note = "Generated with ElevenLabs sound effects; may be used only inside this game, not on its own or in a sound library."
+source = ""

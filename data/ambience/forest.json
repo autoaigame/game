@@ -1,0 +1,17 @@
+{
+	"id": "forest",
+	"name": "Forêt",
+	"grounds": ["forest_floor"],
+	"debug_only": false,
+	"fade_s": 4.0,
+	"beds": [
+		{"sound": "wind_dark", "volume_db": -6.0},
+		{"sound": "insects", "volume_db": -28.0}
+	],
+	"events": [
+		{"sounds": ["leaves_breeze", "leaves_grass"], "interval_s": [8.0, 20.0],
+			"volume_db": -17.0, "volume_jitter_db": 4.0, "pan": 0.8, "pitch": 0.05},
+		{"sounds": ["bird_blackbird", "bird_dove", "bird_tit"], "interval_s": [6.0, 16.0],
+			"volume_db": -20.0, "volume_jitter_db": 5.0, "pan": 0.8, "pitch": 0.05}
+	]
+}
