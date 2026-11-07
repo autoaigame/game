@@ -115,15 +115,14 @@ func test_nearest_walkable_from_water() -> void:
 
 ## The nearest cell may lie in a farther square ring: (0, 4) is nearer than (3, 3).
 func test_nearest_looks_beyond_the_first_ring_that_matches() -> void:
-	var hits := [Vector2i(3, 3), Vector2i(0, 4)]
-	assert_eq(MapData.nearest_matching(Vector2i.ZERO, func(c): return c in hits), Vector2i(0, 4))
-	assert_eq(MapData.nearest_matching(Vector2i(10, 10), func(c): return c - Vector2i(10, 10) in hits),
+	assert_eq(MapData.nearest_of(Vector2i.ZERO, {Vector2i(3, 3): true, Vector2i(0, 4): true}), Vector2i(0, 4))
+	assert_eq(MapData.nearest_of(Vector2i(10, 10), {Vector2i(13, 13): true, Vector2i(10, 14): true}),
 			Vector2i(10, 14))
 
 
 func test_nearest_ties_are_deterministic() -> void:
-	var hits := [Vector2i(2, 0), Vector2i(-2, 0), Vector2i(0, 2), Vector2i(0, -2)]
-	assert_eq(MapData.nearest_matching(Vector2i.ZERO, func(c): return c in hits), Vector2i(0, -2))
+	var cells := {Vector2i(2, 0): true, Vector2i(-2, 0): true, Vector2i(0, 2): true, Vector2i(0, -2): true}
+	assert_eq(MapData.nearest_of(Vector2i.ZERO, cells), Vector2i(0, -2))
 
 
 func test_nearest_walkable_of_walkable_is_itself() -> void:

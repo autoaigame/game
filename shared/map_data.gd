@@ -39,13 +39,20 @@ static func spawn_cell() -> Vector2i:
 
 ## The walkable cell nearest to `from`, or null if none lies within SEARCH_RADIUS.
 static func nearest_walkable(from: Vector2i) -> Variant:
-	return nearest_matching(from, is_walkable)
+	return _nearest(from, {})
 
 
-## The cell nearest to `from` (Euclidean distance) for which `test` is true, or null if none lies
-## within SEARCH_RADIUS. Searches square rings of growing size, and goes on while a farther ring may
-## still hold a closer cell, so the result is exact. Ties go to the first cell in a fixed scan order.
-static func nearest_matching(from: Vector2i, test: Callable) -> Variant:
+## The cell of `cells` (a set: cell -> true) nearest to `from`, or null: the same search as
+## nearest_walkable, on given cells (tests check the search with it).
+static func nearest_of(from: Vector2i, cells: Dictionary) -> Variant:
+	return null if cells.is_empty() else _nearest(from, cells)
+
+
+## The cell nearest to `from` (Euclidean distance) that is in `cells`, or walkable if `cells` is
+## empty; null if none lies within SEARCH_RADIUS. Searches square rings of growing size, and goes on
+## while a farther ring may still hold a closer cell, so the result is exact. Ties go to the first
+## cell in a fixed scan order.
+static func _nearest(from: Vector2i, cells: Dictionary) -> Variant:
 	var best: Variant = null
 	var best_d2 := 0
 	for r in SEARCH_RADIUS + 1:
@@ -57,8 +64,9 @@ static func nearest_matching(from: Vector2i, test: Callable) -> Variant:
 				var d2 := dx * dx + dy * dy
 				if best != null and d2 >= best_d2:
 					continue
-				if test.call(from + Vector2i(dx, dy)):
-					best = from + Vector2i(dx, dy)
+				var c := from + Vector2i(dx, dy)
+				if cells.has(c) if not cells.is_empty() else is_walkable(c):
+					best = c
 					best_d2 = d2
 	return best
 
