@@ -31,7 +31,11 @@ const NOTICES := {
 const COOK := "Cuire"
 ## Key hints (physical key, what it does), shown as key caps under the hunger bar.
 ## Physical keys sit next to the movement keys whatever the layout: E and Q on QWERTY, E and A on AZERTY.
-const KEYS := [[KEY_E, "Sac"], [KEY_Q, "Siffler le chien"]]
+## The map is on the physical M key: M on QWERTY, ',' on AZERTY.
+const KEYS := [[KEY_E, "Sac"], [KEY_Q, "Siffler le chien"], [KEY_M, "Carte"]]
+## The big map (client/hud.gd).
+const MAP_TITLE := "Carte"
+const MAP_HELP := "Molette : zoom    %s ou Échap : fermer"
 ## The bag window (client/bag_view.gd).
 const FOOD_DESC := "Nourrit : +%d"
 const COOKS_DESC := "Sur un feu, devient : %s"
@@ -49,7 +53,7 @@ const LOOK_COLOUR := "Couleur (clic droit : précédente)"
 const LOOK_NONE := "—"
 const SOUND_CHANNELS := {"master": "Général", "music": "Musique", "ambience": "Ambiance", "effects": "Effets",
 		"ui": "Interface"}
-const MUTE := "Couper le son (M)"
+const MUTE := "Couper le son (N)"
 const CLOSE := "Fermer"
 const SETTINGS_HINT := "Échap pour fermer"
 
@@ -96,18 +100,24 @@ static func notice(key: String, args: Dictionary) -> String:
 
 ## Display servers that know the keyboard layout. Others (headless, web) learn it from key presses.
 const LAYOUT_AWARE := ["Windows", "macOS", "X11", "Wayland"]
-## Physical keys that AZERTY labels differently from QWERTY (the letters around the movement keys).
-const AZERTY := {KEY_Q: KEY_A, KEY_A: KEY_Q, KEY_W: KEY_Z, KEY_Z: KEY_W}
+## Physical keys that AZERTY labels differently from QWERTY (the letters around the movement keys, and M).
+const AZERTY := {KEY_Q: KEY_A, KEY_A: KEY_Q, KEY_W: KEY_Z, KEY_Z: KEY_W, KEY_M: KEY_COMMA}
+## Key names that Godot spells out, as printed on the key.
+const KEY_SIGNS := {KEY_COMMA: ",", KEY_SEMICOLON: ";", KEY_PERIOD: ".", KEY_COLON: ":"}
 
 
 ## The name printed on the player's keyboard for a physical key. `seen` maps physical keys the
 ## player pressed to their labels: it names those keys, and tells AZERTY apart from QWERTY.
 static func key_name(physical: Key, seen := {}) -> String:
 	if seen.has(physical):
-		return OS.get_keycode_string(seen[physical])
+		return _sign(seen[physical])
 	if DisplayServer.get_name() in LAYOUT_AWARE:
-		return OS.get_keycode_string(DisplayServer.keyboard_get_label_from_physical(physical))
+		return _sign(DisplayServer.keyboard_get_label_from_physical(physical))
 	for k in AZERTY:
 		if seen.get(k) == AZERTY[k]:
-			return OS.get_keycode_string(AZERTY.get(physical, physical))
-	return OS.get_keycode_string(physical)
+			return _sign(AZERTY.get(physical, physical))
+	return _sign(physical)
+
+
+static func _sign(key: Key) -> String:
+	return KEY_SIGNS.get(key, OS.get_keycode_string(key))

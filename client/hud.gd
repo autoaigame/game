@@ -2,6 +2,9 @@
 ## framed box (bottom left) with a warning when starving and the key hints as key caps; the bag
 ## window (client/bag_view.gd: E opens and closes it, Escape closes it); short notices from the
 ## server on a parchment band (top centre), with the item's icon when there is one.
+## The world map (client/world_map.gd): a minimap (top right) and a big map, opened and closed with
+## the physical M key (',' on AZERTY) or closed with Escape. Both follow the player, show the other
+## players the server sends, and zoom with the mouse wheel. The explored cells are kept per player name.
 ## Values come from the server (status, inventory, marks); the HUD only shows them.
 extends CanvasLayer
 
@@ -14,6 +17,13 @@ const BAR_RIM := Color8(0x1f, 0x22, 0x1a)
 const NOTICE_S := 3.0
 const BAG_MARGIN := 16.0
 const BAG_W := 300.0
+const MINIMAP_PX := 200.0
+const MAP_MARGIN := 16.0
+## Explored cells are saved this often (seconds) while they change, and when leaving.
+const MAP_SAVE_S := 10.0
+## The player's surroundings are revealed again this often (seconds) even standing still: the chunks
+## around them keep being generated after they stop.
+const MAP_REVEAL_S := 1.0
 
 var client: Node  ## client/client.gd
 
@@ -28,13 +38,23 @@ var _my_pos: Variant = null  ## where I stand (last snapshot), or null before th
 var _fires: Array = []  ## positions of the fires the server sent
 var _seen_labels := {}  ## physical key -> its label, for every key the player pressed
 var _hint_caps := {}  ## physical key -> the Label of its key cap
+var _map := WorldMap.new()
+var _map_path := ""  ## where the explored cells are kept ("" before joining)
+var _map_dirty := false
+var _map_save_in := MAP_SAVE_S
+var _map_reveal_in := 0.0
+var _revealed_at: Variant = null  ## the cell the map was last revealed around
+var _minimap: MapView
+var _big_map: MapView
+var _big_frame: Control
+var _map_help: Label  ## under the big map: how to zoom and close it
 
 
 func _ready() -> void:
 	layer = 5
 	visible = false
 	_build()
-	client.welcomed.connect(func(_cell: Vector2i): visible = true)
+	client.welcomed.connect(_on_welcomed)
 	client.status_received.connect(_on_status)
 	client.inventory_received.connect(func(items: Dictionary): _bag.set_items(items))
 	client.notice_received.connect(_on_notice)
@@ -66,6 +86,43 @@ func toggle_bag() -> void:
 	_bag.visible = not _bag.visible
 
 
+func minimap() -> MapView:
+	return _minimap
+
+
+func big_map() -> MapView:
+	return _big_map
+
+
+func toggle_big_map() -> void:
+	_big_frame.visible = not _big_frame.visible
+	_big_map.visible = _big_frame.visible
+	_minimap.visible = not _big_frame.visible
+	_minimap.get_parent().visible = _minimap.visible
+
+
+## Closes the big map if it is open, else the bag. False if neither was open (Escape then opens the
+## settings menu: client/settings_menu.gd).
+func close_window() -> bool:
+	if _big_frame.visible:
+		toggle_big_map()
+		return true
+	if _bag.visible:
+		_bag.visible = false
+		return true
+	return false
+
+
+func _on_welcomed(_cell: Vector2i) -> void:
+	visible = true
+	var player_name: Variant = client.get("player_name")
+	if typeof(player_name) == TYPE_STRING and player_name != "":
+		_map_path = WorldMap.path_for(player_name)
+		_map.load(_map_path)
+		_minimap.refresh_all()
+		_big_map.refresh_all()
+
+
 ## The letter shown on the key cap of a hinted physical key.
 func key_hint(physical: Key) -> String:
 	return _hint_caps[physical].text
@@ -81,6 +138,7 @@ func _input(event: InputEvent) -> void:
 	_seen_labels[event.physical_keycode] = label
 	for k in _hint_caps:
 		_hint_caps[k].text = UiText.key_name(k, _seen_labels)
+	_map_help.text = UiText.MAP_HELP % UiText.key_name(KEY_M, _seen_labels)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -91,10 +149,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			toggle_bag()
 		KEY_Q:
 			client.request_whistle()
+		KEY_M:
+			toggle_big_map()
 		KEY_ESCAPE:
-			if not _bag.visible:
+			if not close_window():
 				return
-			_bag.visible = false
 		_:
 			return
 	if is_inside_tree():
@@ -103,6 +162,38 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	_age_notice(delta)
+	_update_map(delta)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_PREDELETE:
+		_save_map()
+
+
+## Reveals the cells around the player when they move (and now and then), and saves them now and then.
+func _update_map(dt: float) -> void:
+	if _my_pos == null or not visible:
+		return
+	var cell := Protocol.cell_of(_my_pos)
+	_map_reveal_in -= dt
+	if cell != _revealed_at or _map_reveal_in <= 0.0:
+		_revealed_at = cell
+		_map_reveal_in = MAP_REVEAL_S
+		var changed := _map.reveal(cell)
+		if not changed.is_empty():
+			_map_dirty = true
+			_minimap.refresh(changed)
+			_big_map.refresh(changed)
+	_map_save_in -= dt
+	if _map_save_in <= 0.0:
+		_map_save_in = MAP_SAVE_S
+		_save_map()
+
+
+func _save_map() -> void:
+	if _map_dirty and _map_path != "":
+		_map.save(_map_path)
+		_map_dirty = false
 
 
 func _age_notice(dt: float) -> void:
@@ -129,10 +220,16 @@ func _on_notice(key: String, args: Dictionary) -> void:
 
 
 func _on_snapshot(players: Array) -> void:
+	var markers := []
 	for p in players:
-		if p["id"] == client.my_peer_id:
+		var me: bool = p["id"] == client.my_peer_id
+		if me:
 			_my_pos = p["pos"]
+		markers.append({"pos": p["pos"], "me": me})
 	_update_fire()
+	if _my_pos != null:
+		_minimap.set_view(_my_pos, markers)
+		_big_map.set_view(_my_pos, markers)
 
 
 func _on_marks(marks: Array) -> void:
@@ -242,6 +339,8 @@ func _build() -> void:
 	_bag.build_fire.connect(func(): client.request_build_fire())
 	root.add_child(_bag)
 
+	_build_maps(root)
+
 	_notice = PanelContainer.new()
 	_notice.theme_type_variation = "TitleBand"
 	_notice.set_anchors_preset(Control.PRESET_CENTER_TOP)
@@ -265,6 +364,48 @@ func _build() -> void:
 	_notice_label.add_theme_color_override("font_color", UiTheme.TEXT_DARK)
 	_notice_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	notice_line.add_child(_notice_label)
+
+
+## The minimap in a frame (top right), and the big map over most of the screen, hidden at first.
+func _build_maps(root: Control) -> void:
+	var mini_frame := PanelContainer.new()
+	mini_frame.add_theme_stylebox_override("panel", UiTheme.box("panel", 4))
+	mini_frame.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	mini_frame.offset_right = -MAP_MARGIN
+	mini_frame.offset_top = MAP_MARGIN
+	mini_frame.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	root.add_child(mini_frame)
+	_minimap = MapView.new(_map, 1.0, 8.0, 3.0)
+	_minimap.custom_minimum_size = Vector2(MINIMAP_PX, MINIMAP_PX)
+	mini_frame.add_child(_minimap)
+
+	_big_frame = PanelContainer.new()
+	_big_frame.add_theme_stylebox_override("panel", UiTheme.box("panel", 8))
+	_big_frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_big_frame.offset_left = 60
+	_big_frame.offset_right = -60
+	_big_frame.offset_top = 40
+	_big_frame.offset_bottom = -40
+	_big_frame.visible = false
+	root.add_child(_big_frame)
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 6)
+	_big_frame.add_child(col)
+	var title := Label.new()
+	title.text = UiText.MAP_TITLE
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(title)
+	_big_map = MapView.new(_map, 0.5, 16.0, 4.0)
+	_big_map.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_big_map.visible = false
+	col.add_child(_big_map)
+	var help := Label.new()
+	help.text = UiText.MAP_HELP % UiText.key_name(KEY_M)
+	help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	help.add_theme_font_size_override("font_size", 14)
+	help.add_theme_color_override("font_color", UiTheme.TEXT_DIM)
+	col.add_child(help)
+	_map_help = help
 
 
 ## A key cap: the key's letter on a small parchment square (the name field's box).

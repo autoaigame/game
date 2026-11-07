@@ -351,7 +351,7 @@ func cycle_forced() -> void:
 
 
 func _debug_text() -> String:
-	var lines := ["Son %s, volume %d %%   [M] muet  [-/+] volume  [F4] forcer" % ["coupé" if _settings["muted"] else "actif",
+	var lines := ["Son %s, volume %d %%   [N] muet  [-/+] volume  [F4] forcer" % ["coupé" if _settings["muted"] else "actif",
 			AudioSettings.to_percent(_settings["master"])],
 			"Ambiance : %s (%s)" % [_current, "forcée" if forced != "" else "auto, sols à %d cases" % AmbienceMix.RADIUS_CELLS]]
 	var counts := AmbienceMix.ground_counts(_cell)
@@ -374,7 +374,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if not started or not event.pressed or event.echo:
 		return
 	match event.physical_keycode:
-		KEY_M:
+		KEY_N:  # M is the map (client/hud.gd)
 			toggle_mute()
 		KEY_MINUS, KEY_KP_SUBTRACT:
 			change_volume(-VOLUME_STEP)
@@ -386,4 +386,5 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			cycle_forced()
 		_:
 			return
-	get_viewport().set_input_as_handled()
+	if is_inside_tree():
+		get_viewport().set_input_as_handled()

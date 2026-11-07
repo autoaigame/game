@@ -48,3 +48,32 @@ func test_value_text_is_a_percent() -> void:
 	assert_eq(Menu.value_text(0.8), "80 %")
 	assert_eq(Menu.value_text(0.0), "0 %")
 	assert_eq(Menu.value_text(1.0), "100 %")
+
+
+class FakeWindows:
+	extends Node
+	var open := 0  ## windows still open
+
+	func close_window() -> bool:
+		if open == 0:
+			return false
+		open -= 1
+		return true
+
+
+## With a HUD window open (big map, bag), Escape closes it and leaves the menu shut. With none, it
+## opens the menu.
+func test_escape_closes_a_hud_window_first() -> void:
+	var menu: CanvasLayer = Menu.new()
+	menu.visible = false
+	var windows := FakeWindows.new()
+	windows.open = 2
+	menu.windows = windows
+	menu._input(_key(KEY_ESCAPE))
+	assert_eq(windows.open, 1)
+	assert_false(menu.visible)
+	menu._input(_key(KEY_ESCAPE))
+	assert_eq(windows.open, 0)
+	assert_false(menu.visible, "still shut: it closed the last window")
+	windows.free()
+	menu.free()

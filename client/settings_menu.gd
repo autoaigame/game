@@ -1,4 +1,5 @@
 ## Settings menu over the world or the start menu, opened and closed with Escape (or a pad's Start).
+## While a HUD window is open (big map, bag), Escape closes that window instead.
 ## The world keeps running (multiplayer): only my keys stop moving me while it is open (world_view.gd).
 ## One tab per entry of TABS; only the sound tab exists for now. Texts in client/ui_text.gd.
 extends CanvasLayer
@@ -13,6 +14,7 @@ const FADE_S := 0.15
 const UI_PREVIEW_MS := 150
 
 var sounds: Node  ## client/sound_director.gd, or null (no sound)
+var windows: Node  ## client/hud.gd, or null: Escape first closes its open window (big map, bag)
 var _root := Control.new()
 var _tab_buttons := {}  ## tab id -> Button
 var _tab_pages := {}  ## tab id -> Control
@@ -90,6 +92,10 @@ func toggle() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if not visible and is_toggle(event) and windows != null and windows.close_window():
+		if is_inside_tree():
+			get_viewport().set_input_as_handled()
+		return
 	if is_toggle(event) or (visible and event.is_action_pressed("ui_cancel")):
 		toggle()
 		get_viewport().set_input_as_handled()
@@ -216,7 +222,7 @@ func _on_slider(channel: String, percent: float) -> void:
 		sounds.ui("hover")
 
 
-## Shows `s` without sending it back (M, - and + while the menu is open move the controls too).
+## Shows `s` without sending it back (N, - and + while the menu is open move the controls too).
 func _show_settings(s: Dictionary) -> void:
 	for c in AudioSettings.CHANNELS:
 		_sliders[c].set_value_no_signal(AudioSettings.to_percent(s[c]))
