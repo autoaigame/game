@@ -39,6 +39,10 @@ const STICKS_DESC := "Sert à faire un feu."
 const CRAFT := "Fabriquer"
 const FIRE_RECIPE := "Faire un feu"
 const EAT := "Manger"
+## The start menu (client/login_ui.gd, client/title_screen.gd).
+const PLAY := "Jouer"
+const QUIT := "Quitter"
+const BACK := "Retour"
 const ENTER := "Entrer dans le monde"
 const SETTINGS := "Paramètres"
 

@@ -23,3 +23,70 @@ func test_each_state_has_an_icon_and_a_text() -> void:
 		var st: Array = LoginUi.status_of(s)
 		assert_true(st[0] != "", "icon of %d" % s)
 		assert_true(st[1] != "", "text of %d" % s)
+
+
+func _key(code: Key, pressed := true, echo := false) -> InputEventKey:
+	var e := InputEventKey.new()
+	e.physical_keycode = code
+	e.keycode = code
+	e.pressed = pressed
+	e.echo = echo
+	return e
+
+
+## The menu opens on the title screen.
+func test_starts_on_the_title_screen() -> void:
+	assert_eq(LoginUi.ROOT_SCREEN, "title")
+
+
+## Screens stack: Jouer pushes the play screen, Retour pops it, the title screen always stays.
+func test_screens_push_and_pop() -> void:
+	var s: Array = LoginUi.pushed([LoginUi.ROOT_SCREEN], "play")
+	assert_eq(s, ["title", "play"])
+	assert_eq(LoginUi.pushed(s, "play"), ["title", "play"], "the top screen is not pushed twice")
+	assert_eq(LoginUi.pushed(s, "credits"), ["title", "play", "credits"])
+	assert_eq(LoginUi.popped(s), ["title"])
+	assert_eq(LoginUi.popped(["title"]), ["title"], "the title screen is never popped")
+	assert_eq(s, ["title", "play"], "the stack given is not changed")
+
+
+## Escape opens the settings on the title screen, and goes back a screen anywhere else.
+func test_escape_depends_on_the_screen() -> void:
+	assert_eq(LoginUi.escape_action(["title"]), LoginUi.ESCAPE_SETTINGS)
+	assert_eq(LoginUi.escape_action(["title", "play"]), LoginUi.ESCAPE_BACK)
+	assert_eq(LoginUi.escape_action(["title", "play", "credits"]), LoginUi.ESCAPE_BACK)
+
+
+## Escape and a pad's cancel button go back; a release, a repeat or another key do not.
+func test_back_events() -> void:
+	assert_true(LoginUi.is_back(_key(KEY_ESCAPE)))
+	assert_false(LoginUi.is_back(_key(KEY_ESCAPE, false)))
+	assert_false(LoginUi.is_back(_key(KEY_ESCAPE, true, true)))
+	assert_false(LoginUi.is_back(_key(KEY_C)))
+	var pad := InputEventJoypadButton.new()
+	pad.button_index = JOY_BUTTON_B
+	pad.pressed = true
+	assert_true(LoginUi.is_back(pad), "B on a pad")
+	pad.pressed = false
+	assert_false(LoginUi.is_back(pad), "B released")
+	pad.pressed = true
+	pad.button_index = JOY_BUTTON_START
+	assert_false(LoginUi.is_back(pad), "Start opens the settings")
+
+
+## The settings menu lets the start menu use Escape first: on the play screen it goes back, and the
+## settings stay closed.
+func test_settings_let_the_start_menu_use_escape_first() -> void:
+	var menu: CanvasLayer = preload("res://client/settings_menu.gd").new()
+	menu.visible = false
+	var seen := []
+	menu.escape_first = func(e: InputEvent) -> bool:
+		seen.append(e)
+		return true
+	var pad := InputEventJoypadButton.new()
+	pad.button_index = JOY_BUTTON_B
+	pad.pressed = true
+	assert_true(menu.handle(pad), "the start menu used the event")
+	assert_eq(seen, [pad])
+	assert_false(menu.is_open())
+	menu.free()
