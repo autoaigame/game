@@ -48,13 +48,16 @@ jobs:
             // 0. Stacked PRs. If this PR builds on another open PR to main whose exact head commit
             //    already passed this gate, review only what changed since that commit: everything
             //    up to it was approved. Same trust rule as the deployer (latest gate run on that
-            //    commit, from that PR's head repo and branch). Anything else: review against main.
+            //    commit, from that PR's head repo and branch, and listed for that PR to main, so
+            //    only same-repo branches). Anything else: review against main.
             const GATE = '.github/workflows/deploy-gate.yml';
             const gateRun = async (p, sha) => {
               const { data } = await github.rest.actions.listWorkflowRunsForRepo({ owner, repo, head_sha: sha, event: 'pull_request_target', per_page: 50 });
               const runs = data.workflow_runs.filter(r => r.path === GATE && r.event === 'pull_request_target' && r.head_sha === sha
                 && r.head_repository?.full_name === p.head.repo?.full_name && r.head_branch === p.head.ref
-                && (!(r.pull_requests || []).length || r.pull_requests.some(x => x.number === p.number && x.base.ref === 'main')));
+                // GitHub lists a run's PRs only for same-repo branches. An empty list (forks) could be a run
+                // for a PR to another branch, gated by that branch's older workflow: never trust it here.
+                && (r.pull_requests || []).some(x => x.number === p.number && x.base.ref === 'main'));
               return runs.length ? runs.reduce((a, b) => (b.id > a.id ? b : a)) : null;
             };
             let from = base, stackedOn = null;
