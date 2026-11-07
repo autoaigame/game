@@ -1,0 +1,2 @@
+{"id": "face_stern", "slot": "face", "name": "Sévère", "kind": "texture", "texture": "res://assets/character/faces/face_stern.png",
+ "colors": ["hair_brown", "hair_black", "hair_red", "hair_fair", "hair_grey"]}

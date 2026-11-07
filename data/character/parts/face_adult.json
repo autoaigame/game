@@ -1,0 +1,2 @@
+{"id": "face_adult", "slot": "face", "name": "Adulte", "kind": "texture", "texture": "res://assets/character/faces/face_adult.png",
+ "colors": ["hair_brown", "hair_black", "hair_red", "hair_fair", "hair_grey"]}

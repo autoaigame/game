@@ -45,7 +45,8 @@ func test_every_part_names_a_known_slot_and_existing_glb() -> void:
 	for id in CharacterParts.part_ids():
 		var p := CharacterParts.part(id)
 		assert_true(p["slot"] in slots, "%s: slot %s" % [id, p["slot"]])
-		assert_true(ResourceLoader.exists(p["glb"]), "%s: %s" % [id, p["glb"]])
+		var file: String = p["texture"] if p["kind"] == "texture" else p["glb"]
+		assert_true(ResourceLoader.exists(file), "%s: %s" % [id, file])
 		assert_true(p["colors"].size() >= 1, "%s has colours" % id)
 		if p["kind"] == "rigid":
 			assert_true(p["bone"] != "", "%s: rigid needs a bone" % id)
@@ -58,7 +59,7 @@ func test_default_look_is_valid_and_has_the_body() -> void:
 
 
 func test_validate_accepts_a_good_look() -> void:
-	assert_eq(CharacterParts.validate(_look([["body_standard", 1], ["hat_cap", 2], ["top_tshirt", 0], ["bottom_shorts", 1]])), "")
+	assert_eq(CharacterParts.validate(_look([["body_standard", 1], ["face_old", 2], ["hat_cap", 2], ["top_tshirt", 0], ["bottom_shorts", 1]])), "")
 
 
 func test_validate_rejects_unknown_id() -> void:
@@ -70,7 +71,7 @@ func test_validate_rejects_two_parts_in_one_slot() -> void:
 
 
 func test_validate_rejects_a_colour_the_part_does_not_allow() -> void:
-	var base := _look([["body_standard", 0], ["top_tshirt", 0], ["bottom_jeans", 0]])
+	var base := _look([["body_standard", 0], ["face_adult", 0], ["top_tshirt", 0], ["bottom_jeans", 0]])
 	assert_eq(CharacterParts.validate(base), "")
 	assert_true(CharacterParts.validate(base + [{"id": "hat_cap", "color": "skin_light"}]) != "", "a skin ramp on a cap")
 	assert_true(CharacterParts.validate(base + [{"id": "hat_cap", "color": "gold"}]) != "", "unknown ramp")
@@ -78,7 +79,8 @@ func test_validate_rejects_a_colour_the_part_does_not_allow() -> void:
 
 func test_validate_rejects_missing_required_slot() -> void:
 	assert_true(CharacterParts.validate(_look([["hat_cap", 0]])) != "", "no body")
-	assert_true(CharacterParts.validate(_look([["body_standard", 0], ["top_tshirt", 0]])) != "", "no trousers")
+	assert_true(CharacterParts.validate(_look([["body_standard", 0], ["face_adult", 0], ["top_tshirt", 0]])) != "", "no trousers")
+	assert_true(CharacterParts.validate(_look([["body_standard", 0], ["top_tshirt", 0], ["bottom_jeans", 0]])) != "", "no face")
 
 
 func test_validate_rejects_bad_shapes() -> void:
@@ -98,10 +100,11 @@ func test_validate_rejects_bad_shapes() -> void:
 func test_normalize_repairs_a_look() -> void:
 	var raw: Variant = JSON.parse_string('[{"id":"body_standard","color":"skin_dark"},{"id":"gone","color":"khaki"},{"id":"hat_cap","color":"gold"}]')
 	var look := CharacterParts.normalize(raw)
-	assert_eq(look, [{"id": "body_standard", "color": "skin_dark"}, {"id": "hat_cap", "color": "khaki"},
-			{"id": "top_tshirt", "color": "grey"}, {"id": "bottom_jeans", "color": "faded_denim"}])
+	assert_eq(look, [{"id": "body_standard", "color": "skin_dark"}, {"id": "face_adult", "color": "hair_brown"},
+			{"id": "hat_cap", "color": "khaki"}, {"id": "top_tshirt", "color": "grey"},
+			{"id": "bottom_jeans", "color": "faded_denim"}])
 	assert_eq(CharacterParts.validate(look), "")
-	assert_eq(CharacterParts.normalize("junk"), _look([["body_standard", 0], ["top_tshirt", 0], ["bottom_jeans", 0]]))
+	assert_eq(CharacterParts.normalize("junk"), _look([["body_standard", 0], ["face_adult", 0], ["top_tshirt", 0], ["bottom_jeans", 0]]))
 
 
 func test_a_hat_hides_short_hair_entirely() -> void:
@@ -151,7 +154,7 @@ func test_a_part_not_drawn_hides_nothing() -> void:
 
 
 func test_cycle_part_goes_through_none_for_optional_slots() -> void:
-	var look := _look([["body_standard", 0], ["top_tshirt", 0], ["bottom_jeans", 0]])
+	var look := _look([["body_standard", 0], ["face_adult", 0], ["top_tshirt", 0], ["bottom_jeans", 0]])
 	var seen := []
 	for i in CharacterParts.parts_for("hat").size() + 1:
 		look = CharacterParts.cycle_part(look, "hat", 1)

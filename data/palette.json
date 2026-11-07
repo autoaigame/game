@@ -1,5 +1,5 @@
 {
-	"comment": "The kit's 40-colour palette (pixellab-kit/6-terne/0-palette), as ramps from dark to light. Every pixel of the game's art is one of these colours.",
+	"comment": "The game's palette, as ramps from dark to light. The first ten ramps are the 40 colours of the kit (pixellab-kit/6-terne/0-palette): every pixel of the world's art is one of them. The ramps after them are for characters only (docs/art-guide.md): skin tones from deep to fair, and faded reds for hair and cloth. The 3D characters are drawn in these colours only.",
 	"ramps": {
 		"olive_grass": ["2c3324", "3b4530", "4d5638", "616a43", "767d52", "8d9064"],
 		"dry_grass": ["6b6342", "857a54", "9e9268", "b8ac84"],
@@ -10,6 +10,10 @@
 		"stone": ["44443f", "5d5c55", "77756c", "938f84", "b0ab9e"],
 		"skin": ["6e4b3b", "9a6d56", "c09576"],
 		"denim": ["2f3a46", "455466", "64758a"],
-		"khaki_cloth": ["4e4a33", "6e6948", "8f8a63"]
+		"khaki_cloth": ["4e4a33", "6e6948", "8f8a63"],
+		"skin_deep": ["2e221c", "47322a", "5f4434"],
+		"skin_warm": ["8a6149", "d6b49b"],
+		"rust": ["4a2d24", "6b3f30", "8a5640", "a46c52"],
+		"brick": ["5a2f2a", "7a3f36", "96564a"]
 	}
 }

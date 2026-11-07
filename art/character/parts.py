@@ -84,6 +84,20 @@ def is_beard(i, b, c, r):
     return r == "head" and rel.z < 0.30 * HS and rel.z > 0.02 * HS and rel.y < -0.12 * HS
 
 
+def is_goatee(i, b, c, r):
+    return is_beard(i, b, c, r) and abs(c.x) < 0.16 * HS and (c - HEAD).z < 0.24 * HS
+
+
+def is_bowl(i, b, c, r):
+    """Hair down the sides and back to the ears, the face left clear."""
+    rel = c - HEAD
+    return r in ("scalp", "nape") or (r == "head" and rel.z > 0.50 * HS and rel.y > -0.22 * HS)
+
+
+def is_crest(i, b, c, r):
+    return r == "scalp" and abs(c.x) < 0.16 * HS
+
+
 def extract(name, keep, offset, mats, mat_of=None):
     """A copy of the body with only the faces keep(i, bone, centre, region), pushed `offset` metres along
     the normals; weights and armature modifier kept."""
@@ -300,14 +314,16 @@ def back_of_head_slab(top):
 
 hair_m = material("main.hair", "3a2f27")
 head_part("hair_short", [extract("hs", is_hair, 0.012, [hair_m])])
+head_part("hair_bowl", [extract("hb", is_bowl, 0.018, [hair_m])])
+head_part("hair_crest", [extract("hc", is_crest, 0.05, [hair_m])])
+bun_at = (0, HEAD.y + 0.56 * HS, HEAD.z + 0.80 * HS)
+head_part("hair_bun", [extract("hn", is_hair, 0.012, [hair_m]), prim("sphere", (0.2 * HS, 0.18 * HS, 0.2 * HS), bun_at, hair_m, segments=12)])
 head_part("hair_long", [extract("hl", is_hair, 0.014, [hair_m]), back_of_head_slab(HEAD.z + 0.70 * HS)])
 head_part("hair_long_under", [back_of_head_slab(RIM - 0.01)])  # what hair_long keeps under a hat
 beard_m = material("main.beard", "3a2f27")
 head_part("beard_full", [extract("bf", is_beard, 0.014, [beard_m])])
 head_part("beard_short", [extract("bs", is_beard, 0.007, [beard_m])])
-front = min(v.co.y for v in src.vertices if abs(v.co.x) < 0.02 and HEAD.z + 0.25 * HS < v.co.z < HEAD.z + 0.4 * HS)
-head_part("beard_moustache", [prim("box", (0.24 * HS, 0.06 * HS, 0.05 * HS), (0, front - 0.005, HEAD.z + 0.33 * HS),
-        beard_m, bevel=0.015 * HS)])
+head_part("beard_goatee", [extract("bg", is_goatee, 0.012, [beard_m])])
 
 # Hat domes are sized on the skull itself: an ellipsoid centred at the rim, through the skull's extents
 # above the rim, grown until every skull vertex above the rim is inside, plus a margin (covers the facets

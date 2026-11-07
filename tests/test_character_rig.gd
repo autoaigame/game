@@ -118,7 +118,11 @@ func test_every_part_of_every_slot_builds() -> void:
 		look = look.filter(func(e): return CharacterParts.part(e["id"])["slot"] != slot_id)
 		look.append({"id": id, "color": CharacterParts.part(id)["colors"][0]})
 		var root := CharacterRig.build(look)
-		assert_true(_part_node(root, id) != null, "%s built" % id)
+		if CharacterParts.part(id)["kind"] == "texture":
+			var head: Node = _skeleton(root).get_node("body_head")
+			assert_eq(head.get_meta(slot_id, {}).get("texture", ""), CharacterParts.part(id)["texture"], "%s on the head" % id)
+		else:
+			assert_true(_part_node(root, id) != null, "%s built" % id)
 		root.free()
 
 

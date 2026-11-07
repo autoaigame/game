@@ -1,2 +1,2 @@
 {"id": "jacket_field", "slot": "jacket", "name": "Veste", "kind": "skinned", "glb": "res://assets/character/parts/jacket_field.glb",
- "hides": ["arms_upper", "arms_lower"], "colors": ["khaki", "olive", "workwear_blue", "brown"]}
+ "hides": ["arms_upper", "arms_lower"], "colors": ["khaki", "olive", "workwear_blue", "brown", "rust"]}

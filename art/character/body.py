@@ -56,7 +56,12 @@ OUTFIT = {"head": "c09576", "scalp": "3a2f27", "nape": "3a2f27", "torso": "8f8a6
         "arms_lower": "8f8a63", "hands": "c09576", "hips": "455466", "legs_upper": "455466",
         "legs_lower": "455466", "feet": "51433a"}
 # Height of the scalp's lower edge (a hat's rim) above the head bone, as a fraction of the head's height.
-SCALP = 0.62
+SCALP = 0.72
+# The head's texture: u goes around the head (0.5 = the front), v from the top of the head (0) to the chin
+# (1). The face zone (FACE_RECT: x, y, width, height in texels) is where a face texture is drawn
+# (client/character_3d.gd has the same numbers): high on the head, seen from 30 degrees above.
+HEAD_TEXTURE = (48, 22)
+FACE_RECT = (12, 6, 24, 16)
 
 
 def lin(hexstr):
@@ -436,6 +441,35 @@ def cut_regions(me, rig, dom):
     return dom
 
 
+def head_uv(me, rig, dom):
+    """Cylindrical UV of the head, scalp and nape around the head's vertical axis; other faces at (0, 0)."""
+    mesh = me.data
+    while mesh.uv_layers:
+        mesh.uv_layers.remove(mesh.uv_layers[0])
+    uv = mesh.uv_layers.new(name="UVMap")
+    head_mats = {REGIONS.index(r) for r in ("head", "scalp", "nape")}
+    hv = {vi for p in mesh.polygons if p.material_index in head_mats for vi in p.vertices}
+    hv = [vi for vi in hv if dom[vi] in ("DEF-head", "DEF-neck")]
+    top = max(mesh.vertices[vi].co.z for vi in hv)
+    chin = top - (top - rig.data.bones["DEF-head"].head_local.z) / 0.95  # just under the jaw
+    ys = [mesh.vertices[vi].co.y for vi in hv]
+    cy = (min(ys) + max(ys)) / 2
+    for p in mesh.polygons:
+        if p.material_index not in head_mats:
+            for li in p.loop_indices:
+                uv.data[li].uv = (0.0, 0.0)
+            continue
+        cx = sum(mesh.vertices[vi].co.x for vi in p.vertices) / len(p.vertices)
+        for li, vi in zip(p.loop_indices, p.vertices):
+            co = mesh.vertices[vi].co
+            a = math.atan2(co.x, -(co.y - cy))  # 0 at the front (-y)
+            if abs(a) > math.pi * 0.9 and a * cx < 0:  # keep a face on one side of the seam at the back
+                a = math.copysign(math.pi, cx)
+            u = 0.5 + a / (2 * math.pi)
+            v = min(max((top - co.z) / (top - chin), 0.0), 1.0)
+            uv.data[li].uv = (u, 1.0 - v)  # Blender's v points up; glTF flips it back
+
+
 def split_regions(me):
     """One object per region (body_<region>), each with its region's material only."""
     bpy.ops.object.select_all(action="DESELECT")
@@ -594,6 +628,7 @@ if os.path.exists(parts_py):
     runpy.run_path(parts_py, init_globals={"me": me, "rig": rig, "ROOT": ROOT, "REGIONS": REGIONS,
             "SCALP": SCALP, "lin": lin, "MORPH_RIG": MORPH_RIG})
     rig.animation_data.action = None
+head_uv(me, rig, dominant(me))
 parts = split_regions(me)
 out = os.path.join(ROOT, "assets/character")
 os.makedirs(out, exist_ok=True)

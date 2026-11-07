@@ -1,0 +1,2 @@
+{"id": "face_scar", "slot": "face", "name": "Cicatrice", "kind": "texture", "texture": "res://assets/character/faces/face_scar.png",
+ "colors": ["hair_brown", "hair_black", "hair_red", "hair_fair", "hair_grey"]}

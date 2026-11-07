@@ -1,2 +1,2 @@
-{"id": "beard_moustache", "slot": "beard", "name": "Moustache", "kind": "rigid", "glb": "res://assets/character/parts/beard_moustache.glb",
- "bone": "DEF-head", "colors": ["hair_brown", "hair_black", "hair_fair", "hair_grey"]}
+{"id": "beard_moustache", "slot": "beard", "name": "Moustache", "kind": "texture", "texture": "res://assets/character/faces/beard_moustache.png",
+ "colors": ["hair_brown", "hair_black", "hair_red", "hair_fair", "hair_grey"]}

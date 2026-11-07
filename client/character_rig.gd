@@ -5,12 +5,14 @@
 ## bone, offset so that in the rest pose they sit where they were modelled (bone head + offset in model
 ## axes). The body part's shape (morph) turns on the shape key morph_<id> of the body and of every skinned
 ## part; the bones are changed by CharacterMorph once the model animates (metadata "morph" on the root).
-## Each part node carries the metadata part_id and glb. Display only.
+## Texture parts (faces, flat beards) go on the head as metadata ("face", "beard": {texture, ramp}) for the
+## renderer. Each part node carries the metadata part_id and glb; each tinted material the ramp name
+## (metadata "ramp"). Display only.
 class_name CharacterRig
 extends RefCounted
 
 static var _scenes := {}  ## glb path -> PackedScene
-static var _tints := {}  ## [source material, colour] -> tinted copy, shared by every character
+static var _tints := {}  ## [source material, ramp] -> tinted copy, shared by every character
 
 
 static func scene(path: String) -> PackedScene:
@@ -35,9 +37,14 @@ static func build(look: Array) -> Node3D:
 	for mi in sk.get_children():
 		if mi is MeshInstance3D and String(mi.name).begins_with("body_"):
 			mi.visible = not r["hidden"].has(String(mi.name).trim_prefix("body_"))
-			_tint(mi, body["color"], true)
+			_tint(mi, body, true)
 	for e in parts:
 		if e["kind"] == "body":
+			continue
+		if e["kind"] == "texture":
+			var head: Node = sk.get_node_or_null("body_head")
+			if head != null:
+				head.set_meta(e["slot"], {"texture": e["texture"], "ramp": e["ramp"]})
 			continue
 		var inst: Node3D = scene(e["glb"]).instantiate()
 		if e["kind"] == "rigid":
@@ -54,7 +61,7 @@ static func build(look: Array) -> Node3D:
 			att.add_child(inst)
 			inst.transform = Transform3D(sk.get_bone_global_rest(idx).basis.inverse(), Vector3.ZERO)
 			for mi in inst.find_children("*", "MeshInstance3D", true, false):
-				_tint(mi, e["color"])
+				_tint(mi, e)
 		else:
 			for mi: MeshInstance3D in inst.find_children("*", "MeshInstance3D", true, false):
 				mi.owner = null
@@ -63,7 +70,7 @@ static func build(look: Array) -> Node3D:
 				sk.add_child(mi)
 				mi.skeleton = NodePath("..")
 				_mark(mi, e)
-				_tint(mi, e["color"])
+				_tint(mi, e)
 			inst.free()
 	if body["morph"] != CharacterMorph.BASE:
 		for mi: MeshInstance3D in sk.find_children("*", "MeshInstance3D", true, false):
@@ -78,15 +85,16 @@ static func _mark(n: Node, e: Dictionary) -> void:
 	n.set_meta("glb", e["glb"])
 
 
-## The chosen colour as a surface override on every surface whose material is named main* (all of them
-## with `all`: the body's skin regions), so the renderer reads it like a glTF colour.
-static func _tint(mi: MeshInstance3D, color: Color, all := false) -> void:
+## The chosen ramp as a surface override on every surface whose material is named main* (all of them
+## with `all`: the body's skin regions): its colour, and the ramp name for the renderer.
+static func _tint(mi: MeshInstance3D, e: Dictionary, all := false) -> void:
 	for s in mi.mesh.get_surface_count():
 		var m := mi.mesh.surface_get_material(s)
 		if m is BaseMaterial3D and (all or m.resource_name.begins_with("main")):
-			var key := [m, color]
+			var key := [m, e["ramp"]]
 			if not _tints.has(key):
 				var t: BaseMaterial3D = m.duplicate()
-				t.albedo_color = color
+				t.albedo_color = e["color"]
+				t.set_meta("ramp", e["ramp"])
 				_tints[key] = t
 			mi.set_surface_override_material(s, _tints[key])

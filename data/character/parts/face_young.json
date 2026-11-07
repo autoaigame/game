@@ -1,0 +1,2 @@
+{"id": "face_young", "slot": "face", "name": "Jeune", "kind": "texture", "texture": "res://assets/character/faces/face_young.png",
+ "colors": ["hair_brown", "hair_black", "hair_red", "hair_fair", "hair_grey"]}

@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://fj6tjr0plqpw"
-path="res://.godot/imported/beard_moustache.glb-abc7f1e887585dfff0793775ff46ade3.scn"
+uid="uid://dmisllfqaepd2"
+path="res://.godot/imported/hair_bowl.glb-a0716dec44c69efd49231dda38915f3b.scn"
 
 [deps]
 
-source_file="res://assets/character/parts/beard_moustache.glb"
-dest_files=["res://.godot/imported/beard_moustache.glb-abc7f1e887585dfff0793775ff46ade3.scn"]
+source_file="res://assets/character/parts/hair_bowl.glb"
+dest_files=["res://.godot/imported/hair_bowl.glb-a0716dec44c69efd49231dda38915f3b.scn"]
 
 [params]
 

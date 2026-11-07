@@ -1,2 +1,2 @@
 {"id": "back_bag", "slot": "back", "name": "Sac", "kind": "rigid", "glb": "res://assets/character/parts/back_bag.glb",
- "bone": "DEF-spine.003", "colors": ["canvas_blue", "khaki", "brown"]}
+ "bone": "DEF-spine.003", "colors": ["canvas_blue", "khaki", "brown", "rust"]}

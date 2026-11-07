@@ -1,2 +1,2 @@
 {"id": "hat_beanie", "slot": "hat", "name": "Bonnet", "kind": "rigid", "glb": "res://assets/character/parts/hat_beanie.glb",
- "bone": "DEF-head", "hides": ["scalp", "hair_top"], "colors": ["leather", "workwear_blue", "olive", "grey"]}
+ "bone": "DEF-head", "hides": ["scalp", "hair_top"], "colors": ["leather", "workwear_blue", "olive", "grey", "brick"]}

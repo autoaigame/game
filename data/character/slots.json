@@ -2,6 +2,7 @@
 	"comment": "Character slots, in editor order. A look wears at most one part per slot; required slots always have one. default: the part a new player wears (\"\" for none). See docs/character-parts.md.",
 	"slots": [
 		{"id": "body", "name": "Silhouette", "required": true, "default": "body_standard"},
+		{"id": "face", "name": "Visage", "required": true, "default": "face_adult"},
 		{"id": "hair", "name": "Cheveux", "required": false, "default": "hair_short"},
 		{"id": "beard", "name": "Barbe", "required": false, "default": "beard_short"},
 		{"id": "hat", "name": "Chapeau", "required": false, "default": ""},
