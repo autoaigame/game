@@ -29,8 +29,9 @@ const NOTICES := {
 	"bag_full": "Ton sac est plein.",
 }
 const COOK := "Cuire"
-## Key hints (key, what it does), shown as key caps under the hunger bar.
-const KEYS := [["I", "Sac"], ["H", "Siffler le chien"]]
+## Key hints (physical key, what it does), shown as key caps under the hunger bar.
+## Physical keys sit next to the movement keys whatever the layout: E and Q on QWERTY, E and A on AZERTY.
+const KEYS := [[KEY_E, "Sac"], [KEY_Q, "Siffler le chien"]]
 ## The bag window (client/bag_view.gd).
 const FOOD_DESC := "Nourrit : +%d"
 const COOKS_DESC := "Sur un feu, devient : %s"
@@ -91,3 +92,22 @@ static func notice(key: String, args: Dictionary) -> String:
 	if key == "ate" or key == "cooked":
 		return NOTICES[key] % ItemData.item(String(args.get("item", ""))).get("name", "?")
 	return NOTICES.get(key, "")
+
+
+## Display servers that know the keyboard layout. Others (headless, web) learn it from key presses.
+const LAYOUT_AWARE := ["Windows", "macOS", "X11", "Wayland"]
+## Physical keys that AZERTY labels differently from QWERTY (the letters around the movement keys).
+const AZERTY := {KEY_Q: KEY_A, KEY_A: KEY_Q, KEY_W: KEY_Z, KEY_Z: KEY_W}
+
+
+## The name printed on the player's keyboard for a physical key. `seen` maps physical keys the
+## player pressed to their labels: it names those keys, and tells AZERTY apart from QWERTY.
+static func key_name(physical: Key, seen := {}) -> String:
+	if seen.has(physical):
+		return OS.get_keycode_string(seen[physical])
+	if DisplayServer.get_name() in LAYOUT_AWARE:
+		return OS.get_keycode_string(DisplayServer.keyboard_get_label_from_physical(physical))
+	for k in AZERTY:
+		if seen.get(k) == AZERTY[k]:
+			return OS.get_keycode_string(AZERTY.get(physical, physical))
+	return OS.get_keycode_string(physical)
