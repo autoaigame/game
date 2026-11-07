@@ -16,6 +16,7 @@ var _chunk_nodes := {}  ## chunk -> Node2D
 var _actors := {}  ## peer_id -> Node2D
 ## creature id -> {node, server, shown (cells), pose (from the server, "idle" if none), walked (cells), t (s in pose)}
 var _creatures := {}
+var _marks := {}  ## mark id -> {node: MarkView, left: seconds}
 var _walk := {}  ## peer_id -> drawing state (WalkAnim.new_state)
 var _camera := Camera2D.new()
 var _my_pos := Vector2.ZERO  ## my position in the last snapshot, in cells
@@ -38,6 +39,7 @@ func _ready() -> void:
 	_camera.position = IsoLayer.cell_to_local(Vector2(MapData.spawn_cell()))
 	client.snapshot_received.connect(_on_snapshot)
 	client.creatures_received.connect(_on_creatures)
+	client.marks_received.connect(_on_marks)
 	client.welcomed.connect(func(cell: Vector2i): _my_pos = Vector2(cell))
 
 
@@ -82,6 +84,33 @@ func _on_creatures(list: Array) -> void:
 		if not seen.has(id):
 			_creatures[id]["node"].queue_free()
 			_creatures.erase(id)
+
+
+func _on_marks(list: Array) -> void:
+	var seen := {}
+	for m in list:
+		var id: int = m["id"]
+		seen[id] = true
+		if not _marks.has(id):
+			var node := MarkView.new()
+			node.kind = m["kind"]
+			node.position = IsoLayer.cell_to_local(m["pos"])
+			add_child(node)
+			_marks[id] = {"node": node}
+		_marks[id]["left"] = float(m["left"])
+	for id in _marks.keys():
+		if not seen.has(id):
+			_marks[id]["node"].queue_free()
+			_marks.erase(id)
+	_age_marks(0.0)
+
+
+## Marks fade out over their last seconds (the server removes them when they expire).
+func _age_marks(dt: float) -> void:
+	for id in _marks:
+		var m: Dictionary = _marks[id]
+		m["left"] = maxf(m["left"] - dt, 0.0)
+		(m["node"] as Node2D).modulate.a = clampf(m["left"] / MarkView.FADE_S, 0.0, 1.0)
 
 
 func _make_creature(_kind: String) -> Node2D:
@@ -193,6 +222,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	_animate_actors(delta)
 	_animate_creatures(delta)
+	_age_marks(delta)
 	var z := CameraZoom.approach(_camera.zoom.x, _zoom_target, delta)
 	_camera.zoom = Vector2(z, z)
 	_stream_chunks()
