@@ -57,6 +57,10 @@ const HUNT_SPEED := 9.0
 const HUNT_LEASH := 30.0
 const HUNT_MAX_S := 12.0
 const CATCH_DIST := 0.6
+## While hunting, the dog runs around obstacles: it follows the shortest walkable path (path_to) to
+## the prey's cell, looking at most PATH_MAX_CELLS cells, and recomputes it when the prey changes cell.
+## With no path found it runs straight at the prey.
+const PATH_MAX_CELLS := 2048
 
 const _NEIGHBOURS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(0, -1),
 		Vector2i(1, 1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(-1, -1)]
@@ -125,6 +129,7 @@ static func start_hunt(dog: Dictionary, prey_id: int) -> void:
 	dog["hunt_left"] = HUNT_MAX_S
 	dog["goal"] = null
 	dog["stuck"] = 0.0
+	dog.erase("path")
 
 
 ## One step of a hunt: runs to `prey_pos` (null if the prey is gone). Returns [{kind: "catch", prey,
@@ -135,7 +140,7 @@ static func hunt(dog: Dictionary, owner_pos: Vector2, prey_pos: Variant, dt: flo
 	if prey_pos == null or dog["hunt_left"] <= 0.0 or (dog["pos"] as Vector2).distance_to(owner_pos) > HUNT_LEASH:
 		_end_hunt(dog)
 		return []
-	dog["pos"] = Protocol.step_towards(dog["pos"], Protocol.cell_of(prey_pos), dt * HUNT_SPEED / Protocol.SPEED_CELLS_PER_S)
+	_run_to(dog, Protocol.cell_of(prey_pos), dt * HUNT_SPEED / Protocol.SPEED_CELLS_PER_S)
 	if (dog["pos"] as Vector2).distance_to(prey_pos) > CATCH_DIST:
 		return []
 	var caught := {"kind": "catch", "prey": dog["prey"], "pos": prey_pos}
@@ -150,6 +155,55 @@ static func _end_hunt(dog: Dictionary) -> void:
 	dog["returning"] = true
 	dog["rest"] = 0.0
 	dog.erase("prey")
+	dog.erase("path")
+
+
+## Runs towards cell `target` along a walkable path (kept in dog["path"] while the target stays the
+## same), for `dt` seconds at Protocol.SPEED_CELLS_PER_S. Straight at it when there is no path.
+static func _run_to(dog: Dictionary, target: Vector2i, dt: float) -> void:
+	var path: Variant = dog.get("path")
+	if path == null or path["to"] != target:
+		path = {"to": target, "cells": path_to(Protocol.cell_of(dog["pos"]), target)}
+		dog["path"] = path
+	var cells: Array = path["cells"]
+	if cells.is_empty():
+		dog["pos"] = Protocol.step_towards(dog["pos"], target, dt)
+		return
+	while dt > 0.0 and not cells.is_empty():
+		var before: Vector2 = dog["pos"]
+		dog["pos"] = Protocol.step_towards(before, cells[0], dt)
+		if dog["pos"] != Vector2(cells[0]):
+			if dog["pos"] == before:
+				dog.erase("path")  # blocked: look for a new path next tick
+			return
+		dt -= before.distance_to(dog["pos"]) / Protocol.SPEED_CELLS_PER_S
+		cells.pop_front()
+
+
+## The cells of a shortest walkable path from `from` to `to` (8 directions, no corner cutting:
+## Protocol.can_enter), without `from` and ending on `to`. Empty when `to` cannot be reached within
+## PATH_MAX_CELLS visited cells, or when `from` == `to`.
+static func path_to(from: Vector2i, to: Vector2i) -> Array:
+	if from == to or not MapData.is_walkable(to):
+		return []
+	var came := {from: from}
+	var queue: Array[Vector2i] = [from]
+	var head := 0
+	while head < queue.size() and came.size() < PATH_MAX_CELLS:
+		var c := queue[head]
+		head += 1
+		for n in _NEIGHBOURS:
+			var next := c + n
+			if came.has(next) or not Protocol.can_enter(c, next):
+				continue
+			came[next] = c
+			if next == to:
+				var path := [to]
+				while came[path[0]] != from:
+					path.push_front(came[path[0]])
+				return path
+			queue.append(next)
+	return []
 
 
 ## Runs its catch back to its owner, as fast as it follows, and hands it over once within

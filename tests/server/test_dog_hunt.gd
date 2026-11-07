@@ -222,3 +222,44 @@ func test_no_new_hunt_while_carrying() -> void:
 func test_every_species_gives_meat() -> void:
 	for id in WILD.species():
 		assert_true(load(SERVER_SCRIPT).MEAT.get("carcass_" + id, 0) > 0, "%s gives meat" % id)
+
+
+## A lone obstacle (a tree, a rock...) with open walkable ground all around it, in rings around the
+## spawn: the dog starts 2 cells on one side of it, the prey sits 2 cells on the other side.
+func _lone_obstacle() -> Variant:
+	var s := MapData.spawn_cell()
+	for r in 300:
+		for dx in range(-r, r + 1):
+			for dy in [-r, r]:
+				var c := s + Vector2i(dx, dy)
+				if MapData.is_walkable(c):
+					continue
+				var open := true
+				for y in range(-2, 3):
+					for x in range(-3, 4):
+						if Vector2i(x, y) != Vector2i.ZERO and not MapData.is_walkable(c + Vector2i(x, y)):
+							open = false
+				if open:
+					return c
+	return null
+
+
+## An obstacle stands on the straight line to the prey: the dog runs around it and catches the prey
+## instead of staying stuck against it until it gives up.
+func test_runs_around_an_obstacle() -> void:
+	var rock: Variant = _lone_obstacle()
+	assert_true(rock != null, "no lone obstacle near the spawn")
+	var at := Vector2(rock - Vector2i(2, 0))
+	var prey := Vector2(rock + Vector2i(2, 0))
+	var straight := Protocol.step_towards(at, prey, 100.0)
+	assert_true(straight.distance_to(prey) > DOG.CATCH_DIST, "the straight line is blocked")
+	var dog := DOG.new_dog(at)
+	DOG.start_hunt(dog, -3)
+	var events := []
+	for i in int(2.0 * Protocol.TICK_HZ):
+		events = DOG.hunt(dog, at, prey, 1.0 / Protocol.TICK_HZ)
+		assert_true(MapData.is_walkable(Protocol.cell_of(dog["pos"])), "on walkable ground")
+		if not events.is_empty():
+			break
+	assert_eq(events.size(), 1, "caught it within 2 s")
+	assert_eq(dog["state"], "fetch")
