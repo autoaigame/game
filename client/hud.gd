@@ -2,7 +2,7 @@
 ## framed box (bottom left) with a warning when starving and the key hints as key caps; the bag
 ## window (client/bag_view.gd: E opens and closes it, Escape closes it); short notices from the
 ## server on a parchment band (top centre), with the item's icon when there is one.
-## The world map (client/world_map.gd): a minimap (top right) and a big map, opened and closed with
+## The world map (client/world_map.gd): a minimap (bottom right) and a big map, opened and closed with
 ## the physical M key (',' on AZERTY) or closed with Escape. Both follow the player, show the other
 ## players the server sends, and zoom with the mouse wheel. The explored cells are kept per player name.
 ## Values come from the server (status, inventory, marks); the HUD only shows them.
@@ -17,7 +17,7 @@ const BAR_RIM := Color8(0x1f, 0x22, 0x1a)
 const NOTICE_S := 3.0
 const BAG_MARGIN := 16.0
 const BAG_W := 300.0
-const MINIMAP_PX := 200.0
+const MINIMAP_PX := 100.0
 const MAP_MARGIN := 16.0
 ## Explored cells are saved this often (seconds) while they change, and when leaving.
 const MAP_SAVE_S := 10.0
@@ -366,16 +366,17 @@ func _build() -> void:
 	notice_line.add_child(_notice_label)
 
 
-## The minimap in a frame (top right), and the big map over most of the screen, hidden at first.
+## The minimap in a frame (bottom right), and the big map over most of the screen, hidden at first.
 func _build_maps(root: Control) -> void:
 	var mini_frame := PanelContainer.new()
 	mini_frame.add_theme_stylebox_override("panel", UiTheme.box("panel", 4))
-	mini_frame.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	mini_frame.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	mini_frame.offset_right = -MAP_MARGIN
-	mini_frame.offset_top = MAP_MARGIN
+	mini_frame.offset_bottom = -MAP_MARGIN
 	mini_frame.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	mini_frame.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	root.add_child(mini_frame)
-	_minimap = MapView.new(_map, 1.0, 8.0, 3.0)
+	_minimap = MapView.new(_map, 1.0, 8.0, 2.0)
 	_minimap.custom_minimum_size = Vector2(MINIMAP_PX, MINIMAP_PX)
 	mini_frame.add_child(_minimap)
 
