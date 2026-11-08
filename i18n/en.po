@@ -94,6 +94,23 @@ msgstr "Colour (right click: previous)"
 msgid "look.none"
 msgstr "—"
 
+#. The dog row of the look editor
+msgid "look.dog"
+msgstr "Dog"
+
+#. Short names of the dogs a player can choose (shared/dog_skins.gd)
+msgid "dog.classic"
+msgstr "Classic"
+
+msgid "dog.cyborg_a"
+msgstr "Scrap"
+
+msgid "dog.cyborg_b"
+msgstr "Armoured"
+
+msgid "dog.cyborg_c"
+msgstr "Commando"
+
 #. HUD (client/hud.gd)
 msgid "hud.hunger"
 msgstr "Hunger"
@@ -334,6 +351,9 @@ msgstr "bag items"
 msgid "credits.kind.music"
 msgstr "music"
 
+msgid "credits.kind.models"
+msgstr "3D models"
+
 msgid "credits.kind.objects"
 msgstr "scenery"
 
@@ -352,6 +372,9 @@ msgstr "CC0 1.0 (public domain)"
 
 msgid "credits.licence.elevenlabs"
 msgstr "ElevenLabs sounds, in this game only"
+
+msgid "credits.licence.proto"
+msgstr "prototype, terms to be checked"
 
 msgid "credits.licence.suno"
 msgstr "Suno music, in this game only"
@@ -385,3 +408,16 @@ msgstr "      bed {sound}  at {at} s"
 #. {in}: seconds
 msgid "debug.event"
 msgstr "      one-shot {sound}…  in {in} s"
+
+#. F10 debug line. {gait}: one of the gait names below
+msgid "debug.dog_gait"
+msgstr "F10: dog gait forced: {gait}"
+
+msgid "debug.gait_walk"
+msgstr "walk"
+
+msgid "debug.gait_trot"
+msgstr "trot"
+
+msgid "debug.gait_gallop"
+msgstr "gallop"

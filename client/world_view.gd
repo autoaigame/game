@@ -41,6 +41,12 @@ const BODY_POINTS := [Vector2(0, 0.15), Vector2(0, 0.5), Vector2(0, 0.85), Vecto
 var _faded := {}  ## tree sprite -> true while not fully opaque
 ## My silhouette stays drawn until the trees covering me are this faded.
 const SILHOUETTE_UNTIL_ALPHA := 0.7
+## Debug key, like F3 and F4 (client/sound_director.gd): F10 forces a gait on the 3D dogs (auto, walk,
+## trot, gallop), still in step with the ground; a line at the top left says which while one is forced.
+const GAIT_KEY := KEY_F10
+const FORCED_GAITS: Array[String] = ["", "walk", "trot", "gallop"]
+var _forced_gait := 0
+var _gait_hint := Label.new()
 
 
 func _ready() -> void:
@@ -62,6 +68,47 @@ func _ready() -> void:
 		client.look_received.connect(_on_look)
 	if client.has_signal("whistled"):
 		client.whistled.connect(_on_whistled)
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	_gait_hint.position = Vector2(8, 6)
+	_gait_hint.add_theme_font_size_override("font_size", 12)
+	_gait_hint.add_theme_color_override("font_outline_color", Color.BLACK)
+	_gait_hint.add_theme_constant_override("outline_size", 4)
+	_gait_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_gait_hint.visible = false
+	layer.add_child(_gait_hint)
+
+
+## Debug (F10): the next forced gait (auto first) on every 3D dog.
+func cycle_forced_gait() -> void:
+	_forced_gait = (_forced_gait + 1) % FORCED_GAITS.size()
+	for id in _creatures:
+		var m: Node = _creatures[id]["node"].get_node_or_null("Dog3D")
+		if m != null:
+			(m as Dog3D).forced = FORCED_GAITS[_forced_gait]
+	_gait_hint.visible = _forced_gait != 0
+	if _forced_gait != 0:
+		_gait_hint.text = UiText.t(UiText.DEBUG_DOG_GAIT).format(
+				{"gait": UiText.t(UiText.DOG_GAITS[FORCED_GAITS[_forced_gait]])})
+
+
+## Draws a dog as the drawn sprite (DogSkins.DEFAULT) or as the 3D model of its DogSkins id, in place of
+## the one it had.
+func _apply_dog_skin(node: Node2D, skin: String) -> void:
+	node.set_meta("skin", skin)
+	var old := node.get_node_or_null("Dog3D")
+	if old != null:
+		node.remove_child(old)
+		old.queue_free()
+	var index := Dog3D.skin_index(skin)
+	(node.get_node("Sprite") as Sprite2D).visible = index < 0
+	if index < 0:
+		return
+	var model := Dog3D.new(index)
+	model.name = "Dog3D"
+	model.forced = FORCED_GAITS[_forced_gait]
+	node.add_child(model)
+	model.face(Model3D.yaw_of(Vector2(1, -1)))
 
 
 ## Whether `tree`, drawn in front of a player standing at `feet` (sorted after it), covers its body.
@@ -145,6 +192,9 @@ func _on_creatures(list: Array) -> void:
 		_creatures[id]["speed"] = WalkAnim.speed_between(_creatures[id]["server"], c["pos"])
 		_creatures[id]["server"] = c["pos"]
 		if c["kind"] == "dog":
+			var skin := DogSkins.valid(c.get("skin", DogSkins.DEFAULT))
+			if _creatures[id]["node"].get_meta("skin", "") != skin:
+				_apply_dog_skin(_creatures[id]["node"], skin)
 			_show_carry(_creatures[id]["node"], String(c.get("carry", "")))
 	for id in _creatures.keys():
 		if not seen.has(id):
@@ -228,7 +278,13 @@ func _animate_creatures(dt: float) -> void:
 		node.position = IsoLayer.cell_to_local(c["shown"])
 		var screen_dx := IsoLayer.cell_to_local(c["shown"]).x - IsoLayer.cell_to_local(before).x
 		if absf(screen_dx) > 0.01:
-			node.scale.x = -1.0 if screen_dx < 0.0 else 1.0
+			c["face"] = -1.0 if screen_dx < 0.0 else 1.0
+		# A Dog3D turns on its own: its node is not mirrored, only the catch in its mouth moves
+		var model: Dog3D = node.get_node_or_null("Dog3D")
+		node.scale.x = 1.0 if model != null else c.get("face", 1.0)
+		var held: Node2D = node.get_node_or_null("Carry")
+		if held != null:
+			held.position.x = CARRY_AT.x * (c.get("face", 1.0) if model != null else 1.0)
 		var moved: float = (c["shown"] - before).length()
 		c["walked"] += moved
 		c["t"] += dt
@@ -237,6 +293,9 @@ func _animate_creatures(dt: float) -> void:
 			continue
 		var speed := moved / dt if dt > 0.0 else 0.0
 		(node.get_node("Sprite") as Sprite2D).frame_coords = DogAnim.frame(c["pose"], moved > 0.0005, speed, c["walked"], c["t"])
+		if model != null:
+			model.step(c["shown"] - before, dt, c["pose"])
+			model.place(node.position, node.position, _camera.position)
 
 
 ## Draws every player between snapshots and animates its walk (display only).
@@ -338,6 +397,10 @@ func _on_whistled(id: int) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if client.my_peer_id == 0:
+		return
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == GAIT_KEY:
+		cycle_forced_gait()
+		get_viewport().set_input_as_handled()
 		return
 	if event is InputEventMouseButton and event.pressed:
 		var steps := CameraZoom.wheel_steps(event.button_index, event.factor)

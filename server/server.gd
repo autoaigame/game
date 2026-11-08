@@ -23,10 +23,12 @@ var _db: RefCounted
 var _net: Node
 ## peer_id -> {name, pos: Vector2, target: Vector2i, stopped: bool, dog: server/dog.gd record,
 ## hunger: float, sent: what the client was last told of its status, inventory: item id -> count,
-## look: Array (CharacterParts)}
+## look: Array (CharacterParts)}; the dog record's "skin" is the dog the player chose (DogSkins)
 var _players := {}
 ## peer_id -> look sent before joining (the client sends it first, so others never see a default look)
 var _early_looks := {}
+## peer_id -> dog (DogSkins id) sent before joining, for the same reason; bounded like _early_looks
+var _early_dogs := {}
 var _marks: Dictionary = MARKS.new_marks()
 var _marks_changed := false
 var _wild: Dictionary = WILD.new_wild()
@@ -82,8 +84,9 @@ func on_join(peer_id: int, player_name: String) -> void:
 		return
 	var cell := join_cell(_db.load_player(player_name))
 	_players[peer_id] = _new_player(player_name, cell, _db.load_stats(player_name), _db.load_inventory(player_name),
-			_early_looks.get(peer_id, []))
+			_early_looks.get(peer_id, []), _early_dogs.get(peer_id, DogSkins.DEFAULT))
 	_early_looks.erase(peer_id)
+	_early_dogs.erase(peer_id)
 	_net.welcome.rpc_id(peer_id, peer_id, cell)
 	_net.marks.rpc_id(peer_id, MARKS.snapshot(_marks))
 	_net.status.rpc_id(peer_id, _status_to_send(_players[peer_id]))
@@ -132,11 +135,14 @@ func _resync_messages(peer_id: int) -> Array:
 
 
 ## A joined player's record at `cell`, with their dog and their saved stats (hunger: full if none),
-## wearing `look` if it is valid, the default look otherwise.
-func _new_player(player_name: String, cell: Vector2i, stats: Dictionary, inventory := {}, look: Variant = []) -> Dictionary:
+## wearing `look` if it is valid, the default look otherwise, and with the dog `dog_skin` (DogSkins.valid).
+func _new_player(player_name: String, cell: Vector2i, stats: Dictionary, inventory := {}, look: Variant = [],
+		dog_skin: Variant = DogSkins.DEFAULT) -> Dictionary:
 	var dog_pos := Vector2(DOG.spot_near(cell, cell + Vector2i(1, 1)))
+	var dog: Dictionary = DOG.new_dog(dog_pos, hash(player_name))
+	dog["skin"] = DogSkins.valid(dog_skin)
 	return {"name": player_name, "pos": Vector2(cell), "target": Vector2(cell), "stopped": false, "sprint": false,
-			"dog": DOG.new_dog(dog_pos, hash(player_name)), "hunger": float(stats.get("hunger", HUNGER.MAX)),
+			"dog": dog, "hunger": float(stats.get("hunger", HUNGER.MAX)),
 			"sent": {}, "inventory": inventory.duplicate(), "look": wearable(look)}
 
 
@@ -352,6 +358,17 @@ func on_set_look(peer_id: int, look: Variant) -> void:
 		_send_look(id, peer_id)
 
 
+## The dog a player chose (DogSkins id): an unknown one gives the default dog. Everyone near sees it
+## with the next creatures update (_creatures_for), so nothing is sent here.
+func on_set_dog(peer_id: int, skin: Variant) -> void:
+	var id := DogSkins.valid(skin)
+	if not _players.has(peer_id):
+		if _early_dogs.has(peer_id) or _early_dogs.size() < MAX_EARLY_LOOKS:
+			_early_dogs[peer_id] = id
+		return
+	_players[peer_id]["dog"]["skin"] = id
+
+
 ## Tells peer `to` what player `who` wears.
 func _send_look(to: int, who: int) -> void:
 	look_sent.emit(to, who, _players[who]["look"])
@@ -361,6 +378,7 @@ func _send_look(to: int, who: int) -> void:
 
 func _on_peer_disconnected(peer_id: int) -> void:
 	_early_looks.erase(peer_id)
+	_early_dogs.erase(peer_id)
 	if not _players.has(peer_id):
 		return
 	var p: Dictionary = _players[peer_id]
@@ -521,8 +539,8 @@ func _snapshot_for(viewer: int) -> Array:
 	return out
 
 
-## The creatures a player is sent: {id, kind, owner (peer id or 0), pos, state, and for a dog carrying
-## a catch, carry: its kind}, those within
+## The creatures a player is sent: {id, kind, owner (peer id or 0), pos, state, for a dog carrying
+## a catch, carry: its kind, and for a dog other than DogSkins.DEFAULT, skin: its DogSkins id}, those within
 ## Protocol.INTEREST_RADIUS (and its own dog). A dog's id is its owner's peer id; wild animals have
 ## negative ids (server/wildlife.gd).
 func _creatures_for(viewer: int) -> Array:
@@ -534,6 +552,8 @@ func _creatures_for(viewer: int) -> Array:
 			var c := {"id": id, "kind": "dog", "owner": id, "pos": dog["pos"], "state": dog["state"]}
 			if dog.has("carry"):
 				c["carry"] = dog["carry"]
+			if dog.get("skin", DogSkins.DEFAULT) != DogSkins.DEFAULT:
+				c["skin"] = dog["skin"]
 			out.append(c)
 	out.append_array(WILD.snapshot_near(_wild, at, Protocol.INTEREST_RADIUS))
 	return out

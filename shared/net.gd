@@ -72,6 +72,13 @@ func set_look(look: Array) -> void:
 	_forward("on_set_look", [multiplayer.get_remote_sender_id(), look])
 
 
+## The dog the player chose (DogSkins id), checked by the server: an unknown one gives the default dog.
+## May come before join.
+@rpc("any_peer", "call_remote", "reliable")
+func set_dog(skin: Variant) -> void:
+	_forward("on_set_dog", [multiplayer.get_remote_sender_id(), skin])
+
+
 ## Back from a pause (its tab was hidden: no frames, so stale or dropped updates), the client asks for
 ## everything that is only sent on a change. The server answers resynced(), then all of it.
 @rpc("any_peer", "call_remote", "reliable")

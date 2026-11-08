@@ -1528,3 +1528,43 @@ tool = "PixelLab create_image_pixen (1 generation), 256x64, seed 7203, transpare
 prompt = "flat front view game title nameplate, a wide horizontal plaque of old weathered steel half covered in moss and grass, bolted, a round robot eye lens glowing amber at the left end, plain flat empty middle area for a title, no text, muted olive and grey colours"
 license = "CC0-1.0"
 source = ""
+
+[[asset]]
+path = "assets/models/dog_tripo_a.glb"
+author = "M3t4Data"
+origin = "generated"
+tool = "Tripo API (text-to-model v3.1, rig v3.0 quadruped); skeleton repaired by a Blender 5.2 script (4-bone legs, weights per leg), sit pose scripted in Blender, walk, trot and gallop made by a parametric Blender script (leg IK on paw paths, pelvis and chest controllers, the same parameters for the three dogs), palette conversion"
+prompt = "cyborg dog concept A (orch/chien-proto)"
+license = "LicenseRef-proto-not-for-PR"
+note = "PROTO (branch orch/chien-proto), not for a PR: Tripo terms to be checked before any use in the game."
+source = ""
+
+[[asset]]
+path = "assets/models/dog_tripo_b.glb"
+author = "M3t4Data"
+origin = "generated"
+tool = "Tripo API (text-to-model v3.1, rig v3.0 quadruped); skeleton repaired by a Blender 5.2 script (4-bone legs, weights per leg), sit pose scripted in Blender, walk, trot and gallop made by a parametric Blender script (leg IK on paw paths, pelvis and chest controllers, the same parameters for the three dogs), palette conversion"
+prompt = "cyborg dog concept B (orch/chien-proto)"
+license = "LicenseRef-proto-not-for-PR"
+note = "PROTO (branch orch/chien-proto), not for a PR: Tripo terms to be checked before any use in the game."
+source = ""
+
+[[asset]]
+path = "assets/models/dog_tripo_c.glb"
+author = "M3t4Data"
+origin = "generated"
+tool = "Tripo API (text-to-model v3.1, rig v3.0 quadruped); skeleton repaired by a Blender 5.2 script (4-bone legs, weights per leg), sit pose scripted in Blender, walk, trot and gallop made by a parametric Blender script (leg IK on paw paths, pelvis and chest controllers, the same parameters for the three dogs), palette conversion"
+prompt = "cyborg dog concept C (orch/chien-proto)"
+license = "LicenseRef-proto-not-for-PR"
+note = "PROTO (branch orch/chien-proto), not for a PR: Tripo terms to be checked before any use in the game."
+source = ""
+
+[[asset]]
+path = "assets/models/dog_tripo_gaits.json"
+author = "M3t4Data"
+origin = "generated"
+tool = "copy of the glTF animation extras of the walk, trot and gallop clips of assets/models/dog_tripo_*.glb (Blender 5.2 gait script): stride and leg length in metres, duty factor, paw offsets, clip length"
+prompt = ""
+license = "LicenseRef-proto-not-for-PR"
+note = "PROTO (branch orch/chien-proto), not for a PR."
+source = ""

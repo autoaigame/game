@@ -346,8 +346,10 @@ func _build_play_screen() -> Control:
 	var look_panel := PanelContainer.new()
 	pair.add_child(look_panel)
 	var worn: Variant = client.get("look") if client != null else null
-	var editor := LookEditor.new(worn if worn is Array else [])
+	var dog: Variant = client.get("dog") if client != null else null
+	var editor := LookEditor.new(worn if worn is Array else [], true, true, dog if dog is String else DogSkins.DEFAULT)
 	editor.look_changed.connect(func(l: Array): if client != null and client.has_method("set_look"): client.set_look(l))
+	editor.dog_changed.connect(func(d: String): if client != null and client.has_method("set_dog"): client.set_dog(d))
 	look_panel.add_child(editor)
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(340, 0)

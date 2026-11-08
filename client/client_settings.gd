@@ -70,6 +70,21 @@ static func save_look(look: Array, path := PATH) -> void:
 	cfg.save(path)
 
 
+## The dog (DogSkins id) last chosen; the default dog if none or unknown.
+static func load_dog(path := PATH) -> String:
+	var cfg := ConfigFile.new()
+	if cfg.load(path) != OK:
+		return DogSkins.DEFAULT
+	return DogSkins.valid(cfg.get_value("player", "dog", DogSkins.DEFAULT))
+
+
+static func save_dog(dog: String, path := PATH) -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(path)
+	cfg.set_value("player", "dog", DogSkins.valid(dog))
+	cfg.save(path)
+
+
 ## Whether the player chose fullscreen; windowed when missing or unusable.
 static func load_fullscreen(path := PATH) -> bool:
 	var cfg := ConfigFile.new()

@@ -1,0 +1,119 @@
+{
+ "source": "gait.py then convert.py (Blender scripts out of the repo, PROTO): the extras of each gait clip of assets/models/dog_tripo_<skin>.glb",
+ "skins": {
+  "a": {
+   "leg_m": 0.3807,
+   "gaits": {
+    "walk": {
+     "stride_m": 0.4188,
+     "duration_s": 2.0,
+     "duty": 0.65,
+     "offsets": {
+      "FL": 0.25,
+      "FR": 0.75,
+      "HL": 0.0,
+      "HR": 0.5
+     }
+    },
+    "trot": {
+     "stride_m": 0.7234,
+     "duration_s": 2.0,
+     "duty": 0.4,
+     "offsets": {
+      "FL": 0.5,
+      "FR": 0.0,
+      "HL": 0.0,
+      "HR": 0.5
+     }
+    },
+    "gallop": {
+     "stride_m": 1.7513,
+     "duration_s": 2.0,
+     "duty": 0.18,
+     "offsets": {
+      "FL": 0.6,
+      "FR": 0.5,
+      "HL": 0.0,
+      "HR": 0.1
+     }
+    }
+   }
+  },
+  "b": {
+   "leg_m": 0.291,
+   "gaits": {
+    "walk": {
+     "stride_m": 0.3201,
+     "duration_s": 2.0,
+     "duty": 0.65,
+     "offsets": {
+      "FL": 0.25,
+      "FR": 0.75,
+      "HL": 0.0,
+      "HR": 0.5
+     }
+    },
+    "trot": {
+     "stride_m": 0.5528,
+     "duration_s": 2.0,
+     "duty": 0.4,
+     "offsets": {
+      "FL": 0.5,
+      "FR": 0.0,
+      "HL": 0.0,
+      "HR": 0.5
+     }
+    },
+    "gallop": {
+     "stride_m": 1.3385,
+     "duration_s": 2.0,
+     "duty": 0.18,
+     "offsets": {
+      "FL": 0.6,
+      "FR": 0.5,
+      "HL": 0.0,
+      "HR": 0.1
+     }
+    }
+   }
+  },
+  "c": {
+   "leg_m": 0.2988,
+   "gaits": {
+    "walk": {
+     "stride_m": 0.3287,
+     "duration_s": 2.0,
+     "duty": 0.65,
+     "offsets": {
+      "FL": 0.25,
+      "FR": 0.75,
+      "HL": 0.0,
+      "HR": 0.5
+     }
+    },
+    "trot": {
+     "stride_m": 0.5677,
+     "duration_s": 2.0,
+     "duty": 0.4,
+     "offsets": {
+      "FL": 0.5,
+      "FR": 0.0,
+      "HL": 0.0,
+      "HR": 0.5
+     }
+    },
+    "gallop": {
+     "stride_m": 1.3744,
+     "duration_s": 2.0,
+     "duty": 0.18,
+     "offsets": {
+      "FL": 0.6,
+      "FR": 0.5,
+      "HL": 0.0,
+      "HR": 0.1
+     }
+    }
+   }
+  }
+ }
+}
