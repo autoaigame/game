@@ -95,6 +95,37 @@ func test_look_is_kept_and_repaired() -> void:
 	_clean()
 
 
+## Windowed until the player chooses fullscreen; a broken value is windowed too. Other settings stay.
+func test_fullscreen_is_remembered() -> void:
+	_clean()
+	assert_eq(ClientSettings.load_fullscreen(PATH), false)
+	ClientSettings.save_name("ann", PATH)
+	ClientSettings.save_fullscreen(true, PATH)
+	assert_eq(ClientSettings.load_fullscreen(PATH), true)
+	assert_eq(ClientSettings.load_name(PATH), "ann")
+	ClientSettings.save_fullscreen(false, PATH)
+	assert_eq(ClientSettings.load_fullscreen(PATH), false)
+	var cfg := ConfigFile.new()
+	cfg.load(PATH)
+	cfg.set_value("display", "fullscreen", "yes")
+	cfg.save(PATH)
+	assert_eq(ClientSettings.load_fullscreen(PATH), false)
+	cfg.set_value("display", "fullscreen", 1)
+	cfg.save(PATH)
+	assert_eq(ClientSettings.load_fullscreen(PATH), false)
+	_clean()
+
+
+## A browser only allows fullscreen after a click, so the web build starts windowed whatever was saved.
+func test_fullscreen_at_launch_only_off_the_web() -> void:
+	_clean()
+	assert_eq(ClientSettings.fullscreen_at_launch(false, PATH), false)
+	ClientSettings.save_fullscreen(true, PATH)
+	assert_eq(ClientSettings.fullscreen_at_launch(false, PATH), true)
+	assert_eq(ClientSettings.fullscreen_at_launch(true, PATH), false)
+	_clean()
+
+
 ## A name from the page's ?name= is for this session only: it never replaces the saved one.
 func test_session_name_is_not_saved() -> void:
 	_clean()

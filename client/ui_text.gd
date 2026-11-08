@@ -39,11 +39,32 @@ const STICKS_DESC := "Sert à faire un feu."
 const CRAFT := "Fabriquer"
 const FIRE_RECIPE := "Faire un feu"
 const EAT := "Manger"
+## The start menu (client/login_ui.gd, client/title_screen.gd).
+const PLAY := "Jouer"
+const QUIT := "Quitter"
+const BACK := "Retour"
 const ENTER := "Entrer dans le monde"
 const SETTINGS := "Paramètres"
 
 const SETTINGS_TITLE := "Paramètres"
 const TAB_SOUND := "Son"
+const TAB_DISPLAY := "Affichage"
+const TAB_CONTROLS := "Commandes"
+const FULLSCREEN := "Plein écran"
+## The controls tab (client/settings_menu.gd): what each key does. The bag and the whistle come from KEYS.
+const CONTROL_MOVE := "Se déplacer"
+const CONTROL_SPRINT := "Courir (maintenir)"
+const CONTROL_CLICK := "Aller, cueillir, ramasser"
+const CONTROL_LOOK := "Apparence"
+const CONTROL_MUTE := "Couper le son"
+const CONTROL_VOLUME := "Baisser, monter le volume"
+const CONTROL_ZOOM := "Zoomer"
+const CONTROL_SETTINGS := "Paramètres"
+const MOUSE_LEFT := "Clic gauche"
+const MOUSE_WHEEL := "Molette"
+const PAD_START := "Start (manette)"
+## Key caps that are not printed as one character.
+const KEY_CAPS := {KEY_ESCAPE: "Échap", KEY_SHIFT: "Maj"}
 const LOOK_TITLE := "Apparence (C pour fermer)"
 const LOOK_COLOUR := "Couleur (clic droit : précédente)"
 const LOOK_NONE := "—"
@@ -96,6 +117,45 @@ static func notice(key: String, args: Dictionary) -> String:
 
 ## Display servers that know the keyboard layout. Others (headless, web) learn it from key presses.
 const LAYOUT_AWARE := ["Windows", "macOS", "X11", "Wayland"]
+## The controls listed in the settings menu: {caps, action}. A cap is a physical key, named by cap_text
+## after the player's layout, or a text (a mouse button). Read only: the keys are handled in hud.gd,
+## look_panel.gd, sound_director.gd, world_view.gd and settings_menu.gd.
+static func controls() -> Array:
+	var rows := [{"caps": [KEY_W, KEY_A, KEY_S, KEY_D], "action": CONTROL_MOVE},
+			{"caps": [KEY_SHIFT], "action": CONTROL_SPRINT}, {"caps": [MOUSE_LEFT], "action": CONTROL_CLICK}]
+	for k in KEYS:
+		rows.append({"caps": [k[0]], "action": k[1]})
+	rows.append_array([{"caps": [KEY_C], "action": CONTROL_LOOK}, {"caps": [KEY_M], "action": CONTROL_MUTE},
+			{"caps": [KEY_MINUS, KEY_EQUAL], "action": CONTROL_VOLUME},
+			{"caps": [MOUSE_WHEEL], "action": CONTROL_ZOOM},
+			{"caps": [KEY_ESCAPE, PAD_START], "action": CONTROL_SETTINGS}])
+	return rows
+
+
+## Remembers the label of the key pressed in `event` (see key_name); true when `seen` changed.
+static func learn_key(seen: Dictionary, event: InputEvent) -> bool:
+	if not (event is InputEventKey and event.pressed):
+		return false
+	var label: Key = event.key_label if event.key_label != KEY_NONE else event.keycode
+	if label == KEY_NONE or seen.get(event.physical_keycode) == label:
+		return false
+	seen[event.physical_keycode] = label
+	return true
+
+
+## The text on a key cap of the controls list: a text cap as it is, a physical key as key_name names
+## it, in French for Escape and as its character for a symbol key (")" rather than "ParenRight").
+static func cap_text(cap: Variant, seen := {}) -> String:
+	if cap is String:
+		return cap
+	var label := key_label(cap, seen)
+	if KEY_CAPS.has(label):
+		return KEY_CAPS[label]
+	if label > KEY_SPACE and label < KEY_SPECIAL:
+		return String.chr(label).to_upper()
+	return OS.get_keycode_string(label)
+
+
 ## Physical keys that AZERTY labels differently from QWERTY (the letters around the movement keys).
 const AZERTY := {KEY_Q: KEY_A, KEY_A: KEY_Q, KEY_W: KEY_Z, KEY_Z: KEY_W}
 
@@ -103,11 +163,16 @@ const AZERTY := {KEY_Q: KEY_A, KEY_A: KEY_Q, KEY_W: KEY_Z, KEY_Z: KEY_W}
 ## The name printed on the player's keyboard for a physical key. `seen` maps physical keys the
 ## player pressed to their labels: it names those keys, and tells AZERTY apart from QWERTY.
 static func key_name(physical: Key, seen := {}) -> String:
+	return OS.get_keycode_string(key_label(physical, seen))
+
+
+## The key printed on the player's keyboard for a physical key (see key_name).
+static func key_label(physical: Key, seen := {}) -> Key:
 	if seen.has(physical):
-		return OS.get_keycode_string(seen[physical])
+		return seen[physical]
 	if DisplayServer.get_name() in LAYOUT_AWARE:
-		return OS.get_keycode_string(DisplayServer.keyboard_get_label_from_physical(physical))
+		return DisplayServer.keyboard_get_label_from_physical(physical)
 	for k in AZERTY:
 		if seen.get(k) == AZERTY[k]:
-			return OS.get_keycode_string(AZERTY.get(physical, physical))
-	return OS.get_keycode_string(physical)
+			return AZERTY.get(physical, physical)
+	return physical
