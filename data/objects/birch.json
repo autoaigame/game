@@ -7,7 +7,7 @@
 		{
 			"file": "res://assets/objects/birch_00.png",
 			"anchor_px": [
-				81,
+				85,
 				240
 			]
 		},
@@ -21,15 +21,15 @@
 		{
 			"file": "res://assets/objects/birch_02.png",
 			"anchor_px": [
-				98,
-				252
+				97,
+				245
 			]
 		},
 		{
 			"file": "res://assets/objects/birch_03.png",
 			"anchor_px": [
 				126,
-				241
+				245
 			]
 		},
 		{
@@ -42,14 +42,14 @@
 		{
 			"file": "res://assets/objects/birch_05.png",
 			"anchor_px": [
-				106,
-				252
+				105,
+				245
 			]
 		},
 		{
 			"file": "res://assets/objects/birch_06.png",
 			"anchor_px": [
-				109,
+				105,
 				243
 			]
 		},
@@ -64,28 +64,28 @@
 			"file": "res://assets/objects/birch_08.png",
 			"anchor_px": [
 				89,
-				240
+				244
 			]
 		},
 		{
 			"file": "res://assets/objects/birch_09.png",
 			"anchor_px": [
-				91,
+				95,
 				245
 			]
 		},
 		{
 			"file": "res://assets/objects/birch_10.png",
 			"anchor_px": [
-				113,
-				246
+				117,
+				243
 			]
 		},
 		{
 			"file": "res://assets/objects/birch_11.png",
 			"anchor_px": [
-				146,
-				238
+				145,
+				237
 			]
 		},
 		{
@@ -99,35 +99,56 @@
 			"file": "res://assets/objects/birch_13.png",
 			"anchor_px": [
 				94,
-				248
+				245
 			]
 		},
 		{
 			"file": "res://assets/objects/birch_14.png",
 			"anchor_px": [
-				110,
+				114,
 				243
 			]
 		},
 		{
 			"file": "res://assets/objects/birch_15.png",
 			"anchor_px": [
-				140,
-				244
+				144,
+				241
 			]
 		},
 		{
 			"file": "res://assets/objects/birch_16.png",
 			"anchor_px": [
-				82,
+				85,
 				244
 			]
 		},
 		{
 			"file": "res://assets/objects/birch_17.png",
 			"anchor_px": [
-				95,
+				91,
 				245
+			]
+		},
+		{
+			"file": "res://assets/objects/birch_4.png",
+			"anchor_px": [
+				54,
+				158
+			]
+		},
+		{
+			"file": "res://assets/objects/birch_4.png",
+			"anchor_px": [
+				54,
+				158
+			]
+		},
+		{
+			"file": "res://assets/objects/birch_4.png",
+			"anchor_px": [
+				54,
+				158
 			]
 		},
 		{

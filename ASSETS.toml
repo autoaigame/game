@@ -1386,15 +1386,6 @@ license = "CC0-1.0"
 source = ""
 
 [[asset]]
-path = "art/trees/pieces/tuft_10.png"
-author = "M3t4Data"
-origin = "generated"
-tool = "PixelLab create_1_direction_object (64 px, view sidescroller, palette = the kit's 40 colours (first ten ramps of data/palette.json), palette_name 'terne survival', no style image; the tool takes no seed; one call with 16 item_descriptions, candidate 10 of the 16, downloaded from the review pack); retouches: text and time chunks stripped (ImageMagick -strip, saved as RGBA PNG), pixels unchanged"
-prompt = "single isolated clump of tree foliage, dense muted olive-green leaves in a soft rounded cluster, realistic, desaturated natural colours, soft light from the top-left, fine detail, no thick outline, no trunk, transparent background / item: long weeping birch leaf curtain, pale olive-yellow leaves"
-license = "CC0-1.0"
-source = ""
-
-[[asset]]
 path = "art/trees/pieces/tuft_11.png"
 author = "M3t4Data"
 origin = "generated"

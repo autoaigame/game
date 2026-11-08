@@ -136,6 +136,27 @@
 				55,
 				148
 			]
+		},
+		{
+			"file": "res://assets/objects/oak_4.png",
+			"anchor_px": [
+				55,
+				148
+			]
+		},
+		{
+			"file": "res://assets/objects/oak_4.png",
+			"anchor_px": [
+				55,
+				148
+			]
+		},
+		{
+			"file": "res://assets/objects/oak_4.png",
+			"anchor_px": [
+				55,
+				148
+			]
 		}
 	],
 	"densities": {

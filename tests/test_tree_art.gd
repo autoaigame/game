@@ -23,12 +23,14 @@ func _raw(file: String) -> Image:
 	return img
 
 
-## Each species lists between 15 and 20 sprites: every variant the assembler draws, in order (and
-## the young tree drawn by hand).
+## Each species draws between 15 and 20 different sprites: every variant the assembler draws, in
+## order (and the young tree drawn by hand).
 func test_each_species_has_its_variants() -> void:
 	for id in ["oak", "birch", "pine"]:
-		var sprites: Array = WorldData.object(WorldData.object_index(id))["sprites"]
-		assert_true(sprites.size() >= 15 and sprites.size() <= 20, "%s: %d sprites" % [id, sprites.size()])
+		var files := {}
+		for sp in WorldData.object(WorldData.object_index(id))["sprites"]:
+			files[sp["file"]] = true
+		assert_true(files.size() >= 15 and files.size() <= 20, "%s: %d different sprites" % [id, files.size()])
 	for species in ASSEMBLER.SPECIES:
 		var spec: Dictionary = ASSEMBLER.SPECIES[species]
 		var listed := 0
@@ -36,6 +38,37 @@ func test_each_species_has_its_variants() -> void:
 			if ASSEMBLER.parse_name(sp["file"]) == [species, listed]:
 				listed += 1
 		assert_eq(listed, int(spec["variants"]), species + ": every variant listed, in order")
+
+
+## The young tree (the sprite the assembler does not draw) is listed several times, so it stands on
+## about one cell in six of its species (a sprite is drawn uniformly from the list).
+func test_young_trees_are_about_one_in_six() -> void:
+	for id in ["oak", "birch", "pine"]:
+		var sprites: Array = WorldData.object(WorldData.object_index(id))["sprites"]
+		var young := 0
+		for sp in sprites:
+			if ASSEMBLER.parse_name(sp["file"]).is_empty():
+				young += 1
+		var share := float(young) / sprites.size()
+		assert_true(share >= 1.0 / 7.0 and share <= 1.0 / 5.0, "%s: young trees %d of %d" % [id, young, sprites.size()])
+
+
+## Every piece in art/trees/pieces/ is one the assembler uses, and every piece it names is there.
+func test_pieces_are_the_ones_the_assembler_uses() -> void:
+	var used := {}
+	for species in ASSEMBLER.SPECIES:
+		var spec: Dictionary = ASSEMBLER.SPECIES[species]
+		for key in ["skeletons", "tufts", "branches", "spires", "clumps"]:
+			for p in spec.get(key, []):
+				used[p + ".png"] = true
+	var files := {}
+	for f in DirAccess.get_files_at(ASSEMBLER.PIECES):
+		if f.ends_with(".png"):
+			files[f] = true
+	for f in files:
+		assert_true(used.has(f), "art/trees/pieces/%s is not used by the assembler" % f)
+	for f in used:
+		assert_true(files.has(f), "art/trees/pieces/%s is missing" % f)
 
 
 ## Every pixel is fully transparent, one of the kit's 40 colours and opaque, or the ground shadow

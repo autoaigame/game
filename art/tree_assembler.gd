@@ -49,7 +49,7 @@ const SPECIES := {
 		"data": "birch",
 		"variants": 18,
 		"skeletons": ["birch_bare_256", "birch_bare2_256", "birch_bare3_256", "birch_bare4_256"],
-		"tufts": ["tuft_08", "tuft_09", "tuft_11", "tuft_08", "tuft_09", "tuft_11", "tuft_10"],
+		"tufts": ["tuft_08", "tuft_09", "tuft_11"],
 		"tufts_min": 18, "tufts_max": 24, "spacing": 16,
 		"level": 0.55,
 		"crown": 0.7,
@@ -476,7 +476,8 @@ static func _load(name: String) -> Image:
 
 
 ## Rewrites the "sprites" list of data/objects/<id>.json: the assembled sprites, then the sprites
-## listed there that the assembler does not draw (the young trees). The rest of the file stays as is.
+## listed there that the assembler does not draw (the young trees, each listed four times so about one
+## tree in six is young), duplicates kept. The rest of the file stays as is.
 static func _write_sprites(id: String, sprites: Array) -> void:
 	var path := "res://data/objects/%s.json" % id
 	var text := FileAccess.get_file_as_string(path)
