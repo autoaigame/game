@@ -7,7 +7,7 @@ const CreditsScreen := preload("res://client/credits_screen.gd")
 const DATA := {
 	"people": [{"name": "M3t4Data", "files": 3, "kinds": {"objects": 2, "sounds": 1}, "licenses": ["CC0-1.0"]}],
 	"third_party": [{"name": "Quaternius", "files": 1, "kinds": {"character": 1}, "licenses": ["CC0-1.0"],
-			"sources": ["https://example.org/kit"]}],
+			"sources": ["kit-page"]}],
 	"tools": ["Blender", "PixelLab"],
 	"licenses": ["CC0-1.0"],
 }
@@ -25,7 +25,7 @@ func _text(lines: Array) -> String:
 func test_lines_credit_people_third_parties_and_tools() -> void:
 	var text := _text(CreditsScreen.lines(DATA))
 	assert_true(text.begins_with(UiText.CREDITS_COMMUNITY), text)
-	for want in ["M3t4Data", "Quaternius", "https://example.org/kit", UiText.CREDITS_KINDS["objects"],
+	for want in ["M3t4Data", "Quaternius", "kit-page", UiText.CREDITS_KINDS["objects"],
 			UiText.CREDITS_KINDS["character"], UiText.CREDITS_LICENSES["CC0-1.0"], UiText.CREDITS_PEOPLE,
 			UiText.CREDITS_THIRD_PARTY, UiText.CREDITS_TOOLS]:
 		assert_true(text.contains(want), want)

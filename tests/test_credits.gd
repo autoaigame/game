@@ -87,7 +87,7 @@ func test_authors_and_kinds() -> void:
 func test_third_party_author_is_credited_apart() -> void:
 	var c := Credits.build([
 		{"path": "assets/character/body.glb", "author": "Quaternius (mesh); M3t4Data (cut)", "origin": "third-party",
-				"license": "CC0-1.0", "source": "https://example.org/kit (also https://example.org/b)",
+				"license": "CC0-1.0", "source": "kit-page (also other-page)",
 				"tool": "Blender 5"},
 		{"path": "assets/objects/a.png", "author": "M3t4Data", "origin": "generated", "license": "CC0-1.0",
 				"tool": "PixelLab x"},
@@ -95,7 +95,7 @@ func test_third_party_author_is_credited_apart() -> void:
 				"tool": "PixelLab y"},
 	])
 	assert_eq(c["third_party"], [{"name": "Quaternius", "files": 1, "kinds": {"character": 1},
-			"licenses": ["CC0-1.0"], "sources": ["https://example.org/kit"]}])
+			"licenses": ["CC0-1.0"], "sources": ["kit-page"]}])
 	assert_eq(c["people"], [{"name": "M3t4Data", "files": 2, "kinds": {"character": 1, "objects": 1},
 			"licenses": ["CC0-1.0"]}, {"name": "vitteloil", "files": 1, "kinds": {"objects": 1}, "licenses": ["Other"]}])
 	assert_eq(c["tools"], ["Blender", "PixelLab"])
