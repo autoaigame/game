@@ -47,7 +47,7 @@ const ENTER := "Entrer dans le monde"
 const SETTINGS := "Paramètres"
 const CREDITS := "Crédits"
 
-## The credits screen (client/credits_screen.gd), from data/credits.json.
+## The credits screen (client/credits_screen.gd), from ASSETS.toml (client/credits.gd).
 const CREDITS_COMMUNITY := "Ce jeu est construit par sa communauté : chacun propose ses changements en pull request, et celles qui recueillent assez de votes entrent dans le jeu."
 const CREDITS_PEOPLE := "Contributeurs"
 const CREDITS_THIRD_PARTY := "Ressources tierces"
@@ -57,8 +57,9 @@ const CREDITS_ONE_FILE := "1 fichier : %s"
 const CREDITS_LICENSE := "Licence : %s"
 const CREDITS_LICENSES_LABEL := "Licences : %s"
 const CREDITS_SOURCE := "Source : %s"
+const CREDITS_MISSING := "La liste des contributeurs (ASSETS.toml) est introuvable ou illisible."
 const CREDITS_HINT := "Haut et bas pour faire défiler, Échap ou B pour revenir"
-## What an asset is (art/credits.gd kind()).
+## What an asset is (client/credits.gd kind()).
 const CREDITS_KINDS := {"character": "personnage", "decals": "détails du sol", "dog": "chien",
 		"items": "objets du sac", "music": "musique", "objects": "décor", "sounds": "sons", "tiles": "sols",
 		"ui": "interface"}

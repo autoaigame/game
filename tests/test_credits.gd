@@ -1,8 +1,9 @@
 extends TestCase
 
-## The credits: data/credits.json, drawn from ASSETS.toml by art/credits.gd (make art).
+## The credits, read from ASSETS.toml by client/credits.gd when the Crédits screen opens.
 
-const Credits := preload("res://art/credits.gd")
+const Credits := preload("res://client/credits.gd")
+const CreditsScreen := preload("res://client/credits_screen.gd")
 
 
 func _assets_text() -> String:
@@ -10,38 +11,50 @@ func _assets_text() -> String:
 
 
 func _credits() -> Dictionary:
-	return JSON.parse_string(FileAccess.get_file_as_string("res://data/credits.json"))
+	return Credits.load_from("res://ASSETS.toml")
 
 
-## data/credits.json is what make art writes from today's ASSETS.toml: run make art after changing it.
-func test_credits_file_matches_assets_toml() -> void:
-	var want := Credits.json_text(Credits.parse(_assets_text()))
-	assert_eq(FileAccess.get_file_as_string("res://data/credits.json"), want,
-			"data/credits.json is out of date: run make art")
+## The text of a Crédits screen that read `source` when it showed.
+func _shown_text(source: String) -> String:
+	var screen := CreditsScreen.new()
+	screen.source = source
+	screen.visible = false
+	screen.visible = true
+	var text := screen.body_text()
+	screen.free()
+	return text
 
 
-## Read without the generator's parser: every author named in ASSETS.toml and every licence is credited.
-func test_every_author_and_licence_of_assets_toml_is_credited() -> void:
-	var c := _credits()
-	var names := {}
-	var licenses := {}
-	for group in ["people", "third_party"]:
-		for e in c[group]:
-			names[e["name"]] = true
-			for l in e["licenses"]:
-				licenses[l] = true
+## Read without the parser: every author named in the game's ASSETS.toml, and every licence in words,
+## shows on the Crédits screen.
+func test_every_author_and_licence_of_assets_toml_is_shown() -> void:
+	var text := _shown_text("res://ASSETS.toml")
 	var re := RegEx.create_from_string("(?m)^(author|license) = \"(.*)\"$")
 	var seen := 0
 	for m in re.search_all(_assets_text()):
 		if m.get_string(1) == "license":
-			assert_true(licenses.has(m.get_string(2)), "licence %s" % m.get_string(2))
-			assert_true(m.get_string(2) in c["licenses"], "licence list: %s" % m.get_string(2))
+			var words: String = UiText.CREDITS_LICENSES.get(m.get_string(2), m.get_string(2))
+			assert_true(text.contains(words), "licence %s" % m.get_string(2))
 			continue
 		seen += 1
 		for part in m.get_string(2).split(";"):
 			var who := part.get_slice("(", 0).strip_edges()
-			assert_true(names.has(who), "author %s" % who)
+			assert_true(text.contains(who), "author %s" % who)
 	assert_true(seen > 100, "ASSETS.toml read")
+
+
+## Without ASSETS.toml (or with nothing readable in it), the screen says so in a line and no credits.
+func test_missing_or_unreadable_file() -> void:
+	assert_eq(Credits.load_from("res://no_such_assets.toml"), {})
+	var path := "user://test_credits_unreadable.toml"
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string("not toml at all\n")
+	f.close()
+	assert_eq(Credits.load_from(path), {})
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	var text := _shown_text("res://no_such_assets.toml")
+	assert_true(text.contains(UiText.CREDITS_MISSING), text)
+	assert_false(text.contains(UiText.CREDITS_PEOPLE), text)
 
 
 ## One table per [[asset]], each with its path, author and licence.

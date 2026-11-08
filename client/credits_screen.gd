@@ -1,32 +1,31 @@
-## The start menu's Crédits screen: how the game is made, then who made its assets (data/credits.json,
-## written from ASSETS.toml by art/credits.gd). The text scrolls in a ScrollContainer that takes the
+## The start menu's Crédits screen: how the game is made, then who made its assets, read from
+## ASSETS.toml (client/credits.gd) when the screen first shows. The text scrolls in a ScrollContainer that takes the
 ## focus: up and down (keys, a pad's d-pad or stick) scroll it, and past the bottom go to Retour.
 ## Retour, Escape and a pad's B go back (client/login_ui.gd).
 extends PanelContainer
 
 signal back_pressed
 
-const DATA_PATH := "res://data/credits.json"
+const Credits := preload("res://client/credits.gd")
 const LEAVE := -1  ## scroll_step(): the text is at its end, the focus moves on
 const STEP := 40  ## pixels scrolled by one press of up or down
 const VIEW_SIZE := Vector2(540, 284)
 const FRAME_PAD := 4  ## room for the focus frame around the text
 
 var sounds: Node  ## client/sound_director.gd, or null (no sound)
+var source := Credits.SOURCE  ## the ASSETS.toml read when the screen first shows without data
 var _scroll := ScrollContainer.new()
 var _body := VBoxContainer.new()
 var _back := Button.new()
 
 
-## data/credits.json, or {} when it is missing.
-static func load_data() -> Dictionary:
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(DATA_PATH))
-	return parsed if parsed is Dictionary else {}
-
-
-## The lines of the screen for `data`, top to bottom: {text, style}, style "heading", "name" or "".
+## The lines of the screen for `data` (client/credits.gd build()), top to bottom: {text, style},
+## style "heading", "name" or "". Empty `data` (ASSETS.toml missing or unreadable) gives a short line.
 static func lines(data: Dictionary) -> Array:
 	var out := [{"text": UiText.CREDITS_COMMUNITY, "style": ""}]
+	if data.is_empty():
+		out.append({"text": UiText.CREDITS_MISSING, "style": ""})
+		return out
 	out.append({"text": UiText.CREDITS_PEOPLE, "style": "heading"})
 	for e in data.get("people", []):
 		out.append_array(_entry_lines(e))
@@ -102,8 +101,10 @@ func _init(data: Variant = null) -> void:
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body.add_theme_constant_override("separation", 2)
 	_scroll.add_child(_body)
-	for l in lines(load_data() if data == null else data):
-		_body.add_child(_line(l))
+	if data == null:  # read when the screen first shows
+		visibility_changed.connect(_on_visibility_changed)
+	else:
+		_fill(data)
 
 	var hint := Label.new()
 	hint.text = UiText.CREDITS_HINT
@@ -170,6 +171,16 @@ func scroll_input(event: InputEvent) -> bool:
 	else:
 		_scroll.scroll_vertical = to
 	return true
+
+
+func _on_visibility_changed() -> void:
+	if visible and _body.get_child_count() == 0:
+		_fill(Credits.load_from(source))
+
+
+func _fill(data: Dictionary) -> void:
+	for l in lines(data):
+		_body.add_child(_line(l))
 
 
 func _line(l: Dictionary) -> Label:

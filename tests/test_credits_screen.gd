@@ -48,12 +48,14 @@ func test_unknown_words_show_as_they_are() -> void:
 	assert_true(text.contains("LicenseRef-New"), text)
 
 
-## The game's own data/credits.json loads and shows its authors.
-func test_screen_reads_the_game_credits() -> void:
-	var data := CreditsScreen.load_data()
-	assert_true(data.get("people", []).size() > 0, "people in data/credits.json")
+## Without data given, the screen reads the game's ASSETS.toml when it first shows, not before.
+func test_screen_reads_assets_toml_when_it_opens() -> void:
 	var screen := CreditsScreen.new()
-	assert_true(screen.body_text().contains(data["people"][0]["name"]))
+	screen.visible = false
+	assert_eq(screen.body_text(), "")
+	screen.visible = true
+	assert_true(screen.body_text().contains(UiText.CREDITS_PEOPLE), screen.body_text())
+	assert_true(screen.body_text().contains("M3t4Data"), screen.body_text())
 	screen.free()
 
 
