@@ -39,7 +39,7 @@ func test_every_author_and_licence_of_assets_toml_is_shown() -> void:
 		seen += 1
 		for part in m.get_string(2).split(";"):
 			var who := part.get_slice("(", 0).strip_edges()
-			assert_true(text.contains(who), "author %s" % who)
+			assert_true(who in text.split("\n"), "author %s on a line of its own" % who)
 	assert_true(seen > 100, "ASSETS.toml read")
 
 
