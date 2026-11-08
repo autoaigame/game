@@ -25,6 +25,12 @@ func move_to(target: Vector2) -> void:
 	_forward("on_move_to", [multiplayer.get_remote_sender_id(), target])
 
 
+## Sprint (Shift held) or walk. The server caps the speed at Protocol.SPRINT_FACTOR times the walk.
+@rpc("any_peer", "call_remote", "reliable")
+func sprint(on: bool) -> void:
+	_forward("on_sprint", [multiplayer.get_remote_sender_id(), on])
+
+
 @rpc("any_peer", "call_remote", "reliable")
 func stop() -> void:
 	_forward("on_stop", [multiplayer.get_remote_sender_id()])
@@ -126,6 +132,12 @@ func notice(key: String, args: Dictionary) -> void:
 @rpc("authority", "call_remote", "reliable")
 func resynced() -> void:
 	_forward("on_resynced", [])
+
+
+## Player `peer_id` whistled near this one (not sent to the one who whistled: it hears its own at once).
+@rpc("authority", "call_remote", "reliable")
+func whistled(peer_id: int) -> void:
+	_forward("on_whistled", [peer_id])
 
 
 ## What a player wears, sent when it joins or changes (not in every snapshot).

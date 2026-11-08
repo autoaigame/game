@@ -5,30 +5,30 @@
   },
   "jog": {
    "duration_s": 0.9333,
-   "ground_speed_m_s": 2.0038,
+   "ground_speed_m_s": 4.8734,
    "left_contact": 0.9542,
    "left_mid_stance": 0.1125,
    "right_contact": 0.4833,
    "right_mid_stance": 0.6125,
-   "stride_m": 1.8702
+   "stride_m": 4.5485
   },
   "sprint": {
    "duration_s": 0.6667,
-   "ground_speed_m_s": 2.6444,
+   "ground_speed_m_s": 7.4097,
    "left_contact": 0.0042,
    "left_mid_stance": 0.125,
    "right_contact": 0.4,
    "right_mid_stance": 0.6792,
-   "stride_m": 1.763
+   "stride_m": 4.9398
   },
   "walk": {
    "duration_s": 1.3333,
-   "ground_speed_m_s": 0.8161,
+   "ground_speed_m_s": 0.8973,
    "left_contact": 0.0,
    "left_mid_stance": 0.2375,
    "right_contact": 0.5,
    "right_mid_stance": 0.725,
-   "stride_m": 1.0881
+   "stride_m": 1.1964
   }
  },
  "forward": "+z",

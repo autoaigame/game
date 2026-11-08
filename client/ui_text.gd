@@ -75,6 +75,7 @@ const TAB_CONTROLS := "Commandes"
 const FULLSCREEN := "Plein écran"
 ## The controls tab (client/settings_menu.gd): what each key does. The bag and the whistle come from KEYS.
 const CONTROL_MOVE := "Se déplacer"
+const CONTROL_SPRINT := "Courir (maintenir)"
 const CONTROL_CLICK := "Aller, cueillir, ramasser"
 const CONTROL_LOOK := "Apparence"
 const CONTROL_MUTE := "Couper le son"
@@ -85,7 +86,7 @@ const MOUSE_LEFT := "Clic gauche"
 const MOUSE_WHEEL := "Molette"
 const PAD_START := "Start (manette)"
 ## Key caps that are not printed as one character.
-const KEY_CAPS := {KEY_ESCAPE: "Échap"}
+const KEY_CAPS := {KEY_ESCAPE: "Échap", KEY_SHIFT: "Maj"}
 const LOOK_TITLE := "Apparence (C pour fermer)"
 const LOOK_COLOUR := "Couleur (clic droit : précédente)"
 const LOOK_NONE := "—"
@@ -143,7 +144,7 @@ const LAYOUT_AWARE := ["Windows", "macOS", "X11", "Wayland"]
 ## look_panel.gd, sound_director.gd, world_view.gd and settings_menu.gd.
 static func controls() -> Array:
 	var rows := [{"caps": [KEY_W, KEY_A, KEY_S, KEY_D], "action": CONTROL_MOVE},
-			{"caps": [MOUSE_LEFT], "action": CONTROL_CLICK}]
+			{"caps": [KEY_SHIFT], "action": CONTROL_SPRINT}, {"caps": [MOUSE_LEFT], "action": CONTROL_CLICK}]
 	for k in KEYS:
 		rows.append({"caps": [k[0]], "action": k[1]})
 	rows.append_array([{"caps": [KEY_C], "action": CONTROL_LOOK}, {"caps": [KEY_M], "action": CONTROL_MUTE},

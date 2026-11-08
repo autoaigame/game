@@ -4,6 +4,10 @@ class_name ClientSettings
 extends RefCounted
 
 const PATH := "user://settings.cfg"
+
+## The name the page's ?name= gave (client/client.gd), or "". It is for this session only: save_name()
+## never saves it, so a shared link does not replace the name a visitor saved.
+static var session_name := ""
 ## Master volume (0..1) before the player sets one.
 const DEFAULT_VOLUME := 0.8
 
@@ -20,6 +24,8 @@ static func load_name(path := PATH) -> String:
 
 
 static func save_name(player_name: String, path := PATH) -> void:
+	if session_name != "" and player_name == session_name:
+		return
 	var cfg := ConfigFile.new()
 	cfg.load(path)  # keep other settings; a missing file is fine
 	cfg.set_value("player", "name", player_name)

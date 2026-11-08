@@ -7,17 +7,18 @@ extends CanvasLayer
 signal opened
 signal closed
 
-## id -> title; a tab is built by _build_<id>_tab().
+## id -> title; a tab is built by _build_tab(id).
 const TABS := [{"id": "sound", "title": UiText.TAB_SOUND}, {"id": "display", "title": UiText.TAB_DISPLAY},
 		{"id": "controls", "title": UiText.TAB_CONTROLS}]
 const FADE_S := 0.15
 ## The Interface slider plays a menu sound at most this often while it moves, in ms.
 const UI_PREVIEW_MS := 150
+const StartMenu := preload("res://client/login_ui.gd")
 
 var sounds: Node  ## client/sound_director.gd, or null (no sound)
-## While the menu is closed, a key or button event is offered here first; true means it was used (the
-## start menu goes back a screen on Escape, client/login_ui.gd).
-var escape_first: Callable
+## While the menu is closed, a key or button event goes to this start menu first, which goes back a
+## screen on Escape (client/login_ui.gd); null when there is none.
+var start_menu: StartMenu
 var settings_path := ClientSettings.PATH  ## where the fullscreen choice is kept (tests use their own)
 var _root := Control.new()
 var _tab_buttons := {}  ## tab id -> Button
@@ -132,7 +133,7 @@ func _input(event: InputEvent) -> void:
 
 ## Acts on `event`; true when it was used.
 func handle(event: InputEvent) -> bool:
-	if not visible and escape_first.is_valid() and escape_first.call(event):
+	if not visible and start_menu != null and start_menu.use_escape(event):
 		return true
 	if is_toggle(event) or (visible and event.is_action_pressed("ui_cancel")):
 		toggle()
@@ -197,7 +198,7 @@ func _build() -> void:
 		_with_sounds(b)
 		tabs.add_child(b)
 		_tab_buttons[id] = b
-		var page: Control = call("_build_%s_tab" % id)
+		var page: Control = _build_tab(id)
 		box.add_child(page)
 		_tab_pages[id] = page
 
@@ -213,6 +214,16 @@ func _build() -> void:
 	_close.pressed.connect(close)
 	_with_sounds(_close)
 	footer.add_child(_close)
+
+
+## The page of tab `id` (an id of TABS).
+func _build_tab(id: String) -> Control:
+	match id:
+		"display":
+			return _build_display_tab()
+		"controls":
+			return _build_controls_tab()
+	return _build_sound_tab()
 
 
 func _build_sound_tab() -> Control:

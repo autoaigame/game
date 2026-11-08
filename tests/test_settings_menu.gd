@@ -125,7 +125,7 @@ func _row(action: String) -> Dictionary:
 func test_controls_reuse_the_hud_hints() -> void:
 	for k in UiText.KEYS:
 		assert_eq(_row(k[1])["caps"], [k[0]], k[1])
-	for action in [UiText.CONTROL_MOVE, UiText.CONTROL_CLICK, UiText.CONTROL_LOOK, UiText.CONTROL_MUTE,
+	for action in [UiText.CONTROL_MOVE, UiText.CONTROL_SPRINT, UiText.CONTROL_CLICK, UiText.CONTROL_LOOK, UiText.CONTROL_MUTE,
 			UiText.CONTROL_VOLUME, UiText.CONTROL_ZOOM, UiText.CONTROL_SETTINGS]:
 		assert_false(_row(action).is_empty(), action)
 
@@ -139,6 +139,13 @@ func test_listed_keys_are_the_handled_keys() -> void:
 	assert_eq(_row(UiText.CONTROL_MOVE)["caps"], [KEY_W, KEY_A, KEY_S, KEY_D])
 	assert_eq(_row(UiText.CONTROL_MUTE)["caps"], [KEY_M])
 	assert_eq(_row(UiText.CONTROL_VOLUME)["caps"], [KEY_MINUS, KEY_EQUAL])
+
+
+## Shift held makes the player run (client/world_view.gd); its cap reads "Maj", as on a French keyboard.
+func test_sprint_key_is_listed() -> void:
+	assert_eq(_row(UiText.CONTROL_SPRINT)["caps"], [KEY_SHIFT])
+	assert_eq(UiText.cap_text(KEY_SHIFT), "Maj")
+	assert_eq(UiText.cap_text(KEY_SHIFT, {KEY_SHIFT: KEY_SHIFT}), "Maj")
 
 
 ## Keys are named as printed on the player's keyboard: Z Q S D on AZERTY, W A S D on QWERTY.

@@ -4,6 +4,7 @@ const PATH := "user://test_settings.cfg"
 
 
 func _clean() -> void:
+	ClientSettings.session_name = ""  # a failed test_session_name_is_not_saved must not leak into the others
 	if FileAccess.file_exists(PATH):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(PATH))
 
@@ -122,4 +123,18 @@ func test_fullscreen_at_launch_only_off_the_web() -> void:
 	ClientSettings.save_fullscreen(true, PATH)
 	assert_eq(ClientSettings.fullscreen_at_launch(false, PATH), true)
 	assert_eq(ClientSettings.fullscreen_at_launch(true, PATH), false)
+	_clean()
+
+
+## A name from the page's ?name= is for this session only: it never replaces the saved one.
+func test_session_name_is_not_saved() -> void:
+	_clean()
+	ClientSettings.save_name("Corbeau_42", PATH)
+	ClientSettings.session_name = "Visiteur"
+	ClientSettings.save_name("Visiteur", PATH)
+	assert_eq(ClientSettings.load_name(PATH), "Corbeau_42")
+	# A name typed in the start menu instead (the session name was refused, say) is saved as usual.
+	ClientSettings.save_name("ann", PATH)
+	assert_eq(ClientSettings.load_name(PATH), "ann")
+	ClientSettings.session_name = ""
 	_clean()
