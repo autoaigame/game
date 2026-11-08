@@ -373,9 +373,6 @@ msgstr "CC0 1.0 (public domain)"
 msgid "credits.licence.elevenlabs"
 msgstr "ElevenLabs sounds, in this game only"
 
-msgid "credits.licence.proto"
-msgstr "prototype, terms to be checked"
-
 msgid "credits.licence.suno"
 msgstr "Suno music, in this game only"
 

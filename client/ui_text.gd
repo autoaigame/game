@@ -72,7 +72,6 @@ const CREDITS_KINDS := {"character": "credits.kind.character", "decals": "credit
 ## Licences of ASSETS.toml -> text key of their words.
 const CREDITS_LICENSES := {"CC0-1.0": "credits.licence.cc0",
 		"LicenseRef-ElevenLabs-in-game-only": "credits.licence.elevenlabs",
-		"LicenseRef-proto-not-for-PR": "credits.licence.proto",
 		"LicenseRef-Suno-in-game-only": "credits.licence.suno"}
 
 const SETTINGS_TITLE := "settings.title"
