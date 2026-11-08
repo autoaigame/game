@@ -75,6 +75,45 @@ static func wall_neighbours(cell: Vector2i, wall: int) -> Array[bool]:
 	return [x, y]
 
 
+## Trees are drawn TREE_SCALE times the size of their sprites, so they stand well above the players
+## (an adult tree about 4 times a player's height). Nearest filtering: the texels of this non-integer
+## scale come out 1 or 2 px wide. The sprite is scaled around its anchor, on the cell centre, so the
+## foot, the ground shadow drawn in the sprite, the one-cell collision and the depth sorting stay put.
+const TREE_IDS := ["oak", "birch", "pine"]
+const TREE_SCALE := 1.75
+## A tree drawn in front of my player fades to this opacity where it covers the body, at
+## TREE_FADE_PER_S opacity per second, and comes back once the player has passed.
+const TREE_FADE_ALPHA := 0.4
+const TREE_FADE_PER_S := 3.0
+static var _images := {}  ## texture -> Image, to test which pixels are opaque
+
+
+## Whether object type `index` is a tree (every species, young sprites included).
+static func is_tree(index: int) -> bool:
+	return index >= 0 and WorldData.object(index)["id"] in TREE_IDS
+
+
+## Whether `sprite` (an object sprite, in its parent's coordinates) is opaque at point `p`: its
+## translucent ground shadow and its transparent margins do not count.
+static func hides(sprite: Sprite2D, p: Vector2) -> bool:
+	var tex := sprite.texture
+	if tex == null:
+		return false
+	var t := ((p - sprite.position) / sprite.scale - sprite.offset).floor()
+	if t.x < 0 or t.y < 0 or t.x >= tex.get_width() or t.y >= tex.get_height():
+		return false
+	if not _images.has(tex):
+		_images[tex] = tex.get_image()
+	var x := int(t.x) if not sprite.flip_h else tex.get_width() - 1 - int(t.x)
+	return (_images[tex] as Image).get_pixel(x, int(t.y)).a >= 0.5
+
+
+## The opacity of a tree after dt seconds: towards TREE_FADE_ALPHA while it hides the player, else
+## back to 1.
+static func fade_step(alpha: float, hiding: bool, dt: float) -> float:
+	return move_toward(alpha, TREE_FADE_ALPHA if hiding else 1.0, TREE_FADE_PER_S * dt)
+
+
 ## A sprite for an object standing on `cell`: its anchor (data/objects "anchor_px") on the cell centre.
 ## The position is the cell centre, so it sorts by y with the players (y_sort): a player north of a
 ## tree walks behind it. mirrored: flipped left to right around its anchor.
@@ -89,6 +128,9 @@ static func object_sprite(cell: Vector2i, index: int, mirrored := false) -> Spri
 		anchor.x = sprite.texture.get_width() - anchor.x
 	sprite.offset = -anchor
 	sprite.position = IsoLayer.cell_to_local(Vector2(cell))
+	if is_tree(index):
+		sprite.set_meta("tree", true)
+		sprite.scale = Vector2.ONE * TREE_SCALE
 	return sprite
 
 
