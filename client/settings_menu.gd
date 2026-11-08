@@ -281,8 +281,9 @@ func _build_display_tab() -> Control:
 
 func _build_language_tab() -> Control:
 	_languages = LanguageList.new()
-	_languages.sounds = sounds
 	_languages.settings_path = settings_path
+	for l in _languages.locales():  # the sounds of the other tabs, focus included (no sounds of its own)
+		_with_sounds(_languages.button(l))
 	_languages.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_languages.custom_minimum_size = Vector2(220, 0)
 	return _languages

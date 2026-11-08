@@ -160,6 +160,27 @@ func test_settings_language_tab() -> void:
 	_clean()
 
 
+class SoundSpy:
+	extends Node
+	var played := []
+
+	func ui(kind: String) -> void:
+		played.append(kind)
+
+
+## In the settings, a language button sounds like the other tabs' controls, reached by a pad too.
+func test_settings_language_buttons_sound_on_focus() -> void:
+	var menu: CanvasLayer = SettingsMenu.new()
+	menu.settings_path = PATH
+	menu.sounds = SoundSpy.new()
+	menu._build()
+	menu.language_list().button("fr").focus_entered.emit()
+	menu.language_list().button("fr").mouse_entered.emit()
+	assert_eq(menu.sounds.played, ["hover", "hover"], "focus and mouse, once each")
+	menu.sounds.free()
+	menu.free()
+
+
 ## A name refused by the server is said again in the new language.
 func test_refused_name_follows_a_language_change() -> void:
 	I18n.use("fr")
