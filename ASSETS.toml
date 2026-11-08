@@ -1528,3 +1528,39 @@ tool = "PixelLab create_image_pixen (1 generation), 256x64, seed 7203, transpare
 prompt = "flat front view game title nameplate, a wide horizontal plaque of old weathered steel half covered in moss and grass, bolted, a round robot eye lens glowing amber at the left end, plain flat empty middle area for a title, no text, muted olive and grey colours"
 license = "CC0-1.0"
 source = ""
+
+[[asset]]
+path = "assets/models/dog_tripo_a.glb"
+author = "M3t4Data"
+origin = "generated"
+tool = "Tripo API: text-to-model (model v3.1-20260211, smart_low_poly, face_limit 3000, texture without PBR), rig (v3.0-20260909, quadruped), retarget preset:quadruped:walk; skeleton repaired by a Blender 5.2 script (4-bone legs, weights per leg), sit pose scripted in Blender, walk, trot and gallop made by a parametric Blender script (leg IK on paw paths, pelvis and chest controllers, the same parameters for the three dogs, Tripo's walk removed), palette conversion (faces of fur hue 10 to 50 degrees recoloured to #6b5a4c, a grey-brown coat instead of the tan one asked)"
+prompt = "A low-poly stylized game cyborg dog, medium-sized mongrel, full body, standing on four legs, side-on neutral pose, head up, tail out. Living dog front half: tan-brown fur, floppy ears, dark nose. Its back half is salvaged machine: both hind legs are rusty steel robot legs with piston joints and paw-shaped metal feet, and a segmented metal spine plate runs along the back to the metal tail. Dull muted colours, weathered dark grey and rust metal. Simple flat colours, chunky shapes, readable silhouette, game-ready animal. Negative prompt: base, pedestal, ground, rider, saddle, weapon, gun, realistic, highly detailed, thin wires, glowing neon, bright colours"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/models/dog_tripo_b.glb"
+author = "M3t4Data"
+origin = "generated"
+tool = "Tripo API: text-to-model (model v3.1-20260211, smart_low_poly, face_limit 3000, texture without PBR), rig (v3.0-20260909, quadruped), retarget preset:quadruped:walk; skeleton repaired by a Blender 5.2 script (4-bone legs, weights per leg), sit pose scripted in Blender, walk, trot and gallop made by a parametric Blender script (leg IK on paw paths, pelvis and chest controllers, the same parameters for the three dogs, Tripo's walk removed), palette conversion"
+prompt = "A low-poly stylized game cyborg dog, medium-sized shepherd-like dog, full body, standing on four legs, side-on neutral pose, head up. Grey-brown fur body and furry legs, bushy tail. Its head is armoured: a dark gunmetal skull plate and a metal lower jaw with steel teeth, one big round camera eye lens on the side of the head, a pointed ear and a metal ear. A few thick black cables run from the head down the neck into a metal collar. Dull muted colours. Simple flat colours, chunky shapes, readable silhouette, game-ready animal. Negative prompt: base, pedestal, ground, rider, saddle, weapon, gun, realistic, highly detailed, thin wires, glowing neon, bright colours"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/models/dog_tripo_c.glb"
+author = "M3t4Data"
+origin = "generated"
+tool = "Tripo API: text-to-model (model v3.1-20260211, smart_low_poly, face_limit 3000, texture without PBR), rig (v3.0-20260909, quadruped), retarget preset:quadruped:walk; skeleton repaired by a Blender 5.2 script (4-bone legs, weights per leg), sit pose scripted in Blender, walk, trot and gallop made by a parametric Blender script (leg IK on paw paths, pelvis and chest controllers, the same parameters for the three dogs, Tripo's walk removed), palette conversion"
+prompt = "A low-poly stylized game military robot dog, mostly machine, full body, standing on four legs, side-on neutral pose, head up. Dog shape: long muzzle, pointed ears, deep chest, slim waist, short tail. Clean armour plates in dull olive-green and dark grey over a black mechanical frame, jointed metal legs with dog-like reverse hocks, small sensor visor where the eyes are. Only a strip of short brown fur visible on the neck and belly. Simple flat colours, chunky shapes, readable silhouette, game-ready. Negative prompt: base, pedestal, ground, rider, saddle, weapon, gun, realistic, highly detailed, thin wires, glowing neon, bright colours"
+license = "CC0-1.0"
+source = ""
+
+[[asset]]
+path = "assets/models/dog_tripo_gaits.json"
+author = "M3t4Data"
+origin = "generated"
+tool = "copy of the glTF animation extras of the walk, trot and gallop clips of assets/models/dog_tripo_*.glb (Blender 5.2 gait script): stride and leg length in metres, duty factor, paw offsets, clip length"
+prompt = ""
+license = "CC0-1.0"
+source = ""

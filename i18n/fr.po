@@ -94,6 +94,23 @@ msgstr "Couleur (clic droit : précédente)"
 msgid "look.none"
 msgstr "—"
 
+#. The dog row of the look editor
+msgid "look.dog"
+msgstr "Chien"
+
+#. Short names of the dogs a player can choose (shared/dog_skins.gd)
+msgid "dog.classic"
+msgstr "Classique"
+
+msgid "dog.cyborg_a"
+msgstr "Ferraille"
+
+msgid "dog.cyborg_b"
+msgstr "Blindé"
+
+msgid "dog.cyborg_c"
+msgstr "Commando"
+
 #. HUD (client/hud.gd)
 msgid "hud.hunger"
 msgstr "Faim"
@@ -334,6 +351,9 @@ msgstr "objets du sac"
 msgid "credits.kind.music"
 msgstr "musique"
 
+msgid "credits.kind.models"
+msgstr "modèles 3D"
+
 msgid "credits.kind.objects"
 msgstr "décor"
 
@@ -385,3 +405,16 @@ msgstr "      fond {sound}  à {at} s"
 #. {in}: seconds
 msgid "debug.event"
 msgstr "      ponctuel {sound}…  dans {in} s"
+
+#. F10 debug line. {gait}: one of the gait names below
+msgid "debug.dog_gait"
+msgstr "F10 : allure du chien forcée : {gait}"
+
+msgid "debug.gait_walk"
+msgstr "pas"
+
+msgid "debug.gait_trot"
+msgstr "trot"
+
+msgid "debug.gait_gallop"
+msgstr "galop"

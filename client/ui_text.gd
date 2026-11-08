@@ -67,7 +67,7 @@ const CREDITS_HINT := "credits.hint"
 ## What an asset is (client/credits.gd kind()) -> text key.
 const CREDITS_KINDS := {"character": "credits.kind.character", "decals": "credits.kind.decals",
 		"dog": "credits.kind.dog", "items": "credits.kind.items", "music": "credits.kind.music",
-		"objects": "credits.kind.objects", "sounds": "credits.kind.sounds", "tiles": "credits.kind.tiles",
+		"models": "credits.kind.models", "objects": "credits.kind.objects", "sounds": "credits.kind.sounds", "tiles": "credits.kind.tiles",
 		"ui": "credits.kind.ui"}
 ## Licences of ASSETS.toml -> text key of their words.
 const CREDITS_LICENSES := {"CC0-1.0": "credits.licence.cc0",
@@ -97,6 +97,10 @@ const KEY_CAPS := {KEY_ESCAPE: "key.escape", KEY_SHIFT: "key.shift"}
 const LOOK_TITLE := "look.title"
 const LOOK_COLOUR := "look.colour"
 const LOOK_NONE := "look.none"
+const LOOK_DOG := "look.dog"  ## the dog row of the look editor
+## Short name of each dog (DogSkins id) -> text key.
+const DOG_NAMES := {"classic": "dog.classic", "cyborg_a": "dog.cyborg_a", "cyborg_b": "dog.cyborg_b",
+		"cyborg_c": "dog.cyborg_c"}
 const SOUND_CHANNELS := {"master": "sound.master", "music": "sound.music", "ambience": "sound.ambience",
 		"effects": "sound.effects", "ui": "sound.ui"}
 const MUTE := "settings.mute"
@@ -123,6 +127,9 @@ const DEBUG_AMBIENCE_AUTO := "debug.ambience_auto"  ## {current} {radius}
 const DEBUG_AMBIENCE_ROW := "debug.ambience_row"  ## {mark} {name} {weight} {score}
 const DEBUG_BED := "debug.bed"  ## {sound} {at}
 const DEBUG_EVENT := "debug.event"  ## {sound} {in}
+## The forced dog gait (F10, client/world_view.gd).
+const DEBUG_DOG_GAIT := "debug.dog_gait"  ## {gait}
+const DOG_GAITS := {"walk": "debug.gait_walk", "trot": "debug.gait_trot", "gallop": "debug.gait_gallop"}
 
 
 ## The text of `key` in the current language (i18n/<locale>.po), else in English, else the key itself.

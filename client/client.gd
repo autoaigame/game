@@ -23,6 +23,8 @@ var player_name := ""
 var my_peer_id := 0
 ## The parts this player wears (CharacterParts look), remembered between sessions, sent before joining.
 var look: Array = []
+## The dog this player chose (DogSkins id), remembered between sessions, sent before joining.
+var dog := DogSkins.DEFAULT
 
 ## A frame this long after the previous one means the game was paused (a hidden browser tab runs no
 ## frames). The updates buffered meanwhile are stale, and those that did not fit were dropped.
@@ -46,6 +48,7 @@ func _ready() -> void:
 	_net = get_parent().get_node("Net")
 	_net.set_handler(self)
 	look = ClientSettings.load_look()
+	dog = ClientSettings.load_dog()
 	if player_name == "" and OS.has_feature("web"):
 		player_name = name_from_query(str(JavaScriptBridge.eval("location.search")))
 		ClientSettings.session_name = player_name  # for this session only, never saved
@@ -247,9 +250,10 @@ func _on_connected() -> void:
 		_join()
 
 
-## The look first, so that the others see it as soon as this player appears.
+## The look and the dog first, so that the others see them as soon as this player appears.
 func _join() -> void:
 	_net.set_look.rpc_id(1, look)
+	_net.set_dog.rpc_id(1, dog)
 	_net.join.rpc_id(1, player_name)
 
 
@@ -259,6 +263,14 @@ func set_look(new_look: Array) -> void:
 	ClientSettings.save_look(look)
 	if my_peer_id != 0:
 		_net.set_look.rpc_id(1, look)
+
+
+## Takes another dog (DogSkins id): remembered, and sent to the server once joined.
+func set_dog(new_dog: String) -> void:
+	dog = DogSkins.valid(new_dog)
+	ClientSettings.save_dog(dog)
+	if my_peer_id != 0:
+		_net.set_dog.rpc_id(1, dog)
 
 
 func on_look(peer_id: int, parts: Array) -> void:
