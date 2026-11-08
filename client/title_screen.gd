@@ -1,4 +1,4 @@
-## The start menu's first screen: Jouer, Paramètres, Quitter (not on the web, a tab cannot close
+## The start menu's first screen: Jouer, Paramètres, Crédits, Quitter (not on the web, a tab cannot close
 ## itself). It only says which button was chosen; client/login_ui.gd acts on it.
 extends PanelContainer
 
@@ -11,11 +11,12 @@ var _order: Array = []
 
 ## The ids of the buttons, top to bottom.
 static func buttons(web: bool) -> Array:
-	return ["play", "settings"] if web else ["play", "settings", "quit"]
+	return ["play", "settings", "credits"] if web else ["play", "settings", "credits", "quit"]
 
 
 static func label(id: String) -> String:
-	return {"play": UiText.PLAY, "settings": UiText.SETTINGS, "quit": UiText.QUIT}.get(id, "")
+	return {"play": UiText.PLAY, "settings": UiText.SETTINGS, "credits": UiText.CREDITS,
+			"quit": UiText.QUIT}.get(id, "")
 
 
 func _init(web := OS.has_feature("web")) -> void:

@@ -1,6 +1,6 @@
 ## Start menu, drawn over the world until the server welcomes us. Under the title band, one screen at a
 ## time from a stack; the title and play screens show the connection state. The title screen (client/title_screen.gd) is the root;
-## Jouer opens the play screen (look, name, Entrer). A new screen is a Control given to add_screen(),
+## Jouer opens the play screen (look, name, Entrer), Crédits the credits (client/credits_screen.gd). A new screen is a Control given to add_screen(),
 ## opened with go(id); Escape and Retour go back. Texts are in client/ui_text.gd, looks in client/ui_theme.gd.
 extends CanvasLayer
 
@@ -12,16 +12,25 @@ const FADE_OUT_S := 0.4
 const SCREEN_FADE_S := 0.15
 const ROOT_SCREEN := "title"
 const PLAY_SCREEN := "play"
+const CREDITS_SCREEN := "credits"
 const ESCAPE_SETTINGS := "settings"  ## Escape opens the settings menu (it does so itself)
 const ESCAPE_BACK := "back"  ## Escape goes back a screen
 const FOCUS_SETTINGS_BUTTON := "settings_button"  ## the title's Paramètres button
 const FOCUS_FIRST := "first"  ## the first control of the screen shown
+## On the title screen the column fills the view but these pixels, the logo at the top and the buttons
+## at the bottom, so the colossus shows between them. Other screens are centred under a smaller logo.
+const TITLE_COLUMN_MARGIN := 12
 
 var client: Node  ## client/client.gd
 var sounds: Node  ## client/sound_director.gd, or null (no sound)
 var settings: Node  ## client/settings_menu.gd, or null
 var state := State.CONNECTING
 var _root := Control.new()
+var _center := CenterContainer.new()  ## the column of the menu, over the backdrop
+var _column := VBoxContainer.new()
+var _logo_art: Control
+var _tagline: Label
+var _title_gap := Control.new()  ## pushes the title screen's buttons to the bottom
 var _screen_box := VBoxContainer.new()  ## holds every screen; only the top of the stack shows
 var _screens := {}  ## id -> Control
 var _stack: Array = [ROOT_SCREEN]
@@ -93,6 +102,17 @@ static func stack_after_rejected(stack: Array) -> Array:
 	return pushed([ROOT_SCREEN] if stack.is_empty() else stack, PLAY_SCREEN)
 
 
+## The screen a title button opens, or "" (Paramètres opens the settings menu, Quitter quits).
+static func screen_for(choice: String) -> String:
+	return {"play": PLAY_SCREEN, "credits": CREDITS_SCREEN}.get(choice, "")
+
+
+## The title button that takes the focus back on the title screen, coming from screen `left`: the
+## one that opened it, else Jouer.
+static func title_button_after_back(left: String) -> String:
+	return {CREDITS_SCREEN: "credits"}.get(left, "play")
+
+
 static func button_enabled(s: State) -> bool:
 	return s == State.READY
 
@@ -145,12 +165,19 @@ func go(id: String) -> void:
 func back() -> void:
 	if _stack.size() <= 1:
 		return
+	var left: String = top_screen()
 	_stack = popped(_stack)
 	_show_top(true)
+	if top_screen() == ROOT_SCREEN:
+		_focus_next = _title.button(title_button_after_back(left))
 
 
 func top_screen() -> String:
 	return _stack.back()
+
+
+func has_screen(id: String) -> bool:
+	return _screens.has(id)
 
 
 ## Registers screen `id`, hidden until go(id). `first_focus` takes the focus when it shows.
@@ -180,8 +207,9 @@ func _show_top(fade: bool) -> void:
 	var id: String = top_screen()
 	for k in _screens:
 		_screens[k].visible = k == id
+	_lay_out(id == ROOT_SCREEN)
 	var screen: Control = _screens[id]
-	if fade:
+	if fade and is_inside_tree():  # a tween needs the tree
 		if _screen_tween != null:
 			_screen_tween.kill()
 		screen.modulate.a = 0.0
@@ -208,30 +236,21 @@ func _build() -> void:
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.theme = UiTheme.build()
 	add_child(_root)
-	var veil := ColorRect.new()
-	veil.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var mat := ShaderMaterial.new()
-	mat.shader = load("res://client/menu_veil.gdshader")
-	veil.material = mat
-	_root.add_child(veil)
-	var center := CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_root.add_child(center)
-	var column := VBoxContainer.new()
+	_root.add_child(_backdrop())
+	_center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_root.add_child(_center)
+	var column := _column
 	column.add_theme_constant_override("separation", 10)
-	center.add_child(column)
+	_center.add_child(column)
 
-	var band := PanelContainer.new()
-	band.theme_type_variation = "TitleBand"
-	band.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	band.custom_minimum_size = Vector2(300, UiTheme.TITLE_BAND_H)
-	column.add_child(band)
-	var title := _label(UiText.TITLE, "TitleLabel")
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	band.add_child(title)
-	var tagline := _label(UiText.TAGLINE, "TaglineLabel")
-	tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(tagline)
+	_logo_art = _logo()
+	column.add_child(_logo_art)
+	_tagline = _label(UiText.TAGLINE, "TaglineLabel")
+	_tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(_tagline)
+	_title_gap.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_title_gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_child(_title_gap)
 	_screen_box.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	column.add_child(_screen_box)
 	var title_page := VBoxContainer.new()
@@ -241,12 +260,69 @@ func _build() -> void:
 	_title.chosen.connect(_on_title_chosen)
 	title_page.add_child(_title)
 	var status_row := _icon_row(_title_status_icon, _title_status)
+	_title_status.theme_type_variation = "TaglineLabel"  # outlined, over the backdrop
 	status_row.custom_minimum_size = Vector2(420, 0)
 	status_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	title_page.add_child(status_row)
 	_title_status.autowrap_mode = TextServer.AUTOWRAP_WORD
 	add_screen(ROOT_SCREEN, title_page, _title.first_button())
 	add_screen(PLAY_SCREEN, _build_play_screen(), _button)
+	var credits: Control = load("res://client/credits_screen.gd").new()
+	credits.sounds = sounds
+	credits.back_pressed.connect(back)
+	add_screen(CREDITS_SCREEN, credits, credits.first_focus())
+
+
+## The title screen: big logo at the top, tagline, buttons at the bottom. Other screens (the play
+## screen is tall): the logo at 1 px per texel above them, no tagline, centred.
+func _lay_out(title: bool) -> void:
+	var tex: Texture2D = _logo_art.get("texture")
+	if tex != null:
+		_logo_art.custom_minimum_size = tex.get_size() * (UiTheme.LOGO_SCALE if title else 1)
+	_tagline.visible = title
+	_title_gap.visible = title
+	var view_h: float = ProjectSettings.get_setting("display/window/size/viewport_height", 540)
+	_column.custom_minimum_size.y = view_h - 2 * TITLE_COLUMN_MARGIN if title else 0.0
+
+
+## Behind the menu: the colossus's valley (assets/ui/title_bg.png) at UiTheme.BACKDROP_SCALE, or the
+## world darkened and greyed if the picture is missing.
+func _backdrop() -> Control:
+	var tex := UiTheme.picture("title_bg")
+	if tex == null:
+		var veil := ColorRect.new()
+		veil.set_anchors_preset(Control.PRESET_FULL_RECT)
+		var mat := ShaderMaterial.new()
+		mat.shader = load("res://client/menu_veil.gdshader")
+		veil.material = mat
+		return veil
+	var bg := TextureRect.new()
+	bg.texture = tex
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	return bg
+
+
+## The name of the game: the logo (assets/ui/logo.png) at UiTheme.LOGO_SCALE, or the title band.
+func _logo() -> Control:
+	var tex := UiTheme.picture("logo")
+	if tex != null:
+		var logo := TextureRect.new()
+		logo.texture = tex
+		logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		logo.stretch_mode = TextureRect.STRETCH_SCALE
+		logo.custom_minimum_size = tex.get_size() * UiTheme.LOGO_SCALE
+		logo.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		return logo
+	var band := PanelContainer.new()
+	band.theme_type_variation = "TitleBand"
+	band.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	band.custom_minimum_size = Vector2(300, UiTheme.TITLE_BAND_H)
+	var title := _label(UiText.TITLE, "TitleLabel")
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	band.add_child(title)
+	return band
 
 
 ## The look, the name and Entrer: the look is chosen before entering.
@@ -333,9 +409,10 @@ func _icon_row(icon: TextureRect, label: Label) -> HBoxContainer:
 
 
 func _on_title_chosen(id: String) -> void:
+	if screen_for(id) != "":
+		go(screen_for(id))
+		return
 	match id:
-		"play":
-			go(PLAY_SCREEN)
 		"settings":
 			_open_settings()
 		"quit":
@@ -347,15 +424,15 @@ func _open_settings() -> void:
 		settings.open()
 
 
-## The settings menu takes this one's place while it is open.
+## The settings menu takes this one's place while it is open; the backdrop stays behind it.
 func _on_settings_opened() -> void:
-	_root.visible = false
+	_center.visible = false
 
 
 ## Back from the settings menu while this menu shows: the focus returns to the title's Paramètres
 ## button, or to the first control of the screen shown.
 func _on_settings_closed() -> void:
-	_root.visible = true
+	_center.visible = true
 	if _menu_up():
 		var to := focus_after_settings(_stack)
 		_focus_next = _title.button("settings") if to == FOCUS_SETTINGS_BUTTON else _first_focus(top_screen())
