@@ -79,19 +79,38 @@ func test_back_events() -> void:
 func test_settings_let_the_start_menu_use_escape_first() -> void:
 	var menu: CanvasLayer = preload("res://client/settings_menu.gd").new()
 	menu.visible = false
-	var seen := []
-	menu.escape_first = func(e: InputEvent) -> bool:
-		seen.append(e)
-		return true
+	var start := StartMenuSpy.new()
+	menu.start_menu = start
 	var pad := InputEventJoypadButton.new()
 	pad.button_index = JOY_BUTTON_B
 	pad.pressed = true
 	assert_true(menu.handle(pad), "the start menu used the event")
-	assert_eq(seen, [pad])
+	assert_eq(start.seen, [pad])
+	assert_false(menu.is_open())
+	start.used = false  # on the title screen the start menu leaves the event to the settings
+	assert_false(menu.handle(pad), "B does not open the settings")
+	assert_eq(start.seen, [pad, pad])
 	assert_false(menu.is_open())
 	for n in [menu._root, menu._mute, menu._close]:  # built in _ready, which never ran
 		n.free()
 	menu.free()
+	start._free_parts()
+	start.free()
+
+
+## A start menu that records what the settings menu offers it.
+class StartMenuSpy extends "res://client/login_ui.gd":
+	var seen := []
+	var used := true
+
+	func use_escape(event: InputEvent) -> bool:
+		seen.append(event)
+		return used
+
+	func _free_parts() -> void:
+		for n in [_root, _screen_box, _name_edit, _button, _back_button, _hint, _hint_icon, _status,
+				_status_icon, _title_status, _title_status_icon]:
+			n.free()
 
 
 ## Closing the settings gives the focus back to the title's Paramètres button, or to the first control
