@@ -1,6 +1,6 @@
 extends TestCase
 
-## PROTO (orch/chien-proto): the Tripo dog skins (client/dog_3d.gd).
+## The Tripo dog skins (client/dog_3d.gd).
 
 const Pose := preload("res://tests/character_pose.gd")
 

@@ -1,8 +1,9 @@
-## PROTO (branch orch/chien-proto, not for a PR): the dog drawn as one of the three cyborg Tripo models
-## (assets/models/dog_tripo_*.glb, rigs repaired out of the repo), rendered as pixel art like the player
-## (client/model_3d.gd), at the size of the dog sprite. Clips: walk, trot and gallop (one cycle each,
-## made by one parametric script for the three models, in place), a scripted sit, and the rest pose. The
-## server's states with no clip of their own use the closest one (PROVISIONAL below).
+## The dog drawn as one of the three cyborg Tripo models (assets/models/dog_tripo_*.glb, rigs repaired by
+## a Blender script, see ASSETS.toml), rendered as pixel art like the player (client/model_3d.gd), at the
+## size of the dog sprite. Clips: walk, trot and gallop (one cycle each, made by one parametric script for
+## the three models, in place), a scripted sit, and the rest pose. The models have no lying, peeing,
+## digging or waiting pose yet: those server states show the closest clip instead, marked "provisional"
+## in STILL and WAIT, until a pose of their own is made.
 ## Display only: the dog's behaviour stays on the server (server/dog.gd).
 class_name Dog3D
 extends Model3D
@@ -39,7 +40,7 @@ const STOP_S := 0.12
 ## Walk "frozen" at a phase of the clip (0..1): the hind left paw up at 0.825, the front left at 0.075.
 const STILL := {
 	"sit": {"clip": "sit", "provisional": false},
-	"sleep": {"clip": "sit", "provisional": true},  # couché / dort: no lying pose yet
+	"sleep": {"clip": "sit", "provisional": true},  # lying down / asleep: no lying pose yet
 	"pee": {"clip": "walk", "at": 0.825, "provisional": true},  # a hind paw up
 	"to_pee": {"clip": "walk", "at": 0.825, "provisional": true},
 	"dig": {"clip": "walk", "at": 0.075, "provisional": true},  # a front paw up

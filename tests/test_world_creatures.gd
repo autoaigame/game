@@ -134,6 +134,7 @@ func test_fast_dog_glides_without_jumping() -> void:
 	assert_true(biggest_jump < 0.5, "no jump: biggest step drawn in a frame %f cells" % biggest_jump)
 	assert_true(pos.distance_to(view._creatures[1]["shown"]) < 1.5, "close behind")
 	assert_true(node.position.distance_to(IsoLayer.cell_to_local(view._creatures[1]["shown"])) < 0.01)
+	view.free()
 
 
 ## A dog bringing back its catch is drawn with it in its mouth, until it hands it over.

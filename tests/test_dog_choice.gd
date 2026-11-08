@@ -66,8 +66,8 @@ func test_menu_dog_row_chooses_and_tells_the_client() -> void:
 	var ui: CanvasLayer = LoginUi.new()
 	var c := MenuClient.new()
 	ui.client = c
-	var screen: Control = ui._build_play_screen()
-	var editors := screen.find_children("*", "LookEditor", true, false)
+	ui._build()  # parents the menu's own nodes, so ui.free() frees them all
+	var editors: Array[Node] = ui._screens[LoginUi.PLAY_SCREEN].find_children("*", "LookEditor", true, false)
 	assert_eq(editors.size(), 1)
 	var ed: LookEditor = editors[0]
 	assert_true(ed.with_dog, "the start menu has the Chien row")
@@ -75,7 +75,6 @@ func test_menu_dog_row_chooses_and_tells_the_client() -> void:
 	ed._change_dog(DogSkins.cycle(ed.dog, 1))
 	ed._change_dog(DogSkins.cycle(ed.dog, 1))
 	assert_eq(c.dogs, ["cyborg_c", "classic"])
-	screen.free()
 	ui.free()
 	c.free()
 

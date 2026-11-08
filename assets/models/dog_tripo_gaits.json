@@ -1,5 +1,5 @@
 {
- "source": "gait.py then convert.py (Blender scripts out of the repo, PROTO): the extras of each gait clip of assets/models/dog_tripo_<skin>.glb",
+ "source": "the Blender gait script, then the palette conversion: the extras of each gait clip of assets/models/dog_tripo_<skin>.glb",
  "skins": {
   "a": {
    "leg_m": 0.3807,
