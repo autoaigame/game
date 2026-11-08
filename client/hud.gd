@@ -3,7 +3,8 @@
 ## window (client/bag_view.gd: E opens and closes it, Escape closes it); short notices from the
 ## server on a parchment band (top centre), with the item's icon when there is one.
 ## The world map (client/world_map.gd): a minimap (bottom right) and a big map, opened and closed with
-## the physical M key (',' on AZERTY) or closed with Escape. Both follow the player, show the other
+## the physical M key (',' on AZERTY) or closed with Escape; the minimap hides while the big map or
+## the bag is open. Both follow the player, show the other
 ## players the server sends, and zoom with the mouse wheel. The explored cells are kept per player name.
 ## Values come from the server (status, inventory, marks); the HUD only shows them.
 extends CanvasLayer
@@ -85,6 +86,7 @@ func notice_icon() -> TextureRect:
 
 func toggle_bag() -> void:
 	_bag.visible = not _bag.visible
+	_show_minimap()
 
 
 func minimap() -> MapView:
@@ -98,7 +100,12 @@ func big_map() -> MapView:
 func toggle_big_map() -> void:
 	_big_frame.visible = not _big_frame.visible
 	_big_map.visible = _big_frame.visible
-	_minimap.visible = not _big_frame.visible
+	_show_minimap()
+
+
+## The minimap hides while the big map or the bag is open: it would be drawn over them.
+func _show_minimap() -> void:
+	_minimap.visible = not _big_frame.visible and not _bag.visible
 	_minimap.get_parent().visible = _minimap.visible
 
 
@@ -109,7 +116,7 @@ func close_window() -> bool:
 		toggle_big_map()
 		return true
 	if _bag.visible:
-		_bag.visible = false
+		toggle_bag()
 		return true
 	return false
 
