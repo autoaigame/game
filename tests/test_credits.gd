@@ -80,6 +80,7 @@ func test_authors_and_kinds() -> void:
 	assert_eq(Credits.kind("assets/sounds/ui/click.ogg"), "sounds")
 	assert_eq(Credits.kind("assets/tiles.png"), "tiles")
 	assert_eq(Credits.kind("art/ui_menu/src/panel.png"), "ui")
+	assert_eq(Credits.kind("art/trees/pieces/tuft_00.png"), "objects")
 
 
 ## A third-party asset credits its source's author (first in `author`) apart, with the source and
