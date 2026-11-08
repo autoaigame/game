@@ -129,7 +129,7 @@ func _ready() -> void:
 	if settings != null:
 		settings.opened.connect(_on_settings_opened)
 		settings.closed.connect(_on_settings_closed)
-		settings.escape_first = _on_escape
+		settings.start_menu = self
 	_root.modulate.a = 0.0
 	_fade_to(1.0, FADE_IN_S)
 	_show_top(false)
@@ -161,8 +161,9 @@ func add_screen(id: String, screen: Control, first_focus: Control) -> void:
 	_screen_box.add_child(screen)
 
 
-## Escape or ui_cancel while the settings menu is closed: back a screen when not on the root.
-func _on_escape(event: InputEvent) -> bool:
+## Escape or ui_cancel while the settings menu is closed (client/settings_menu.gd asks): back a screen
+## when not on the root. True when the event was used.
+func use_escape(event: InputEvent) -> bool:
 	if not _menu_up() or not is_back(event) or escape_action(_stack) != ESCAPE_BACK:
 		return false
 	_play_ui("click")
