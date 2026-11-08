@@ -55,6 +55,8 @@ Assisted-by: <tool>[/<version>] (<provider>/<model>)
 
 ## What changes for the player
 
+## Screenshots
+
 ## Verification
 Command:
 Result:
@@ -67,6 +69,8 @@ None, or which ones and why.
 
 Keep `Builds on #<N>` only when your base is PR #N, and delete that line for base `main`. Add `Closes #<issue>` only if an issue exists for this change. The PR always targets `main`. With a PR base, its diff also shows #N's commits until #N is merged.
 
+`## Screenshots` is how your PR shows on the community site. Only the images in that section are shown: the first one is your PR's card, then up to 4 on its page, in order. They must be PNG or JPEG files uploaded to GitHub (the `github.com/user-attachments/assets/...` links GitHub makes when you drag an image into the PR's description); links to other sites, including `raw.githubusercontent.com`, are ignored. An agent cannot upload such an image from the command line: leave the section empty and ask your human to drag the images into it on GitHub. With no image there, the site shows the screenshot its bot takes of your preview. Keep the images in the description, never in the branch: they would end up in `main`.
+
 The `assisted-by` check in CI refuses a missing or malformed `Assisted-by` line. Name the tool and model you really are in `Assisted-by`, using `(unknown)` for a model you cannot identify, or `Assisted-by: none` for a PR written with no AI. The format is in `docs/assisted-by.md`. It is used for public statistics and no one is judged on it. Write only what you did and saw. Do not claim a result you did not get.
 
 ## 6. After opening
@@ -76,7 +80,7 @@ The `assisted-by` check in CI refuses a missing or malformed `Assisted-by` line.
 - A PR that touches admin-only paths is closed automatically. Do not reopen it.
 - Required checks: `ci` (`make check` and the web export), `conventional title`, `assisted-by`, `admin-only paths`.
 - `deploy-gate` decides whether your PR gets a playable preview at `https://pr-<number>.henri.cx`. It refuses native binaries, unknown file types, raw network or OS calls, URLs in code, and anything an automated safety review flags. A refusal does not block the vote; its reasons are in the check summary. When your PR builds on an open PR from a branch of this repository (not a fork) whose `deploy-gate` passed on the exact commit yours starts from, it reviews only your commits on top of it, and waits a few minutes for that PR's gate if it is still running. Otherwise it reviews your whole diff against `main`, which a large stack can exceed.
-- `community` tells the community site that your PR changed and, once its preview serves your latest commit, sends a screenshot taken right after logging in as `screenshot-bot`, for your PR's card. That player joins your preview's game briefly. The check never blocks anything; "no screenshot" in its summary means no preview of that commit appeared within 20 minutes.
+- `community` tells the community site that your PR changed and, once its preview serves your latest commit, sends a screenshot taken once `screenshot-bot` is in the world, for your PR's card when its `## Screenshots` section has no image. The bot opens your preview at `?name=screenshot-bot`: on the web, a valid `?name=` joins with that name at once, without the start menu, so keep that working. That player joins your preview's game briefly. The check never blocks anything; "no screenshot" in its summary means no preview of that commit appeared within 20 minutes.
 - Base PR #N got new commits: `git fetch upstream pull/N/head`, then `git rebase --onto FETCH_HEAD base-pr-N` and `git branch -f base-pr-N FETCH_HEAD`.
 - Base PR #N was merged: `git fetch upstream main && git rebase --onto upstream/main base-pr-N`, then delete the `Builds on` line from the PR body. A squash merge needs this `--onto` form.
 - Base PR #N was closed without merging: tell your human. Either rebase onto `main` as above (and drop what came from #N), or close your PR.

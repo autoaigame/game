@@ -4,6 +4,10 @@ class_name ClientSettings
 extends RefCounted
 
 const PATH := "user://settings.cfg"
+
+## The name the page's ?name= gave (client/client.gd), or "". It is for this session only: save_name()
+## never saves it, so a shared link does not replace the name a visitor saved.
+static var session_name := ""
 ## Master volume (0..1) before the player sets one.
 const DEFAULT_VOLUME := 0.8
 
@@ -20,6 +24,8 @@ static func load_name(path := PATH) -> String:
 
 
 static func save_name(player_name: String, path := PATH) -> void:
+	if session_name != "" and player_name == session_name:
+		return
 	var cfg := ConfigFile.new()
 	cfg.load(path)  # keep other settings; a missing file is fine
 	cfg.set_value("player", "name", player_name)
@@ -62,3 +68,40 @@ static func save_look(look: Array, path := PATH) -> void:
 	cfg.load(path)
 	cfg.set_value("player", "look", JSON.stringify(look))
 	cfg.save(path)
+
+
+## Whether the player chose fullscreen; windowed when missing or unusable.
+static func load_fullscreen(path := PATH) -> bool:
+	var cfg := ConfigFile.new()
+	if cfg.load(path) != OK:
+		return false
+	var value: Variant = cfg.get_value("display", "fullscreen", false)
+	return typeof(value) == TYPE_BOOL and value
+
+
+static func save_fullscreen(on: bool, path := PATH) -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(path)
+	cfg.set_value("display", "fullscreen", on)
+	cfg.save(path)
+
+
+## The language the player chose (a locale of i18n/, client/i18n.gd), or "" if none: the system's then.
+static func load_language(path := PATH) -> String:
+	var cfg := ConfigFile.new()
+	if cfg.load(path) != OK:
+		return ""
+	var value: Variant = cfg.get_value("ui", "language", "")
+	return value if typeof(value) == TYPE_STRING else ""
+
+
+static func save_language(locale: String, path := PATH) -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(path)
+	cfg.set_value("ui", "language", locale)
+	cfg.save(path)
+
+
+## Whether to go fullscreen at launch. A browser allows it only after a click, so never on the web.
+static func fullscreen_at_launch(on_web: bool, path := PATH) -> bool:
+	return not on_web and load_fullscreen(path)

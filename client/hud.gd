@@ -34,6 +34,7 @@ var _notice: PanelContainer
 var _notice_icon: TextureRect
 var _notice_label: Label
 var _notice_left := 0.0
+var _notice_shown := []  ## [key, args] of the notice shown, to build it again in a new language
 var _my_pos: Variant = null  ## where I stand (last snapshot), or null before the first
 var _fires: Array = []  ## positions of the fires the server sent
 var _seen_labels := {}  ## physical key -> its label, for every key the player pressed
@@ -138,7 +139,7 @@ func _input(event: InputEvent) -> void:
 	_seen_labels[event.physical_keycode] = label
 	for k in _hint_caps:
 		_hint_caps[k].text = UiText.key_name(k, _seen_labels)
-	_map_help.text = UiText.MAP_HELP % UiText.key_name(KEY_M, _seen_labels)
+	_show_map_help()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -163,11 +164,6 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	_age_notice(delta)
 	_update_map(delta)
-
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_PREDELETE:
-		_save_map()
 
 
 ## Reveals the cells around the player when they move (and now and then), and saves them now and then.
@@ -210,6 +206,7 @@ func _on_notice(key: String, args: Dictionary) -> void:
 	if text == "":
 		return
 	_notice_label.text = text
+	_notice_shown = [key, args]
 	var item := String(args.get("item", ""))
 	_notice_icon.visible = item != "" and not ItemData.item(item).is_empty()
 	_notice_icon.texture = BagView.icon_of(item) if _notice_icon.visible else null
@@ -217,6 +214,19 @@ func _on_notice(key: String, args: Dictionary) -> void:
 	_notice_label.visible = true
 	_notice.modulate.a = 1.0
 	_notice_left = NOTICE_S
+
+
+## Saves the map on quit. The notice and the map help are built in the current language: they are
+## built again in a new one. The other texts are keys that their Label translates by itself.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_PREDELETE:
+		_save_map()
+	if what != NOTIFICATION_TRANSLATION_CHANGED:
+		return
+	if not _notice_shown.is_empty():
+		_notice_label.text = UiText.notice(_notice_shown[0], _notice_shown[1])
+	if _map_help != null:
+		_show_map_help()
 
 
 func _on_snapshot(players: Array) -> void:
@@ -361,7 +371,10 @@ func _build() -> void:
 	_notice_icon.visible = false
 	notice_line.add_child(_notice_icon)
 	_notice_label = Label.new()
-	_notice_label.add_theme_color_override("font_color", UiTheme.TEXT_DARK)
+	_notice_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED  # built by UiText.notice
+	_notice_label.add_theme_color_override("font_color", UiTheme.TEXT_LIGHT)  # on the title band, outlined
+	_notice_label.add_theme_constant_override("outline_size", 4)
+	_notice_label.add_theme_color_override("font_outline_color", UiTheme.TEXT_DARK)
 	_notice_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	notice_line.add_child(_notice_label)
 
@@ -401,12 +414,18 @@ func _build_maps(root: Control) -> void:
 	_big_map.visible = false
 	col.add_child(_big_map)
 	var help := Label.new()
-	help.text = UiText.MAP_HELP % UiText.key_name(KEY_M)
+	help.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED  # built by _show_map_help
 	help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	help.add_theme_font_size_override("font_size", 14)
 	help.add_theme_color_override("font_color", UiTheme.TEXT_DIM)
 	col.add_child(help)
 	_map_help = help
+	_show_map_help()
+
+
+## The big map's help line, naming the map key as printed on the player's keyboard.
+func _show_map_help() -> void:
+	_map_help.text = UiText.t(UiText.MAP_HELP) % UiText.key_name(KEY_M, _seen_labels)
 
 
 ## A key cap: the key's letter on a small parchment square (the name field's box).

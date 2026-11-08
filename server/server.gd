@@ -135,7 +135,7 @@ func _resync_messages(peer_id: int) -> Array:
 ## wearing `look` if it is valid, the default look otherwise.
 func _new_player(player_name: String, cell: Vector2i, stats: Dictionary, inventory := {}, look: Variant = []) -> Dictionary:
 	var dog_pos := Vector2(DOG.spot_near(cell, cell + Vector2i(1, 1)))
-	return {"name": player_name, "pos": Vector2(cell), "target": Vector2(cell), "stopped": false,
+	return {"name": player_name, "pos": Vector2(cell), "target": Vector2(cell), "stopped": false, "sprint": false,
 			"dog": DOG.new_dog(dog_pos, hash(player_name)), "hunger": float(stats.get("hunger", HUNGER.MAX)),
 			"sent": {}, "inventory": inventory.duplicate(), "look": wearable(look)}
 
@@ -322,6 +322,12 @@ func on_move_to(peer_id: int, target: Vector2) -> void:
 		_players[peer_id]["stopped"] = false
 
 
+## Sprint or walk from now on (the client holds Shift or lets go). Anything but a bool is refused.
+func on_sprint(peer_id: int, on: Variant) -> void:
+	if _players.has(peer_id) and on is bool:
+		_players[peer_id]["sprint"] = on
+
+
 ## The player stays where it is until its next move_to.
 func on_stop(peer_id: int) -> void:
 	if _players.has(peer_id):
@@ -446,11 +452,29 @@ func _deliver(p: Dictionary, carcass: String) -> Dictionary:
 	return {"notice": "bag_full"}
 
 
-## The player whistles: their dog runs after the nearest wild animal within DOG.HUNT_RADIUS of them.
+## The player whistles: their dog runs after the nearest wild animal within DOG.HUNT_RADIUS of them, and
+## the players near them hear it.
 func on_whistle(peer_id: int) -> void:
+	for m in _whistle_messages(peer_id):
+		match m[0]:
+			"notice":
+				_net.notice.rpc_id(m[1], m[2][0], {})
+			"whistled":
+				_net.whistled.rpc_id(m[1], m[2][0])
+
+
+## What a whistle sends, in order, as [rpc name, to, args]: the whistler's notice, then "whistled" to every
+## other player within Protocol.INTEREST_RADIUS (who see it), whatever the dog does. [] if not joined.
+func _whistle_messages(peer_id: int) -> Array:
 	var r := _whistle(peer_id)
-	if not r.is_empty():
-		_net.notice.rpc_id(peer_id, r["notice"], {})
+	if r.is_empty():
+		return []
+	var out := [["notice", peer_id, [r["notice"]]]]
+	var at: Vector2 = _players[peer_id]["pos"]
+	for id in _players:
+		if id != peer_id and at.distance_to(_players[id]["pos"]) <= Protocol.INTEREST_RADIUS:
+			out.append(["whistled", id, [peer_id]])
+	return out
 
 
 ## {notice: hunt, no_prey, or dog_busy while it is bringing back a catch}, or {} for an unknown player.
@@ -518,7 +542,10 @@ func _creatures_for(viewer: int) -> Array:
 func _move_players(dt: float) -> void:
 	for p in _players.values():
 		if not p["stopped"]:
-			p["pos"] = Protocol.step_towards(p["pos"], p["target"], dt * HUNGER.speed_factor(p.get("hunger", HUNGER.MAX)))
+			var factor: float = HUNGER.speed_factor(p.get("hunger", HUNGER.MAX))
+			if p.get("sprint", false):
+				factor *= Protocol.SPRINT_FACTOR
+			p["pos"] = Protocol.step_towards(p["pos"], p["target"], dt * factor)
 
 
 func _tick_hunger(dt: float) -> void:

@@ -101,8 +101,10 @@ from `DEF-hand.*`.
 `idle`, `walk`, `jog`, `sprint` (from `Idle_Loop`, `Walk_Loop`, `Jog_Fwd_Loop`, `Sprint_Loop`), adapted to
 the new proportions by the build script: hips location scaled by the leg factor, upper arms rotated
 outwards (5°), hips lifted on the poses where a foot would dig into the ground (soles within 1.3 cm of the
-ground in every gait). `assets/character/body_clips.json` has, per clip, its duration, ground speed and
-stride (from the backward travel of the ankles), each foot's mid-stance and contact (where it lands: its
+ground in every gait). `assets/character/body_clips.json` has, per clip, its duration, ground speed (how
+fast a planted foot goes back under the body: the median speed of the ball of the foot while it is within
+1.5 cm of its lowest point), stride (that speed times the duration: the distance covered per cycle), each
+foot's mid-stance and contact (where it lands: its
 front-most point), as fractions of the clip. The game plays every gait on one shared phase (0 = left
 mid-stance) and plays a footstep on each contact.
 

@@ -12,6 +12,7 @@ signal settings_changed(settings: Dictionary)
 
 const BUSES: Array[String] = ["Musique", "Ambiance", "Effets", "UI"]
 const UI_DIR := "res://assets/sounds/ui"
+const WHISTLE_DIR := "res://assets/sounds/whistle"
 const MUSIC_DIR := "res://assets/sounds/music"
 const MUSIC_BUS := "Musique"
 ## How often the grounds around the player are counted again, in seconds.
@@ -21,6 +22,9 @@ const VOLUME_STEP := 0.1
 const SAVE_DELAY_S := 0.5
 ## Another player's footsteps fade out over this distance, in px.
 const OTHERS_STEP_RANGE_PX := 900.0
+## Another player's whistle fades out over this distance, in px: Protocol.INTEREST_RADIUS cells across the
+## screen (96 px a cell), so every player told of a whistle hears it.
+const OTHERS_WHISTLE_RANGE_PX := 2200.0
 ## One-shots play this far either side of the screen centre at full pan, in px of the screen.
 const PAN_PX := 600.0
 
@@ -39,6 +43,7 @@ var _pick_t := 0.0
 var _rng := RandomNumberGenerator.new()
 var _steps := {}  ## tile index -> [sound names]
 var _step_last := {}  ## peer id -> last variant
+var _whistle_last := {}  ## peer id -> last whistle variant
 var _sounds_cfg := {}
 var _streams := {}  ## path -> AudioStream
 var _settings := AudioSettings.defaults()
@@ -278,6 +283,37 @@ func footstep(peer_id: int, tile: int, is_me: bool, at: Node2D) -> void:
 	p2.play()
 
 
+## The whistles' files, from `cfg` (data/sounds.json) "whistle".
+static func whistle_paths(cfg: Dictionary) -> Array:
+	return Array(cfg.get("whistle", [])).map(func(s): return WHISTLE_DIR.path_join(s + ".ogg"))
+
+
+## Player `peer_id` whistles: one of the whistles, never the one it whistled last. Mine plays flat; another's
+## from `at` (the node on that player's feet), fading with distance. Returns the player node, or null.
+func whistle(peer_id: int, is_me: bool, at: Node2D) -> Node:
+	var paths := whistle_paths(_sounds_cfg)
+	if not started or paths.is_empty():
+		return null
+	var v := Footsteps.pick_variant(_rng, paths.size(), _whistle_last.get(peer_id, -1))
+	_whistle_last[peer_id] = v
+	var q: float = _sounds_cfg.get("whistle_pitch", 0.0)
+	var p: Node
+	if is_me:
+		p = AudioStreamPlayer.new()
+		p.volume_db = _sounds_cfg.get("whistle_volume_db", 0.0)
+	else:
+		p = AudioStreamPlayer2D.new()
+		p.volume_db = _sounds_cfg.get("whistle_others_volume_db", 0.0)
+		p.max_distance = OTHERS_WHISTLE_RANGE_PX
+	p.stream = _stream(paths[v], false)
+	p.bus = "Effets"
+	p.pitch_scale = 1.0 + _rng.randf_range(-q, q)
+	p.autoplay = true  # starts as it enters the tree
+	p.finished.connect(p.queue_free)
+	(self if is_me else at).add_child(p)
+	return p
+
+
 ## A menu sound: "hover", "click" or "enter" (data/sounds.json "ui").
 func ui(kind: String) -> void:
 	var names: Dictionary = _sounds_cfg.get("ui", {})
@@ -351,22 +387,27 @@ func cycle_forced() -> void:
 
 
 func _debug_text() -> String:
-	var lines := ["Son %s, volume %d %%   [N] muet  [-/+] volume  [F4] forcer" % ["coupé" if _settings["muted"] else "actif",
-			AudioSettings.to_percent(_settings["master"])],
-			"Ambiance : %s (%s)" % [_current, "forcée" if forced != "" else "auto, sols à %d cases" % AmbienceMix.RADIUS_CELLS]]
+	var state := UiText.t(UiText.DEBUG_SOUND_MUTED if _settings["muted"] else UiText.DEBUG_SOUND_ON)
+	var lines := [UiText.t(UiText.DEBUG_SOUND).format({"state": state,
+			"volume": AudioSettings.to_percent(_settings["master"])}),
+			UiText.t(UiText.DEBUG_AMBIENCE_FORCED).format({"current": _current}) if forced != ""
+			else UiText.t(UiText.DEBUG_AMBIENCE_AUTO).format({"current": _current, "radius": AmbienceMix.RADIUS_CELLS})]
 	var counts := AmbienceMix.ground_counts(_cell)
 	for a in _ambiences:
 		var id: String = a["id"]
-		lines.append("%s %s  poids %.2f  score %.2f" % [">" if id == _current else " ", a["name"], _weights.get(id, 0.0),
-				AmbienceMix.score(a, counts)])
+		lines.append(UiText.t(UiText.DEBUG_AMBIENCE_ROW).format({"mark": ">" if id == _current else " ",
+				"name": a["name"], "weight": "%.2f" % _weights.get(id, 0.0),
+				"score": "%.2f" % AmbienceMix.score(a, counts)}))
 		if _weights.get(id, 0.0) <= 0.0:
 			continue
 		var beds: Array = _beds.get(id, [])
 		for i in beds.size():
-			lines.append("      fond %s  à %.1f s" % [a["beds"][i]["sound"], beds[i].position()])
+			lines.append(UiText.t(UiText.DEBUG_BED).format({"sound": a["beds"][i]["sound"],
+					"at": "%.1f" % beds[i].position()}))
 		var timers: Array = _timers.get(id, [])
 		for i in timers.size():
-			lines.append("      ponctuel %s…  dans %.1f s" % [a["events"][i]["sounds"][0], timers[i]])
+			lines.append(UiText.t(UiText.DEBUG_EVENT).format({"sound": a["events"][i]["sounds"][0],
+					"in": "%.1f" % timers[i]}))
 	return "\n".join(lines)
 
 

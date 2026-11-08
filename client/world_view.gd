@@ -20,7 +20,7 @@ var _actors := {}  ## peer_id -> Node2D
 ## speed (cells per second it moved between its last two updates)}
 var _creatures := {}
 var _marks := {}  ## mark id -> {node: MarkView, left: seconds}
-var _walk := {}  ## peer_id -> {"server", "shown"}: its last snapshot position and the one drawn, in cells
+var _walk := {}  ## peer_id -> WalkAnim.walker(): its last snapshot, where it is drawn and how fast it goes
 var _looks := {}  ## peer_id -> what it wears (CharacterParts look), from the server
 var _camera := Camera2D.new()
 var _my_pos := Vector2.ZERO  ## my position in the last snapshot, in cells
@@ -28,10 +28,19 @@ var _key_dir := Vector2i.ZERO  ## direction of the held keys at the last frame
 var _gather_at: Variant = null  ## the bush the player walks to, to gather from it
 var _pick_up_id := -1  ## the caught animal (mark id) the player walks to, to pick it up
 var _key_target := Vector2.ZERO  ## last target sent for the held keys
+var _sprint_sent := false  ## whether the server was last told to sprint (Shift held)
+var _sprint_peer := 0  ## the connection (peer id) _sprint_sent was told to: a new one starts walking
 var _zoom_target := CameraZoom.DEFAULT  ## the zoom the camera glides to (mouse wheel)
 var _drift_t := 0.0  ## seconds of slow camera drift behind the start menu
+var _world_ready_told := false  ## the page was told the world around the player is built
 const DRIFT_CELLS := 2.0  ## radius of the drift around the spawn, in cells
 const DRIFT_PERIOD_S := 60.0
+## The points of my body tested against the trees in front of it (ChunkView.TREE_FADE_ALPHA): x in px,
+## and height as a share of the head's height above the feet. Up the middle, and the arms at mid height.
+const BODY_POINTS := [Vector2(0, 0.15), Vector2(0, 0.5), Vector2(0, 0.85), Vector2(-15, 0.5), Vector2(15, 0.5)]
+var _faded := {}  ## tree sprite -> true while not fully opaque
+## My silhouette stays drawn until the trees covering me are this faded.
+const SILHOUETTE_UNTIL_ALPHA := 0.7
 
 
 func _ready() -> void:
@@ -47,8 +56,53 @@ func _ready() -> void:
 	client.creatures_received.connect(_on_creatures)
 	client.marks_received.connect(_on_marks)
 	client.welcomed.connect(func(cell: Vector2i): _my_pos = Vector2(cell))
+	if client.has_signal("connection_lost"):
+		client.connection_lost.connect(func(): _world_ready_told = false)
 	if client.has_signal("look_received"):
 		client.look_received.connect(_on_look)
+	if client.has_signal("whistled"):
+		client.whistled.connect(_on_whistled)
+
+
+## Whether `tree`, drawn in front of a player standing at `feet` (sorted after it), covers its body.
+static func covers_body(tree: Sprite2D, feet: Vector2) -> bool:
+	if tree.position.y <= feet.y:
+		return false  # drawn behind the player
+	for b in BODY_POINTS:
+		if ChunkView.hides(tree, feet + Vector2(b.x, -Character3D.HEAD_PX * b.y)):
+			return true
+	return false
+
+
+## Fades the trees drawn in front of my player where they cover its body, and brings back the others.
+## Only the chunks around me are looked at. Once the trees covering me are faded, my silhouette is not
+## drawn: the player already shows through them.
+func _fade_trees(dt: float) -> void:
+	var me: Node2D = _actors.get(client.my_peer_id)
+	var hiding := {}
+	if me != null:
+		var at := MapData.chunk_of(Protocol.cell_of(_my_pos))
+		for dy in range(-1, 2):
+			for dx in range(-1, 2):
+				var node: Node2D = _chunk_nodes.get(at + Vector2i(dx, dy))
+				if node == null:
+					continue
+				for sp in node.get_children():
+					if sp is Sprite2D and sp.has_meta("tree") and covers_body(sp, me.position):
+						hiding[sp] = true
+						_faded[sp] = true
+	var see_through := not hiding.is_empty()
+	for sp in _faded.keys():
+		if not is_instance_valid(sp):
+			_faded.erase(sp)
+			continue
+		sp.modulate.a = ChunkView.fade_step(sp.modulate.a, hiding.has(sp), dt)
+		if hiding.has(sp) and sp.modulate.a > SILHOUETTE_UNTIL_ALPHA:
+			see_through = false  # not faded enough yet: the silhouette still shows the player
+		if sp.modulate.a >= 1.0 and not hiding.has(sp):
+			_faded.erase(sp)
+	if me != null:
+		(me.get_node("Model3D") as Character3D).show_silhouette(not see_through)
 
 
 func _on_snapshot(players: Array) -> void:
@@ -61,9 +115,9 @@ func _on_snapshot(players: Array) -> void:
 			actor = _make_actor(p["name"], id == client.my_peer_id, _looks.get(id, CharacterParts.default_look()))
 			_actors[id] = actor
 			add_child(actor)
-			_walk[id] = {"server": p["pos"], "shown": p["pos"]}
+			_walk[id] = WalkAnim.walker(p["pos"])
 			actor.position = IsoLayer.cell_to_local(p["pos"])
-		_walk[id]["server"] = p["pos"]  # drawn there smoothly by _animate_actors
+		WalkAnim.snapshot(_walk[id], p["pos"])  # drawn there smoothly by _animate_actors
 		if id == client.my_peer_id:
 			_my_pos = p["pos"]
 	for id in _actors.keys():
@@ -191,7 +245,7 @@ func _animate_actors(dt: float) -> void:
 		var w: Dictionary = _walk[id]
 		var actor: Node2D = _actors[id]
 		var before: Vector2 = w["shown"]
-		w["shown"] = WalkAnim.follow(before, w["server"], dt)
+		WalkAnim.advance(w, dt)
 		var pos := IsoLayer.cell_to_local(w["shown"])
 		actor.position = pos
 		# A footstep each time a foot of the 3D model lands.
@@ -217,6 +271,25 @@ func _stream_chunks() -> void:
 	for built in _builder.run(ChunkBuilder.BUDGET_USEC, _clock):
 		_chunk_nodes[built[0]] = built[1]
 		add_child(built[1])
+	if not _world_ready_told and world_ready(client.my_peer_id != 0, missing_near_chunks(at, _chunk_nodes)):
+		_world_ready_told = true
+		if client.has_method("tell_page_world_ready"):
+			client.tell_page_world_ready()
+
+
+## Whether the world on screen is built: joined, and no chunk missing around the player.
+static func world_ready(joined: bool, missing_near: int) -> bool:
+	return joined and missing_near == 0
+
+
+## How many of the 3 x 3 chunks around `cell` are not in `built` (chunk -> node). They cover the screen
+## at the default zoom (about 14 cells around the player, a chunk is MapData.CHUNK cells wide).
+static func missing_near_chunks(cell: Vector2i, built: Dictionary) -> int:
+	var n := 0
+	for c in ChunkStreamer.wanted_chunks(cell, 1):
+		if not built.has(c):
+			n += 1
+	return n
 
 
 ## Before joining, the camera circles slowly around the spawn behind the menu (display only).
@@ -234,6 +307,7 @@ func _make_actor(player_name: String, is_me: bool, look: Array) -> Node2D:
 	actor.add_child(model)
 	var label := Label.new()
 	label.text = player_name
+	label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED  # a name, never a text key
 	label.add_theme_font_size_override("font_size", 16)
 	label.add_theme_color_override("font_color", Color.WHITE if not is_me else Color8(0xe8, 0xc4, 0x4a))
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -253,6 +327,13 @@ func _on_look(id: int, look: Array) -> void:
 	var actor: Node2D = _actors.get(id)
 	if actor != null:
 		actor.get_node("Model3D").set_look(_looks[id])
+
+
+## A player whistled: heard from where it is drawn (not at all if it is not).
+func _on_whistled(id: int) -> void:
+	var actor: Node2D = _actors.get(id)
+	if actor != null and sounds != null:
+		sounds.whistle(id, id == client.my_peer_id, actor)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -298,6 +379,17 @@ func _errand_if_reached() -> void:
 			_pick_up_id = -1
 
 
+## Tells the server when Shift is pressed or let go (it applies to keys and clicks alike). A new
+## connection starts walking on the server, so it is told again.
+func _send_sprint(on: bool) -> void:
+	if client.my_peer_id != _sprint_peer:
+		_sprint_peer = client.my_peer_id
+		_sprint_sent = false
+	if on != _sprint_sent:
+		client.request_sprint(on)
+		_sprint_sent = on
+
+
 ## Asks the server to gather once the player has walked up to the bush they clicked.
 func _gather_if_reached() -> void:
 	if _gather_at != null and Interact.reached(_my_pos, _gather_at):
@@ -312,6 +404,7 @@ func _process(delta: float) -> void:
 	var z := CameraZoom.approach(_camera.zoom.x, _zoom_target, delta)
 	_camera.zoom = Vector2(z, z)
 	_stream_chunks()
+	_fade_trees(delta)
 	if client.my_peer_id == 0:
 		_drift_camera(delta)
 		return
@@ -323,6 +416,7 @@ func _process(delta: float) -> void:
 			Input.is_physical_key_pressed(KEY_A), Input.is_physical_key_pressed(KEY_D))
 	if menu != null and menu.is_open():
 		dir = Vector2i.ZERO  # stops me if I was walking
+	_send_sprint(Input.is_physical_key_pressed(KEY_SHIFT) and not (menu != null and menu.is_open()))
 	if dir == Vector2i.ZERO:
 		if _key_dir != Vector2i.ZERO:
 			client.request_stop()
