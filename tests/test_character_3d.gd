@@ -249,7 +249,7 @@ static func _planted_slip(body: String, v: float) -> Vector2:
 	return Vector2(slips[slips.size() / 2], slips.size())
 
 
-## The feet do not slide: at the server's speed (between the walk and the jog), at each gait's own speed
+## The feet do not slide: at the server's speed (between the walk and the jog), sprinting (Shift), at each gait's own speed
 ## and for every body shape, a foot on the ground stays where it landed on the map.
 func test_planted_feet_stay_on_the_ground() -> void:
 	var c: Dictionary = Character3D.clips()["clips"]
@@ -259,6 +259,7 @@ func test_planted_feet_stay_on_the_ground() -> void:
 	var cases := []
 	for body in CharacterParts.parts_for("body"):
 		cases.append([body, server_v])
+		cases.append([body, server_v * Protocol.SPRINT_FACTOR])
 		if CharacterParts.part(body)["morph"] == CharacterMorph.BASE:
 			for g in Character3D.GAITS:
 				cases.append([body, float(c[g]["ground_speed_m_s"])])
