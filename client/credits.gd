@@ -59,10 +59,13 @@ static func authors(field: String) -> Array:
 
 
 ## What an asset file is, for the credits: its folder under assets/ (sounds/music is "music"), the
-## file's name for a file directly in assets/, "ui" for the menu art's sources (art/ui_menu/src/).
+## file's name for a file directly in assets/, "ui" for the menu art's sources (art/ui_menu/src/),
+## "objects" for the tree pieces that art/tree_assembler.gd assembles into trees (art/trees/).
 static func kind(path: String) -> String:
 	if path.begins_with("art/ui_menu/"):
 		return "ui"
+	if path.begins_with("art/trees/"):
+		return "objects"
 	var rest := path.trim_prefix("assets/")
 	if rest.begins_with("sounds/music/"):
 		return "music"
