@@ -158,6 +158,12 @@ func _refresh() -> void:
 	_refresh_detail()
 
 
+## The picked item's text is built in the current language: it is built again in a new one.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and _detail != null:
+		_refresh_detail()
+
+
 func _refresh_detail() -> void:
 	var it := ItemData.item(_picked)
 	_empty.visible = it.is_empty()
@@ -172,11 +178,11 @@ func _refresh_detail() -> void:
 	_detail_name.text = "%s  ×%d" % [it["name"], _items[_picked]]
 	var lines := []
 	if it["food"] > 0:
-		lines.append(UiText.FOOD_DESC % it["food"])
+		lines.append(UiText.t(UiText.FOOD_DESC) % it["food"])
 	if it["cooks_into"] != "":
-		lines.append(UiText.COOKS_DESC % ItemData.item(it["cooks_into"]).get("name", it["cooks_into"]))
+		lines.append(UiText.t(UiText.COOKS_DESC) % ItemData.item(it["cooks_into"]).get("name", it["cooks_into"]))
 	if _picked == "sticks":
-		lines.append(UiText.STICKS_DESC)
+		lines.append(UiText.t(UiText.STICKS_DESC))
 	_detail_text.text = "\n".join(lines)
 
 
@@ -230,8 +236,10 @@ func _build() -> void:
 	head.add_child(words)
 	_detail_name = Label.new()
 	_detail_name.clip_text = true
+	_detail_name.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED  # an item's name, from data
 	words.add_child(_detail_name)
 	_detail_text = _small_label("")
+	_detail_text.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED  # built by _refresh_detail
 	words.add_child(_detail_text)
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 6)

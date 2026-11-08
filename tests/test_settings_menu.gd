@@ -4,6 +4,11 @@ const Menu := preload("res://client/settings_menu.gd")
 const LookPanel := preload("res://client/look_panel.gd")
 
 
+## These tests check French words: the UI is shown in French whatever the system's language.
+func _init() -> void:
+	I18n.use("fr")
+
+
 func _key(code: Key, pressed := true, echo := false) -> InputEventKey:
 	var e := InputEventKey.new()
 	e.physical_keycode = code
@@ -35,8 +40,8 @@ func test_tabs_have_an_id_and_a_title() -> void:
 		ids.append(t["id"])
 		assert_true(t["title"] != "", t["id"])
 	assert_eq(ids, ["sound", "display", "controls"])
-	assert_eq(UiText.TAB_DISPLAY, "Affichage")
-	assert_eq(UiText.TAB_CONTROLS, "Commandes")
+	assert_eq(UiText.t(UiText.TAB_DISPLAY), "Affichage")
+	assert_eq(UiText.t(UiText.TAB_CONTROLS), "Commandes")
 	var menu := _built()
 	for t in Menu.TABS:
 		assert_true(menu.has_method("_build_%s_tab" % t["id"]), t["id"])
@@ -157,7 +162,7 @@ func test_caps_follow_the_layout() -> void:
 	assert_eq(UiText.cap_text(KEY_ESCAPE), "Échap")
 	assert_eq(UiText.cap_text(KEY_MINUS, {KEY_MINUS: KEY_PARENRIGHT}), ")")
 	assert_eq(UiText.cap_text(KEY_EQUAL, {KEY_EQUAL: KEY_EQUAL}), "=")
-	assert_eq(UiText.cap_text(UiText.MOUSE_WHEEL), UiText.MOUSE_WHEEL)
+	assert_eq(UiText.cap_text(UiText.MOUSE_WHEEL), "Molette")
 
 
 func _page_texts(menu: CanvasLayer) -> Array:

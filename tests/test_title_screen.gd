@@ -3,6 +3,11 @@ extends TestCase
 const TitleScreen := preload("res://client/title_screen.gd")
 
 
+## These tests check French words: the UI is shown in French whatever the system's language.
+func _init() -> void:
+	I18n.use("fr")
+
+
 ## Quitter closes a desktop game; a browser tab cannot close itself, so the web build has no Quitter.
 ## Crédits sits between Paramètres and Quitter.
 func test_quit_only_off_the_web() -> void:
@@ -15,8 +20,8 @@ func test_buttons_are_named_in_french() -> void:
 	assert_eq(TitleScreen.label("settings"), UiText.SETTINGS)
 	assert_eq(TitleScreen.label("credits"), UiText.CREDITS)
 	assert_eq(TitleScreen.label("quit"), UiText.QUIT)
-	assert_eq(UiText.PLAY, "Jouer")
-	assert_eq(UiText.QUIT, "Quitter")
+	assert_eq(UiText.t(UiText.PLAY), "Jouer")
+	assert_eq(UiText.t(UiText.QUIT), "Quitter")
 
 
 ## The screen builds one button per id, Jouer first (it takes the focus).

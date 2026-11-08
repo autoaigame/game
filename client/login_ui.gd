@@ -41,6 +41,7 @@ var _button := Button.new()
 var _back_button := Button.new()
 var _hint := Label.new()
 var _hint_icon := TextureRect.new()
+var _hint_error := Callable()  ## builds the error under the name field again (in a new language), or none
 var _status := Label.new()  ## on the play screen
 var _status_icon := TextureRect.new()
 var _title_status := Label.new()  ## under the title screen's buttons
@@ -348,11 +349,11 @@ func _build_play_screen() -> Control:
 	_name_edit.max_length = Protocol.NAME_MAX_LEN
 	_name_edit.custom_minimum_size = Vector2(0, 36)
 	_name_edit.text_submitted.connect(func(_t): _submit())
-	_name_edit.text_changed.connect(func(_t): _show_hint(""))
+	_name_edit.text_changed.connect(func(_t): _show_hint())
 	box.add_child(_name_edit)
 	box.add_child(_icon_row(_hint_icon, _hint))
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD
-	_show_hint("")
+	_show_hint()
 	var gap := Control.new()
 	gap.custom_minimum_size = Vector2(0, 6)
 	box.add_child(gap)
@@ -463,9 +464,22 @@ func _set_icon(rect: TextureRect, key: String) -> void:
 	rect.texture = UiTheme.icon(key) if key != "" else null
 
 
-## Shows `error` under the field, or the naming rule when it is "".
-func _show_hint(error: String) -> void:
-	_hint.text = error if error != "" else UiText.NAME_HINT % Protocol.NAME_MAX_LEN
+## The texts built here are built again in the new language; the others are keys that their Label
+## or Button translates by itself.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and _hint.is_inside_tree():
+		_refresh_hint()
+
+
+## Shows under the field the error that `error` builds (UiText), or the naming rule without one.
+func _show_hint(error := Callable()) -> void:
+	_hint_error = error
+	_refresh_hint()
+
+
+func _refresh_hint() -> void:
+	var error: String = _hint_error.call() if _hint_error.is_valid() else ""
+	_hint.text = error if error != "" else UiText.name_hint()
 	_hint.theme_type_variation = "ErrorLabel" if error != "" else "HintLabel"
 	_set_icon(_hint_icon, "error" if error != "" else "")
 
@@ -473,12 +487,12 @@ func _show_hint(error: String) -> void:
 func _submit() -> void:
 	if state != State.READY:
 		return
-	var problem := UiText.name_problem(_name_edit.text)
-	if problem != "":
-		_show_hint(problem)
+	var typed := _name_edit.text
+	if UiText.name_problem(typed) != "":
+		_show_hint(func(): return UiText.name_problem(typed))
 		_name_edit.grab_focus()
 		return
-	_show_hint("")
+	_show_hint()
 	_set_state(State.JOINING)
 	client.join_with(_name_edit.text)
 
@@ -490,7 +504,8 @@ func _on_connected() -> void:
 
 func _on_rejected(reason: String) -> void:
 	_set_state(State.READY)
-	_show_hint(UiText.rejection(reason, client.player_name))
+	var refused: String = client.player_name
+	_show_hint(func(): return UiText.rejection(reason, refused))
 	var to := stack_after_rejected(_stack)
 	if to != _stack:
 		_stack = to

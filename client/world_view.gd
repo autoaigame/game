@@ -260,6 +260,7 @@ func _make_actor(player_name: String, is_me: bool, look: Array) -> Node2D:
 	actor.add_child(model)
 	var label := Label.new()
 	label.text = player_name
+	label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED  # a name, never a text key
 	label.add_theme_font_size_override("font_size", 16)
 	label.add_theme_color_override("font_color", Color.WHITE if not is_me else Color8(0xe8, 0xc4, 0x4a))
 	label.add_theme_color_override("font_outline_color", Color.BLACK)

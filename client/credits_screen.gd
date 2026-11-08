@@ -17,26 +17,33 @@ var source := Credits.SOURCE  ## the ASSETS.toml read when the screen first show
 var _scroll := ScrollContainer.new()
 var _body := VBoxContainer.new()
 var _back := Button.new()
+var _data: Variant = null  ## what the text shows (lines()), kept to build it again in a new language
 
 
 ## The lines of the screen for `data` (client/credits.gd build()), top to bottom: {text, style},
-## style "heading", "name" or "". Empty `data` (ASSETS.toml missing or unreadable) gives a short line.
+## style "heading", "name" or "", in the current language. Empty `data` (ASSETS.toml missing or
+## unreadable) gives a short line.
 static func lines(data: Dictionary) -> Array:
-	var out := [{"text": UiText.CREDITS_COMMUNITY, "style": ""}]
+	var out := [{"text": UiText.t(UiText.CREDITS_COMMUNITY), "style": ""}]
 	if data.is_empty():
-		out.append({"text": UiText.CREDITS_MISSING, "style": ""})
+		out.append({"text": UiText.t(UiText.CREDITS_MISSING), "style": ""})
 		return out
-	out.append({"text": UiText.CREDITS_PEOPLE, "style": "heading"})
+	out.append({"text": UiText.t(UiText.CREDITS_PEOPLE), "style": "heading"})
 	for e in data.get("people", []):
 		out.append_array(_entry_lines(e))
 	if not data.get("third_party", []).is_empty():
-		out.append({"text": UiText.CREDITS_THIRD_PARTY, "style": "heading"})
+		out.append({"text": UiText.t(UiText.CREDITS_THIRD_PARTY), "style": "heading"})
 		for e in data["third_party"]:
 			out.append_array(_entry_lines(e))
 	if not data.get("tools", []).is_empty():
-		out.append({"text": UiText.CREDITS_TOOLS, "style": "heading"})
+		out.append({"text": UiText.t(UiText.CREDITS_TOOLS), "style": "heading"})
 		out.append({"text": ", ".join(data["tools"]), "style": ""})
 	return out
+
+
+## The words for `id` in the current language (`keys`: id -> text key), or the id itself when unknown.
+static func _words(keys: Dictionary, id: String) -> String:
+	return UiText.t(keys[id]) if keys.has(id) else id
 
 
 ## Where up (`dir` -1) or down (+1) takes the text scrolled to `value` of `max_scroll`: `step` further,
@@ -56,18 +63,17 @@ static func leaves(event: InputEvent) -> bool:
 static func _entry_lines(e: Dictionary) -> Array:
 	var kinds := []
 	for k in e.get("kinds", {}):
-		kinds.append("%s (%d)" % [UiText.CREDITS_KINDS.get(k, k), int(e["kinds"][k])])
+		kinds.append("%s (%d)" % [_words(UiText.CREDITS_KINDS, k), int(e["kinds"][k])])
 	var files := int(e.get("files", 0))
 	var licenses := []
 	for l in e.get("licenses", []):
-		licenses.append(UiText.CREDITS_LICENSES.get(l, l))
+		licenses.append(_words(UiText.CREDITS_LICENSES, l))
 	var out := [{"text": String(e.get("name", "?")), "style": "name"},
-			{"text": (UiText.CREDITS_ONE_FILE % ", ".join(kinds)) if files == 1
-					else UiText.CREDITS_FILES % [files, ", ".join(kinds)], "style": ""},
-			{"text": (UiText.CREDITS_LICENSE if licenses.size() == 1 else UiText.CREDITS_LICENSES_LABEL)
-					% "; ".join(licenses), "style": ""}]
+			{"text": UiText.tn(UiText.CREDITS_FILES, files).format({"count": files, "kinds": ", ".join(kinds)}),
+					"style": ""},
+			{"text": UiText.tn(UiText.CREDITS_LICENSE, licenses.size()) % "; ".join(licenses), "style": ""}]
 	for s in e.get("sources", []):
-		out.append({"text": UiText.CREDITS_SOURCE % s, "style": ""})
+		out.append({"text": UiText.t(UiText.CREDITS_SOURCE) % s, "style": ""})
 	return out
 
 
@@ -179,13 +185,24 @@ func _on_visibility_changed() -> void:
 
 
 func _fill(data: Dictionary) -> void:
+	_data = data
+	for c in _body.get_children():
+		_body.remove_child(c)
+		c.queue_free()
 	for l in lines(data):
 		_body.add_child(_line(l))
+
+
+## The text is built in the current language: it is built again in a new one.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and _data != null:
+		_fill(_data)
 
 
 func _line(l: Dictionary) -> Label:
 	var label := Label.new()
 	label.text = l["text"]
+	label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED  # translated already; names, links
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	match l["style"]:

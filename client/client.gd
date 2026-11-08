@@ -42,6 +42,7 @@ var _last_frame_ms := 0
 
 
 func _ready() -> void:
+	I18n.start()  # before any text is built
 	_net = get_parent().get_node("Net")
 	_net.set_handler(self)
 	look = ClientSettings.load_look()
