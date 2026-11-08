@@ -219,11 +219,14 @@ func _build() -> void:
 ## The page of tab `id` (an id of TABS).
 func _build_tab(id: String) -> Control:
 	match id:
+		"sound":
+			return _build_sound_tab()
 		"display":
 			return _build_display_tab()
 		"controls":
 			return _build_controls_tab()
-	return _build_sound_tab()
+	push_error("settings menu: no page for tab %s" % id)
+	return Control.new()
 
 
 func _build_sound_tab() -> Control:
