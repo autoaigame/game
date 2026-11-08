@@ -9,7 +9,8 @@ extends RefCounted
 
 const SOURCE := "res://ASSETS.toml"
 const OUT := "res://data/credits.json"
-## Word found in a `tool` field -> the tool's name in the credits.
+## Word found in a `tool` field -> the tool's name in the credits. A tool missing here is not credited:
+## add it when ASSETS.toml names a new one.
 const TOOLS := {"PixelLab": "PixelLab", "ElevenLabs": "ElevenLabs", "Suno": "Suno", "Blender": "Blender",
 		"ImageMagick": "ImageMagick", "Godot": "Godot", "Claude": "Claude"}
 
@@ -38,7 +39,7 @@ static func parse(text: String) -> Array:
 
 
 ## The names in an `author` field, in order: "Quaternius (the mesh); M3t4Data (the part)" gives
-## ["Quaternius", "M3t4Data"].
+## ["Quaternius", "M3t4Data"]. A ";" inside the brackets is not supported.
 static func authors(field: String) -> Array:
 	var names := []
 	for part in field.split(";"):

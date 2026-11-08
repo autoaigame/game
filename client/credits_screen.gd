@@ -48,9 +48,10 @@ static func scroll_step(value: int, max_scroll: int, step: int, dir: int) -> int
 	return clampi(value + dir * step, 0, maxi(max_scroll, 0))
 
 
-## Whether down at the end of the text leaves it: a new press does, a held key (echo) stops there.
+## Whether down at the end of the text leaves it: a new press of a key or button does; a held key
+## (echo) or the stick, which sends no echo while held, stops there (Tab or the d-pad go on).
 static func leaves(event: InputEvent) -> bool:
-	return not event.is_echo()
+	return not event.is_echo() and not event is InputEventJoypadMotion
 
 
 static func _entry_lines(e: Dictionary) -> Array:

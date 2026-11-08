@@ -130,9 +130,15 @@ func test_focus_after_going_back() -> void:
 	assert_eq(LoginUi.title_button_after_back("other"), "play")
 
 
-## The start menu has a Crédits screen in its stack, which Retour leaves.
-func test_menu_has_a_credits_screen() -> void:
+## The title's Crédits button opens the Crédits screen; its Retour goes back to the title, with the
+## focus on Crédits.
+func test_credits_button_opens_the_screen_and_retour_leaves_it() -> void:
 	var ui: CanvasLayer = LoginUi.new()
 	ui._build()
 	assert_true(ui.has_screen(LoginUi.CREDITS_SCREEN))
+	ui._title.button("credits").pressed.emit()
+	assert_eq(ui.top_screen(), LoginUi.CREDITS_SCREEN)
+	ui._screens[LoginUi.CREDITS_SCREEN].back_button().pressed.emit()
+	assert_eq(ui.top_screen(), LoginUi.ROOT_SCREEN)
+	assert_eq(ui._focus_next, ui._title.button("credits"))
 	ui.free()

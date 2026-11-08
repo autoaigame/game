@@ -79,11 +79,12 @@ func test_down_and_up_scroll_the_text() -> void:
 	var bar := screen.scroll().get_v_scroll_bar()
 	bar.max_value = 500
 	bar.page = 100
-	assert_true(screen.scroll_input(_action("ui_down")))
+	# through the text's own input, as a key, the d-pad or the stick sends it
+	screen.scroll().gui_input.emit(_action("ui_down"))
 	assert_eq(screen.scroll().scroll_vertical, CreditsScreen.STEP)
-	assert_true(screen.scroll_input(_action("ui_page_down")))
+	screen.scroll().gui_input.emit(_action("ui_page_down"))
 	assert_eq(screen.scroll().scroll_vertical, CreditsScreen.STEP + 100)
-	assert_true(screen.scroll_input(_action("ui_up")))
+	screen.scroll().gui_input.emit(_action("ui_up"))
 	assert_eq(screen.scroll().scroll_vertical, 100)
 	assert_false(screen.scroll_input(_action("ui_accept")))
 	screen.free()
@@ -116,6 +117,10 @@ func test_held_down_stays_on_the_text() -> void:
 	assert_true(CreditsScreen.leaves(e))
 	e.echo = true
 	assert_false(CreditsScreen.leaves(e))
+	var stick := InputEventJoypadMotion.new()  # a held stick sends no echo
+	stick.axis = JOY_AXIS_LEFT_Y
+	stick.axis_value = 1.0
+	assert_false(CreditsScreen.leaves(stick))
 
 
 ## The text shows the kit's focus frame while it has the focus, and none otherwise.

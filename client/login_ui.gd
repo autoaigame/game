@@ -208,7 +208,7 @@ func _show_top(fade: bool) -> void:
 		_screens[k].visible = k == id
 	_lay_out(id == ROOT_SCREEN)
 	var screen: Control = _screens[id]
-	if fade:
+	if fade and is_inside_tree():  # a tween needs the tree
 		if _screen_tween != null:
 			_screen_tween.kill()
 		screen.modulate.a = 0.0

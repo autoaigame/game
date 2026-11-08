@@ -57,7 +57,7 @@ const CREDITS_ONE_FILE := "1 fichier : %s"
 const CREDITS_LICENSE := "Licence : %s"
 const CREDITS_LICENSES_LABEL := "Licences : %s"
 const CREDITS_SOURCE := "Source : %s"
-const CREDITS_HINT := "Haut et bas pour faire défiler, Échap pour revenir"
+const CREDITS_HINT := "Haut et bas pour faire défiler, Échap ou B pour revenir"
 ## What an asset is (art/credits.gd kind()).
 const CREDITS_KINDS := {"character": "personnage", "decals": "détails du sol", "dog": "chien",
 		"items": "objets du sac", "music": "musique", "objects": "décor", "sounds": "sons", "tiles": "sols",
