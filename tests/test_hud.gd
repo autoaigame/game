@@ -263,3 +263,25 @@ func test_map_key_hint_on_azerty() -> void:
 	assert_eq(UiText.key_name(KEY_M, {}), "M")
 	assert_eq(UiText.key_name(KEY_M, {KEY_W: KEY_Z}), ",")
 	assert_eq(UiText.key_name(KEY_M, {KEY_M: KEY_COMMA}), ",")
+
+
+## The minimap (bottom right) is hidden while the bag is open, so it is never drawn over the bag.
+func test_minimap_hidden_while_the_bag_is_open() -> void:
+	var hud := _hud()
+	hud.client.welcomed.emit(Vector2i.ZERO)
+	var frame: Control = hud.minimap().get_parent()
+	assert_true(frame.visible, "shown at first")
+	hud.toggle_bag()
+	assert_false(frame.visible, "hidden under the open bag")
+	hud.toggle_bag()
+	assert_true(frame.visible, "back once the bag is closed")
+	hud.toggle_bag()
+	assert_true(hud.close_window())
+	assert_true(frame.visible, "back once Escape closes the bag")
+	hud.toggle_bag()
+	hud.toggle_big_map()
+	hud.toggle_big_map()
+	assert_false(frame.visible, "closing the big map keeps it hidden while the bag is open")
+	hud.toggle_bag()
+	assert_true(frame.visible)
+	hud.free()
