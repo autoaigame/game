@@ -7,9 +7,9 @@
 //   skin), 1 the face's or the beard's colour, 2 the eyes.
 // - A surface without a ramp (fixed colours) takes the nearest palette colour to its lit colour, among
 //   those of its own hue (hue_lock).
-// The output is not a colour but a code read by client/pixel_3d.gdshader: red = palette index,
-// green = surface (material) id, blue = depth. The 2D pass turns it back into the palette colour and
-// draws the outline and the inner lines from it.
+// The output is not a colour but a code read by client/pixel_3d.gdshader: red = palette index (as
+// Character3D.red_code), green = surface (material) id, blue = depth. The 2D pass turns it back into the
+// palette colour and draws the outline and the inner lines from it.
 shader_type spatial;
 render_mode unshaded, cull_back;
 
@@ -20,6 +20,8 @@ uniform float sun = 0.45;
 uniform int toon_levels = 3;  // 0: smooth light; n >= 2: the light in n flat bands
 uniform float hue_lock = 30.0;  // palette colours of another hue than the surface's cost this much more
 uniform int material_id = 0;  // 0..15, for the inner lines
+uniform int red_base = 56;  // red code of palette index 0 (Character3D.RED_BASE)
+uniform int red_step = 3;  // red codes between two indices (Character3D.RED_STEP)
 uniform float depth_near = 6.0;  // view distance (m) coded as blue 0 ...
 uniform float depth_far = 10.0;  // ... and as blue 1
 
@@ -113,6 +115,6 @@ void fragment() {
 		}
 	}
 	float depth = clamp((-VERTEX.z - depth_near) / (depth_far - depth_near), 0.0, 1.0);
-	// Codes centred in their steps, so a rounding of a unit or two on the way does not change them.
-	ALBEDO = vec3((float(pick) * 4.0 + 2.0) / 255.0, (float(material_id) * 16.0 + 8.0) / 255.0, depth);
+	// Codes centred in their steps, so a rounding of a unit on the way does not change them.
+	ALBEDO = vec3(float(red_base + pick * red_step + red_step / 2) / 255.0, (float(material_id) * 16.0 + 8.0) / 255.0, depth);
 }
