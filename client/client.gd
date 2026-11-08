@@ -152,6 +152,10 @@ func request_move(target: Vector2) -> void:
 	_net.move_to.rpc_id(1, target)
 
 
+func request_sprint(on: bool) -> void:
+	_net.sprint.rpc_id(1, on)
+
+
 func request_stop() -> void:
 	_net.stop.rpc_id(1)
 

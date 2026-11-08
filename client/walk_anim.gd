@@ -35,6 +35,25 @@ static func follow(shown: Vector2, server: Vector2, dt: float, speed := Protocol
 	return shown + to_server / dist * step
 
 
+## A drawn walker: {"server": last snapshot position, "shown": drawn position, "speed": cells/s between
+## its last two snapshots}, at `pos` (it appears there).
+static func walker(pos: Vector2) -> Dictionary:
+	return {"server": pos, "shown": pos, "speed": 0.0}
+
+
+## A new snapshot of a walker, one server tick after the previous one: where to go and how fast it went,
+## so a sprinter (Protocol.SPRINT_FACTOR) is drawn as smoothly as a walker.
+static func snapshot(w: Dictionary, pos: Vector2) -> void:
+	w["speed"] = speed_between(w["server"], pos)
+	w["server"] = pos
+
+
+## Draws a walker dt seconds later (follow at its measured speed). Returns the new drawn position.
+static func advance(w: Dictionary, dt: float) -> Vector2:
+	w["shown"] = follow(w["shown"], w["server"], dt, w["speed"])
+	return w["shown"]
+
+
 ## How fast a walker went between two updates one server tick apart, in cells per second. A jump (a
 ## put-back, a lost update) reads as very fast, which follow() turns into a snap.
 static func speed_between(before: Vector2, after: Vector2) -> float:
