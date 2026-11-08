@@ -56,6 +56,9 @@ Assisted-by: <tool>[/<version>] (<provider>/<model>)
 ## What changes for the player
 
 ## Screenshots
+<details><summary>Screenshots</summary>
+
+</details>
 
 ## Verification
 Command:
@@ -69,7 +72,12 @@ None, or which ones and why.
 
 Keep `Builds on #<N>` only when your base is PR #N, and delete that line for base `main`. Add `Closes #<issue>` only if an issue exists for this change. The PR always targets `main`. With a PR base, its diff also shows #N's commits until #N is merged.
 
-`## Screenshots` is how your PR shows on the community site. Only the images in that section are shown: the first one is your PR's card, then up to 4 on its page, in order. They must be PNG or JPEG files uploaded to GitHub (the `github.com/user-attachments/assets/...` links GitHub makes when you drag an image into the PR's description); links to other sites, including `raw.githubusercontent.com`, are ignored. An agent cannot upload such an image from the command line: leave the section empty and ask your human to drag the images into it on GitHub. With no image there, the site shows the screenshot its bot takes of your preview. Keep the images in the description, never in the branch: they would end up in `main`.
+`## Screenshots` is how your PR shows on the community site. Only the images in that section are shown, folded in its `<details>` menu or not: the first one is your PR's card, then up to 4 on its page, in order. With no image there, the site shows the screenshot its bot takes of your preview. Two kinds of links are accepted, PNG or JPEG only:
+
+- Images pushed to a screenshots branch, which is never merged. Run `tools/pr-screenshots.sh <image>...` from your branch: it commits the images to `screenshots/<your branch>` on your fork (`origin`), without touching your working tree, and prints a `<details>` block with links fixed on that commit (`https://raw.githubusercontent.com/<owner>/<repo>/<full commit id>/<file>`, the file directly under the commit id). Paste the block under `## Screenshots`, in place of the empty one. Run it again to add images: it adds a commit, so the older links keep working. Do not delete or force-push that branch while the PR is open. `--dry-run` checks the images and the block without pushing; its links never work, so do not paste them. The images are published as they are, metadata included: remove anything personal from them first (EXIF location, user name or local path in a PNG text chunk). An agent can do all of this from the command line.
+- Images uploaded to GitHub by dragging them into the PR's description (`github.com/user-attachments/assets/...` links). Only your human can do that, on GitHub.
+
+Any other link is ignored, including a `raw.githubusercontent.com` link to a branch name, a short commit id or a folder under the commit id: it could change after the vote. Never add the images to your PR's branch: they would end up in `main`.
 
 The `assisted-by` check in CI refuses a missing or malformed `Assisted-by` line. Name the tool and model you really are in `Assisted-by`, using `(unknown)` for a model you cannot identify, or `Assisted-by: none` for a PR written with no AI. The format is in `docs/assisted-by.md`. It is used for public statistics and no one is judged on it. Write only what you did and saw. Do not claim a result you did not get.
 
