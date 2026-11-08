@@ -13,8 +13,13 @@ const PALETTE_JSON := "res://data/palette.json"
 const SHADER := "res://client/pixel_3d.gdshader"
 const GHOST_SHADER := "res://client/pixel_3d_ghost.gdshader"
 const LIT_SHADER := "res://client/pixel_3d_lit.gdshader"
-## Most palette colours the shaders take (uniform array size; red code = index * 4).
+## Most palette colours the shaders take (uniform array size).
 const MAX_COLOURS := 64
+## The render codes a palette index in red (red_code); the 2D pass reads it back (red_index). The
+## Compatibility renderer gives every red under 56 back lower (8 comes back 2, 18 comes back 14: an
+## approximate sRGB round trip), so the codes start at 56, where it gives them back unchanged.
+const RED_BASE := 56
+const RED_STEP := 3
 ## Viewport size in texels, and where the feet stand in it.
 const VIEW_SIZE := Vector2i(112, 128)
 const FOOT_PX := 14
@@ -216,6 +221,16 @@ static func dark_of() -> PackedInt32Array:
 	return _dark_of
 
 
+## The red byte pixel_3d_lit.gdshader writes for a palette index: the middle of its step.
+static func red_code(index: int) -> int:
+	return RED_BASE + index * RED_STEP + RED_STEP / 2
+
+
+## The palette index pixel_3d.gdshaderinc reads from a red byte of the render.
+static func red_index(red: float) -> int:
+	return clampi(floori((red - RED_BASE) / RED_STEP), 0, MAX_COLOURS - 1)
+
+
 ## Weighted RGB distance, close enough to perceptual for a small palette.
 static func redmean(a: Color, b: Color) -> float:
 	var r := (a.r + b.r) * 0.5
@@ -301,6 +316,8 @@ func _view_sprite(shader_path: String) -> Sprite2D:
 	mat.shader = load(shader_path)
 	mat.set_shader_parameter("palette", palette_uniform())
 	mat.set_shader_parameter("dark_of", _dark_uniform())
+	mat.set_shader_parameter("red_base", RED_BASE)
+	mat.set_shader_parameter("red_step", RED_STEP)
 	s.material = mat
 	return s
 
@@ -400,6 +417,8 @@ func lit_material(colour: Color) -> ShaderMaterial:
 	sm.shader = load(LIT_SHADER)
 	sm.set_shader_parameter("albedo", colour)
 	sm.set_shader_parameter("material_id", _materials.size() % 16)
+	sm.set_shader_parameter("red_base", RED_BASE)
+	sm.set_shader_parameter("red_step", RED_STEP)
 	sm.set_shader_parameter("palette", palette_uniform())
 	sm.set_shader_parameter("palette_size", palette().size())
 	sm.set_shader_parameter("toon_levels", TOON_LEVELS)
