@@ -1,5 +1,6 @@
 ## The one Theme of the client UI. Uses the pixel art in assets/ui/ when present (9-slice
-## StyleBoxTexture, nearest filter), flat boxes in the same colours otherwise.
+## StyleBoxTexture, nearest filter, drawn by art/ui_menu.gd and art/ui_icons.gd), flat boxes in the
+## same colours otherwise.
 class_name UiTheme
 extends RefCounted
 
@@ -12,18 +13,35 @@ const TITLE_SIZE := 26
 ## The title band art is made to be shown exactly this high (its torn ends do not tile vertically).
 const TITLE_BAND_H := 40
 const BUTTON_SIZE := 20
+## The title screen's backdrop and the logo are drawn at this many screen pixels per texel (the
+## backdrop fills the 960x540 view; every other piece is drawn at 1).
+const BACKDROP_SCALE := 2
+const LOGO_SCALE := 2
 
-## file -> [margin left, top, right, bottom], content padding added inside.
+## file -> [margin left, top, right, bottom], content padding added inside. The margins keep the
+## corners and ends of art/ui_menu.gd's frames; one period of each edge lies between them.
 const SLICES := {
-	"panel": [16, 16, 16, 16],
-	"button_normal": [8, 8, 8, 8],
-	"button_hover": [8, 8, 8, 8],
-	"button_pressed": [8, 8, 8, 8],
-	"button_disabled": [8, 8, 8, 8],
-	"focus": [8, 8, 8, 8],
+	"panel": [17, 17, 17, 17],
+	"button_normal": [22, 15, 28, 19],
+	"button_hover": [22, 15, 28, 19],
+	"button_pressed": [22, 15, 28, 19],
+	"button_disabled": [22, 15, 28, 19],
+	"button_small_normal": [8, 8, 8, 8],
+	"button_small_hover": [8, 8, 8, 8],
+	"button_small_pressed": [8, 8, 8, 8],
+	"button_small_disabled": [8, 8, 8, 8],
+	"focus": [4, 4, 4, 4],
 	"field_normal": [6, 6, 6, 6],
 	"field_focus": [6, 6, 6, 6],
-	"title_band": [24, 8, 24, 8],
+	"title_band": [30, 10, 30, 10],
+}
+## file -> [left, top, right, bottom] room around the content, when it is not the margins plus pad:
+## a button's text stays clear of its lens and mossy ends, and lies on its plate.
+const CONTENT := {
+	"button_normal": [26, 4, 30, 4],
+	"button_hover": [26, 4, 30, 4],
+	"button_pressed": [26, 4, 30, 4],
+	"button_disabled": [26, 4, 30, 4],
 }
 const FLAT := {
 	"panel": [Color8(0x3b, 0x45, 0x30), Color8(0x51, 0x43, 0x3a)],
@@ -31,6 +49,10 @@ const FLAT := {
 	"button_hover": [Color8(0x77, 0x75, 0x6c), Color8(0x2e, 0x28, 0x22)],
 	"button_pressed": [Color8(0x44, 0x44, 0x3f), Color8(0x2e, 0x28, 0x22)],
 	"button_disabled": [Color8(0x4d, 0x56, 0x38), Color8(0x44, 0x44, 0x3f)],
+	"button_small_normal": [Color8(0x5d, 0x5c, 0x55), Color8(0x2e, 0x28, 0x22)],
+	"button_small_hover": [Color8(0x77, 0x75, 0x6c), Color8(0x2e, 0x28, 0x22)],
+	"button_small_pressed": [Color8(0x44, 0x44, 0x3f), Color8(0x2e, 0x28, 0x22)],
+	"button_small_disabled": [Color8(0x4d, 0x56, 0x38), Color8(0x44, 0x44, 0x3f)],
 	"focus": [Color(0, 0, 0, 0), TEXT_LIGHT],
 	"field_normal": [Color8(0xbd, 0xb5, 0x9f), Color8(0x54, 0x48, 0x3a)],
 	"field_focus": [Color8(0xd3, 0xcc, 0xb7), Color8(0x54, 0x48, 0x3a)],
@@ -72,7 +94,9 @@ static func build() -> Theme:
 	t.set_stylebox("panel", "TitleBand", band)
 	t.set_type_variation("TitleLabel", "Label")
 	t.set_font_size("font_size", "TitleLabel", TITLE_SIZE)
-	t.set_color("font_color", "TitleLabel", TEXT_DARK)
+	t.set_color("font_color", "TitleLabel", TEXT_LIGHT)  # light and outlined, like the logo's letters
+	t.set_constant("outline_size", "TitleLabel", 6)
+	t.set_color("font_outline_color", "TitleLabel", TEXT_DARK)
 	t.set_type_variation("HintLabel", "Label")
 	t.set_font_size("font_size", "HintLabel", 14)
 	t.set_color("font_color", "HintLabel", TEXT_DIM)
@@ -143,8 +167,13 @@ static func box(key: String, pad: int, shift := 0) -> StyleBox:
 		st.texture_margin_top = m[1]
 		st.texture_margin_right = m[2]
 		st.texture_margin_bottom = m[3]
-		st.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT
-		st.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE_FIT
+		# tiled without stretching: every texel stays one pixel (TILE_FIT would scale the rivets)
+		st.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+		st.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+		if key == "focus":  # a frame just outside the control
+			st.draw_center = false
+			for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+				st.set_expand_margin(side, 2)
 		sb = st
 	else:
 		var flat := StyleBoxFlat.new()
@@ -160,11 +189,18 @@ static func box(key: String, pad: int, shift := 0) -> StyleBox:
 			flat.expand_margin_bottom = 3
 		sb = flat
 	if pad > 0:
-		sb.content_margin_left = m[0] + pad - 4
-		sb.content_margin_right = m[2] + pad - 4
-		sb.content_margin_top = m[1] + shift
-		sb.content_margin_bottom = m[3] - shift
+		var c: Array = CONTENT.get(key, [m[0] + pad - 4, m[1], m[2] + pad - 4, m[3]])
+		sb.content_margin_left = c[0]
+		sb.content_margin_right = c[2]
+		sb.content_margin_top = c[1] + shift
+		sb.content_margin_bottom = c[3] - shift
 	return sb
+
+
+## The picture `key` of assets/ui/ ("title_bg", "logo"), or null if its PNG is missing.
+static func picture(key: String) -> Texture2D:
+	var path: String = DIR + key + ".png"
+	return load(path) if ResourceLoader.exists(path) else null
 
 
 ## The status icon `key` ("wait", "ok" or "error"), or null if its PNG is missing.

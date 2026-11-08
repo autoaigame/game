@@ -103,9 +103,9 @@ func _arrow(text: String, on_press: Callable) -> Button:
 	b.text = text
 	b.custom_minimum_size = Vector2(24, 24)
 	for st in ["normal", "hover", "disabled"]:
-		b.add_theme_stylebox_override(st, UiTheme.box("button_" + st, 2))
-	b.add_theme_stylebox_override("pressed", UiTheme.box("button_pressed", 2, 2))
-	b.add_theme_stylebox_override("hover_pressed", UiTheme.box("button_pressed", 2, 2))
+		b.add_theme_stylebox_override(st, UiTheme.box("button_small_" + st, 2))
+	b.add_theme_stylebox_override("pressed", UiTheme.box("button_small_pressed", 2, 2))
+	b.add_theme_stylebox_override("hover_pressed", UiTheme.box("button_small_pressed", 2, 2))
 	b.add_theme_font_size_override("font_size", 14)
 	b.focus_mode = Control.FOCUS_NONE
 	b.pressed.connect(on_press)
