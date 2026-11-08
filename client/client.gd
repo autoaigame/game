@@ -42,6 +42,7 @@ var _last_frame_ms := 0
 
 
 func _ready() -> void:
+	I18n.start()  # before any text is built
 	_net = get_parent().get_node("Net")
 	_net.set_handler(self)
 	look = ClientSettings.load_look()
@@ -83,6 +84,7 @@ func _add_views() -> void:
 	var hud: CanvasLayer = load("res://client/hud.gd").new()
 	hud.client = self
 	add_child(hud)
+	settings.windows = hud
 	var ui: CanvasLayer = load("res://client/login_ui.gd").new()
 	ui.client = self
 	ui.sounds = sounds

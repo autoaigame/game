@@ -171,7 +171,7 @@ func test_e_toggles_the_bag() -> void:
 ## The key hints name the keys as printed on the player's keyboard.
 func test_key_hints_follow_the_layout() -> void:
 	var physical: Array = UiText.KEYS.map(func(k): return k[0])
-	assert_eq(physical, [KEY_E, KEY_Q])
+	assert_eq(physical, [KEY_E, KEY_Q, KEY_M])
 	if DisplayServer.get_name() in UiText.LAYOUT_AWARE:
 		var label := DisplayServer.keyboard_get_label_from_physical(KEY_Q)
 		assert_eq(UiText.key_name(KEY_Q), OS.get_keycode_string(label))
@@ -221,3 +221,45 @@ func test_notice_shows_the_item_icon() -> void:
 	hud.client.notice_received.emit("no_prey", {})
 	assert_false(hud.notice_icon().visible, "none without an item")
 	hud.free()
+
+
+## The physical M key (',' on AZERTY) opens and closes the big map, once joined; Escape closes it.
+## The minimap hides while it is open.
+func test_m_key_toggles_the_big_map() -> void:
+	var hud := _hud()
+	_press(hud, KEY_M)
+	assert_false(hud.big_map().visible, "not before joining")
+	hud.client.welcomed.emit(Vector2i.ZERO)
+	assert_true(hud.minimap().visible)
+	_press(hud, KEY_M)
+	assert_true(hud.big_map().visible)
+	assert_false(hud.minimap().visible)
+	_press(hud, KEY_M)
+	assert_false(hud.big_map().visible)
+	assert_true(hud.minimap().visible)
+	_press(hud, KEY_M)
+	_press(hud, KEY_ESCAPE)
+	assert_false(hud.big_map().visible, "Escape closes it")
+	hud.free()
+
+
+## The maps follow me and show the other players the server sends.
+func test_maps_show_me_and_the_other_players() -> void:
+	var hud := _hud()
+	hud.client.my_peer_id = 7
+	hud.client.welcomed.emit(Vector2i.ZERO)
+	hud.client.snapshot_received.emit([{"id": 7, "name": "me", "pos": Vector2(3, 4)},
+			{"id": 9, "name": "bob", "pos": Vector2(10, 4)}])
+	assert_eq(hud.minimap().center, Vector2(3, 4))
+	assert_eq(hud.big_map().center, Vector2(3, 4))
+	assert_eq(hud.minimap().markers, [{"pos": Vector2(3, 4), "me": true}, {"pos": Vector2(10, 4), "me": false}])
+	hud.free()
+
+
+## On AZERTY the map key is printed ','.
+func test_map_key_hint_on_azerty() -> void:
+	if DisplayServer.get_name() in UiText.LAYOUT_AWARE:
+		return
+	assert_eq(UiText.key_name(KEY_M, {}), "M")
+	assert_eq(UiText.key_name(KEY_M, {KEY_W: KEY_Z}), ",")
+	assert_eq(UiText.key_name(KEY_M, {KEY_M: KEY_COMMA}), ",")

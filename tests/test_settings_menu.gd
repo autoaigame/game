@@ -4,6 +4,11 @@ const Menu := preload("res://client/settings_menu.gd")
 const LookPanel := preload("res://client/look_panel.gd")
 
 
+## These tests check French words: the UI is shown in French whatever the system's language.
+func _init() -> void:
+	I18n.use("fr")
+
+
 func _key(code: Key, pressed := true, echo := false) -> InputEventKey:
 	var e := InputEventKey.new()
 	e.physical_keycode = code
@@ -28,15 +33,15 @@ func test_toggle_keys() -> void:
 	assert_false(Menu.is_toggle(pad))
 
 
-## Tabs are data: sound first, then display and controls, each with a title and a builder.
+## Tabs are data: sound first, then display, language and controls, each with a title and a builder.
 func test_tabs_have_an_id_and_a_title() -> void:
 	var ids := []
 	for t in Menu.TABS:
 		ids.append(t["id"])
 		assert_true(t["title"] != "", t["id"])
-	assert_eq(ids, ["sound", "display", "controls"])
-	assert_eq(UiText.TAB_DISPLAY, "Affichage")
-	assert_eq(UiText.TAB_CONTROLS, "Commandes")
+	assert_eq(ids, ["sound", "display", "language", "controls"])
+	assert_eq(UiText.t(UiText.TAB_DISPLAY), "Affichage")
+	assert_eq(UiText.t(UiText.TAB_CONTROLS), "Commandes")
 	var menu := _built()
 	for t in Menu.TABS:
 		assert_true(menu.has_method("_build_%s_tab" % t["id"]), t["id"])
@@ -57,6 +62,35 @@ func test_value_text_is_a_percent() -> void:
 	assert_eq(Menu.value_text(0.8), "80 %")
 	assert_eq(Menu.value_text(0.0), "0 %")
 	assert_eq(Menu.value_text(1.0), "100 %")
+
+
+class FakeWindows:
+	extends Node
+	var open := 0  ## windows still open
+
+	func close_window() -> bool:
+		if open == 0:
+			return false
+		open -= 1
+		return true
+
+
+## With a HUD window open (big map, bag), Escape closes it and leaves the menu shut. With none, it
+## opens the menu.
+func test_escape_closes_a_hud_window_first() -> void:
+	var menu: CanvasLayer = Menu.new()
+	menu.visible = false
+	var windows := FakeWindows.new()
+	windows.open = 2
+	menu.windows = windows
+	assert_true(menu.handle(_key(KEY_ESCAPE)))
+	assert_eq(windows.open, 1)
+	assert_false(menu.visible)
+	assert_true(menu.handle(_key(KEY_ESCAPE)))
+	assert_eq(windows.open, 0)
+	assert_false(menu.visible, "still shut: it closed the last window")
+	windows.free()
+	menu.free()
 
 
 func _built() -> CanvasLayer:
@@ -137,7 +171,7 @@ func test_listed_keys_are_the_handled_keys() -> void:
 	var esc: Key = _row(UiText.CONTROL_SETTINGS)["caps"][0]
 	assert_true(Menu.is_toggle(_key(esc)))
 	assert_eq(_row(UiText.CONTROL_MOVE)["caps"], [KEY_W, KEY_A, KEY_S, KEY_D])
-	assert_eq(_row(UiText.CONTROL_MUTE)["caps"], [KEY_M])
+	assert_eq(_row(UiText.CONTROL_MUTE)["caps"], [KEY_N])
 	assert_eq(_row(UiText.CONTROL_VOLUME)["caps"], [KEY_MINUS, KEY_EQUAL])
 
 
@@ -157,7 +191,7 @@ func test_caps_follow_the_layout() -> void:
 	assert_eq(UiText.cap_text(KEY_ESCAPE), "Échap")
 	assert_eq(UiText.cap_text(KEY_MINUS, {KEY_MINUS: KEY_PARENRIGHT}), ")")
 	assert_eq(UiText.cap_text(KEY_EQUAL, {KEY_EQUAL: KEY_EQUAL}), "=")
-	assert_eq(UiText.cap_text(UiText.MOUSE_WHEEL), UiText.MOUSE_WHEEL)
+	assert_eq(UiText.cap_text(UiText.MOUSE_WHEEL), "Molette")
 
 
 func _page_texts(menu: CanvasLayer) -> Array:

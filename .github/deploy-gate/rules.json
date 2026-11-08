@@ -21,7 +21,8 @@
     "gdshader",
     "gitignore",
     "glb",
-    "gdshaderinc"
+    "gdshaderinc",
+    "po"
   ],
   "forbidden_extensions": [
     "so",

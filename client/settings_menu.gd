@@ -1,21 +1,26 @@
 ## Settings menu over the world or the start menu, opened and closed with Escape (or a pad's Start).
+## While a HUD window is open (big map, bag), Escape closes that window instead.
 ## The world keeps running (multiplayer): only my keys stop moving me while it is open (world_view.gd).
-## One tab per entry of TABS: sound, display (fullscreen) and controls (read-only key list). Texts in
-## client/ui_text.gd.
+## One tab per entry of TABS: sound, display (fullscreen), language (client/language_list.gd, as on the
+## title's Langue screen) and controls (read-only key list). Texts in client/ui_text.gd.
 extends CanvasLayer
 
 signal opened
 signal closed
 
 ## id -> title; a tab is built by _build_tab(id).
+## Language has its own tab: it is not about the screen, and a player who does not read the language
+## shown finds it by the names of the languages, each in itself.
 const TABS := [{"id": "sound", "title": UiText.TAB_SOUND}, {"id": "display", "title": UiText.TAB_DISPLAY},
-		{"id": "controls", "title": UiText.TAB_CONTROLS}]
+		{"id": "language", "title": UiText.LANGUAGE}, {"id": "controls", "title": UiText.TAB_CONTROLS}]
 const FADE_S := 0.15
 ## The Interface slider plays a menu sound at most this often while it moves, in ms.
 const UI_PREVIEW_MS := 150
 const StartMenu := preload("res://client/login_ui.gd")
+const LanguageList := preload("res://client/language_list.gd")
 
 var sounds: Node  ## client/sound_director.gd, or null (no sound)
+var windows: Node  ## client/hud.gd, or null: Escape first closes its open window (big map, bag)
 ## While the menu is closed, a key or button event goes to this start menu first, which goes back a
 ## screen on Escape (client/login_ui.gd); null when there is none.
 var start_menu: StartMenu
@@ -27,8 +32,9 @@ var _sliders := {}  ## channel -> HSlider
 var _values := {}  ## channel -> Label
 var _mute := CheckBox.new()
 var _fullscreen := CheckBox.new()
+var _languages: LanguageList
 var _seen_labels := {}  ## physical key -> label, from the key presses (UiText.key_name)
-var _cap_labels := {}  ## physical key -> [Label] of the controls tab
+var _cap_labels := {}  ## cap (physical key, or a text key) -> [Label] of the controls tab
 var _close := Button.new()
 var _tween: Tween
 var _ui_preview_at := 0
@@ -53,7 +59,7 @@ static func sound_rows() -> Array:
 
 
 static func value_text(level: float) -> String:
-	return "%d %%" % AudioSettings.to_percent(level)
+	return UiText.percent(AudioSettings.to_percent(level))
 
 
 func _ready() -> void:
@@ -133,6 +139,8 @@ func _input(event: InputEvent) -> void:
 
 ## Acts on `event`; true when it was used.
 func handle(event: InputEvent) -> bool:
+	if not visible and is_toggle(event) and windows != null and windows.close_window():
+		return true
 	if not visible and start_menu != null and start_menu.use_escape(event):
 		return true
 	if is_toggle(event) or (visible and event.is_action_pressed("ui_cancel")):
@@ -223,6 +231,8 @@ func _build_tab(id: String) -> Control:
 			return _build_sound_tab()
 		"display":
 			return _build_display_tab()
+		"language":
+			return _build_language_tab()
 		"controls":
 			return _build_controls_tab()
 	push_error("settings menu: no page for tab %s" % id)
@@ -273,6 +283,20 @@ func _build_display_tab() -> Control:
 	return page
 
 
+func _build_language_tab() -> Control:
+	_languages = LanguageList.new()
+	_languages.settings_path = settings_path
+	for l in _languages.locales():  # the sounds of the other tabs, focus included (no sounds of its own)
+		_with_sounds(_languages.button(l))
+	_languages.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_languages.custom_minimum_size = Vector2(220, 0)
+	return _languages
+
+
+func language_list() -> LanguageList:
+	return _languages
+
+
 ## One line per control: its key caps, then what it does. Nothing here takes the focus.
 func _build_controls_tab() -> Control:
 	var grid := GridContainer.new()
@@ -287,8 +311,7 @@ func _build_controls_tab() -> Control:
 			var cap := _label(UiText.cap_text(c), "")
 			cap.add_theme_stylebox_override("normal", _cap_box())
 			caps.add_child(cap)
-			if not c is String:
-				_cap_labels.get_or_add(c, []).append(cap)
+			_cap_labels.get_or_add(c, []).append(cap)
 		grid.add_child(caps)
 		var what := _label(row["action"], "")
 		what.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -307,7 +330,16 @@ func _cap_box() -> StyleBoxFlat:
 	return box
 
 
-## Renames the key caps after the layout learned from the key presses.
+## Texts built here (the caps, the volumes) are built again in the new language; the others are keys
+## that their Label or Button translates by itself.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and not _sliders.is_empty():
+		_name_caps()
+		for c in _sliders:
+			_values[c].text = value_text(AudioSettings.from_percent(_sliders[c].value))
+
+
+## Renames the key caps after the layout learned from the key presses (and the language).
 func _name_caps() -> void:
 	for k in _cap_labels:
 		for cap in _cap_labels[k]:
@@ -325,7 +357,7 @@ func _on_slider(channel: String, percent: float) -> void:
 		sounds.ui("hover")
 
 
-## Shows `s` without sending it back (M, - and + while the menu is open move the controls too).
+## Shows `s` without sending it back (N, - and + while the menu is open move the controls too).
 func _show_settings(s: Dictionary) -> void:
 	for c in AudioSettings.CHANNELS:
 		_sliders[c].set_value_no_signal(AudioSettings.to_percent(s[c]))

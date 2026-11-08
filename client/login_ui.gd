@@ -1,6 +1,7 @@
 ## Start menu, drawn over the world until the server welcomes us. Under the title band, one screen at a
 ## time from a stack; the title and play screens show the connection state. The title screen (client/title_screen.gd) is the root;
-## Jouer opens the play screen (look, name, Entrer), Crédits the credits (client/credits_screen.gd). A new screen is a Control given to add_screen(),
+## Jouer opens the play screen (look, name, Entrer), Langue the languages (client/language_screen.gd),
+## Crédits the credits (client/credits_screen.gd). A new screen is a Control given to add_screen(),
 ## opened with go(id); Escape and Retour go back. Texts are in client/ui_text.gd, looks in client/ui_theme.gd.
 extends CanvasLayer
 
@@ -13,6 +14,7 @@ const SCREEN_FADE_S := 0.15
 const ROOT_SCREEN := "title"
 const PLAY_SCREEN := "play"
 const CREDITS_SCREEN := "credits"
+const LANGUAGE_SCREEN := "language"
 const ESCAPE_SETTINGS := "settings"  ## Escape opens the settings menu (it does so itself)
 const ESCAPE_BACK := "back"  ## Escape goes back a screen
 const FOCUS_SETTINGS_BUTTON := "settings_button"  ## the title's Paramètres button
@@ -41,6 +43,11 @@ var _button := Button.new()
 var _back_button := Button.new()
 var _hint := Label.new()
 var _hint_icon := TextureRect.new()
+## What the error under the name field is about, kept so that it is built again in a new language.
+enum Hint { RULE, PROBLEM, REJECTED }  ## the naming rule, a name the client refuses, a server refusal
+var _hint_kind := Hint.RULE
+var _hint_name := ""  ## the name refused (PROBLEM, REJECTED)
+var _hint_reason := ""  ## the server's reason (REJECTED)
 var _status := Label.new()  ## on the play screen
 var _status_icon := TextureRect.new()
 var _title_status := Label.new()  ## under the title screen's buttons
@@ -104,13 +111,13 @@ static func stack_after_rejected(stack: Array) -> Array:
 
 ## The screen a title button opens, or "" (Paramètres opens the settings menu, Quitter quits).
 static func screen_for(choice: String) -> String:
-	return {"play": PLAY_SCREEN, "credits": CREDITS_SCREEN}.get(choice, "")
+	return {"play": PLAY_SCREEN, "language": LANGUAGE_SCREEN, "credits": CREDITS_SCREEN}.get(choice, "")
 
 
 ## The title button that takes the focus back on the title screen, coming from screen `left`: the
 ## one that opened it, else Jouer.
 static func title_button_after_back(left: String) -> String:
-	return {CREDITS_SCREEN: "credits"}.get(left, "play")
+	return {CREDITS_SCREEN: "credits", LANGUAGE_SCREEN: "language"}.get(left, "play")
 
 
 static func button_enabled(s: State) -> bool:
@@ -222,7 +229,10 @@ func _show_top(fade: bool) -> void:
 func _first_focus(id: String) -> Control:
 	if id == PLAY_SCREEN:
 		return _button if initial_focus(_name_edit.text) == FOCUS_BUTTON else _name_edit
-	return _screens[id].get_meta("first_focus")
+	var screen: Control = _screens[id]
+	if screen.has_method("first_focus"):  # it knows best when it shows (Langue: the language shown)
+		return screen.first_focus()
+	return screen.get_meta("first_focus")
 
 
 ## Gives the focus asked for once its control shows (the settings menu may hide this one meanwhile).
@@ -271,6 +281,9 @@ func _build() -> void:
 	credits.sounds = sounds
 	credits.back_pressed.connect(back)
 	add_screen(CREDITS_SCREEN, credits, credits.first_focus())
+	var languages: Control = load("res://client/language_screen.gd").new(sounds)
+	languages.back_pressed.connect(back)
+	add_screen(LANGUAGE_SCREEN, languages, languages.first_focus())
 
 
 ## The title screen: big logo at the top, tagline, buttons at the bottom. Other screens (the play
@@ -348,11 +361,11 @@ func _build_play_screen() -> Control:
 	_name_edit.max_length = Protocol.NAME_MAX_LEN
 	_name_edit.custom_minimum_size = Vector2(0, 36)
 	_name_edit.text_submitted.connect(func(_t): _submit())
-	_name_edit.text_changed.connect(func(_t): _show_hint(""))
+	_name_edit.text_changed.connect(func(_t): _show_hint())
 	box.add_child(_name_edit)
 	box.add_child(_icon_row(_hint_icon, _hint))
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD
-	_show_hint("")
+	_show_hint()
 	var gap := Control.new()
 	gap.custom_minimum_size = Vector2(0, 6)
 	box.add_child(gap)
@@ -463,9 +476,34 @@ func _set_icon(rect: TextureRect, key: String) -> void:
 	rect.texture = UiTheme.icon(key) if key != "" else null
 
 
-## Shows `error` under the field, or the naming rule when it is "".
-func _show_hint(error: String) -> void:
-	_hint.text = error if error != "" else UiText.NAME_HINT % Protocol.NAME_MAX_LEN
+## The texts built here are built again in the new language; the others are keys that their Label
+## or Button translates by itself.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and _hint.get_parent() != null:
+		_refresh_hint()
+
+
+## Shows under the field the error of `kind` about `player_name` (and the server's `reason`), or
+## the naming rule for Hint.RULE.
+func _show_hint(kind := Hint.RULE, player_name := "", reason := "") -> void:
+	_hint_kind = kind
+	_hint_name = player_name
+	_hint_reason = reason
+	_refresh_hint()
+
+
+func _hint_text() -> String:
+	match _hint_kind:
+		Hint.PROBLEM:
+			return UiText.name_problem(_hint_name)
+		Hint.REJECTED:
+			return UiText.rejection(_hint_reason, _hint_name)
+	return ""
+
+
+func _refresh_hint() -> void:
+	var error := _hint_text()
+	_hint.text = error if error != "" else UiText.name_hint()
 	_hint.theme_type_variation = "ErrorLabel" if error != "" else "HintLabel"
 	_set_icon(_hint_icon, "error" if error != "" else "")
 
@@ -473,12 +511,12 @@ func _show_hint(error: String) -> void:
 func _submit() -> void:
 	if state != State.READY:
 		return
-	var problem := UiText.name_problem(_name_edit.text)
-	if problem != "":
-		_show_hint(problem)
+	var typed := _name_edit.text
+	if UiText.name_problem(typed) != "":
+		_show_hint(Hint.PROBLEM, typed)
 		_name_edit.grab_focus()
 		return
-	_show_hint("")
+	_show_hint()
 	_set_state(State.JOINING)
 	client.join_with(_name_edit.text)
 
@@ -490,7 +528,8 @@ func _on_connected() -> void:
 
 func _on_rejected(reason: String) -> void:
 	_set_state(State.READY)
-	_show_hint(UiText.rejection(reason, client.player_name))
+	var refused: String = client.player_name
+	_show_hint(Hint.REJECTED, refused, reason)
 	var to := stack_after_rejected(_stack)
 	if to != _stack:
 		_stack = to

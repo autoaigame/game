@@ -145,3 +145,25 @@ func test_music_bus_exists_under_master() -> void:
 	var i := AudioServer.get_bus_index("Musique")
 	assert_true(i > 0)
 	assert_eq(AudioServer.get_bus_send(i), &"Master")
+
+
+func _key(physical: Key) -> InputEventKey:
+	var key := InputEventKey.new()
+	key.physical_keycode = physical
+	key.pressed = true
+	return key
+
+
+## N mutes and unmutes; M is the map now (client/hud.gd) and leaves the sound alone.
+func test_n_key_mutes_and_m_does_not() -> void:
+	var director: Node = load("res://client/sound_director.gd").new()
+	director.started = true
+	director._unhandled_key_input(_key(KEY_M))
+	assert_false(director._settings["muted"], "M is the map")
+	director._unhandled_key_input(_key(KEY_N))
+	assert_true(director._settings["muted"])
+	director._unhandled_key_input(_key(KEY_N))
+	assert_false(director._settings["muted"])
+	director._save_in = -1.0  # do not write the test's settings to the player's file
+	director.free()
+	AudioSettings.apply(AudioSettings.defaults())
