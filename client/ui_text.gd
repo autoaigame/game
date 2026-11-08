@@ -48,6 +48,7 @@ const BACK := "menu.back"
 const ENTER := "menu.enter"
 const SETTINGS := "menu.settings"
 const CREDITS := "menu.credits"
+const LANGUAGE := "menu.language"  ## the title button, the Langue screen and the settings tab
 
 ## The credits screen (client/credits_screen.gd), from ASSETS.toml (client/credits.gd).
 const CREDITS_COMMUNITY := "credits.community"

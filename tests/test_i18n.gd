@@ -192,18 +192,19 @@ func test_languages_are_found_in_the_folder() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(dir))
 
 
-## The language to start in: --language, else the saved choice, else the system's matched to a file
-## (fr_CA plays in fr), else English.
+## The language to start in: the player's saved choice, else the engine's at launch (the system's, or
+## --language) matched to a file (fr_CA plays in fr), else English.
 func test_start_language_choice() -> void:
 	var langs := ["en", "fr"]
-	assert_eq(I18n.pick("", "", "fr_FR", langs), "fr")
-	assert_eq(I18n.pick("", "", "fr_CA", langs), "fr")
-	assert_eq(I18n.pick("", "", "en_US", langs), "en")
-	assert_eq(I18n.pick("", "", "de_DE", langs), "en", "no German: English")
-	assert_eq(I18n.pick("", "", "", langs), "en")
-	assert_eq(I18n.pick("", "en", "fr_FR", langs), "en", "the saved choice wins")
-	assert_eq(I18n.pick("", "de", "fr_FR", langs), "fr", "a saved language gone: the system's")
-	assert_eq(I18n.pick("en", "fr", "fr_FR", langs), "en", "--language wins")
+	assert_eq(I18n.pick("", "fr_FR", langs), "fr")
+	assert_eq(I18n.pick("", "fr_CA", langs), "fr")
+	assert_eq(I18n.pick("", "en_US", langs), "en")
+	assert_eq(I18n.pick("", "de_DE", langs), "en", "no German: English")
+	assert_eq(I18n.pick("", "C", langs), "en", "no locale (LANG=C): English")
+	assert_eq(I18n.pick("", "", langs), "en")
+	assert_eq(I18n.pick("en", "fr_FR", langs), "en", "the saved choice beats the system's")
+	assert_eq(I18n.pick("fr", "en", langs), "fr", "and --language, which the engine gives as its locale")
+	assert_eq(I18n.pick("de", "fr_FR", langs), "fr", "a saved language gone: the system's")
 	assert_eq(I18n.closest("pt_BR", langs), "")
 
 

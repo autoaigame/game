@@ -1,6 +1,7 @@
 ## Start menu, drawn over the world until the server welcomes us. Under the title band, one screen at a
 ## time from a stack; the title and play screens show the connection state. The title screen (client/title_screen.gd) is the root;
-## Jouer opens the play screen (look, name, Entrer), Crédits the credits (client/credits_screen.gd). A new screen is a Control given to add_screen(),
+## Jouer opens the play screen (look, name, Entrer), Langue the languages (client/language_screen.gd),
+## Crédits the credits (client/credits_screen.gd). A new screen is a Control given to add_screen(),
 ## opened with go(id); Escape and Retour go back. Texts are in client/ui_text.gd, looks in client/ui_theme.gd.
 extends CanvasLayer
 
@@ -13,6 +14,7 @@ const SCREEN_FADE_S := 0.15
 const ROOT_SCREEN := "title"
 const PLAY_SCREEN := "play"
 const CREDITS_SCREEN := "credits"
+const LANGUAGE_SCREEN := "language"
 const ESCAPE_SETTINGS := "settings"  ## Escape opens the settings menu (it does so itself)
 const ESCAPE_BACK := "back"  ## Escape goes back a screen
 const FOCUS_SETTINGS_BUTTON := "settings_button"  ## the title's Paramètres button
@@ -105,13 +107,13 @@ static func stack_after_rejected(stack: Array) -> Array:
 
 ## The screen a title button opens, or "" (Paramètres opens the settings menu, Quitter quits).
 static func screen_for(choice: String) -> String:
-	return {"play": PLAY_SCREEN, "credits": CREDITS_SCREEN}.get(choice, "")
+	return {"play": PLAY_SCREEN, "language": LANGUAGE_SCREEN, "credits": CREDITS_SCREEN}.get(choice, "")
 
 
 ## The title button that takes the focus back on the title screen, coming from screen `left`: the
 ## one that opened it, else Jouer.
 static func title_button_after_back(left: String) -> String:
-	return {CREDITS_SCREEN: "credits"}.get(left, "play")
+	return {CREDITS_SCREEN: "credits", LANGUAGE_SCREEN: "language"}.get(left, "play")
 
 
 static func button_enabled(s: State) -> bool:
@@ -223,7 +225,10 @@ func _show_top(fade: bool) -> void:
 func _first_focus(id: String) -> Control:
 	if id == PLAY_SCREEN:
 		return _button if initial_focus(_name_edit.text) == FOCUS_BUTTON else _name_edit
-	return _screens[id].get_meta("first_focus")
+	var screen: Control = _screens[id]
+	if screen.has_method("first_focus"):  # it knows best when it shows (Langue: the language shown)
+		return screen.first_focus()
+	return screen.get_meta("first_focus")
 
 
 ## Gives the focus asked for once its control shows (the settings menu may hide this one meanwhile).
@@ -272,6 +277,9 @@ func _build() -> void:
 	credits.sounds = sounds
 	credits.back_pressed.connect(back)
 	add_screen(CREDITS_SCREEN, credits, credits.first_focus())
+	var languages: Control = load("res://client/language_screen.gd").new(sounds)
+	languages.back_pressed.connect(back)
+	add_screen(LANGUAGE_SCREEN, languages, languages.first_focus())
 
 
 ## The title screen: big logo at the top, tagline, buttons at the bottom. Other screens (the play

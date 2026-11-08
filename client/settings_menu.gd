@@ -1,19 +1,22 @@
 ## Settings menu over the world or the start menu, opened and closed with Escape (or a pad's Start).
 ## The world keeps running (multiplayer): only my keys stop moving me while it is open (world_view.gd).
-## One tab per entry of TABS: sound, display (fullscreen) and controls (read-only key list). Texts in
-## client/ui_text.gd.
+## One tab per entry of TABS: sound, display (fullscreen), language (client/language_list.gd, as on the
+## title's Langue screen) and controls (read-only key list). Texts in client/ui_text.gd.
 extends CanvasLayer
 
 signal opened
 signal closed
 
 ## id -> title; a tab is built by _build_tab(id).
+## Language has its own tab: it is not about the screen, and a player who does not read the language
+## shown finds it by the names of the languages, each in itself.
 const TABS := [{"id": "sound", "title": UiText.TAB_SOUND}, {"id": "display", "title": UiText.TAB_DISPLAY},
-		{"id": "controls", "title": UiText.TAB_CONTROLS}]
+		{"id": "language", "title": UiText.LANGUAGE}, {"id": "controls", "title": UiText.TAB_CONTROLS}]
 const FADE_S := 0.15
 ## The Interface slider plays a menu sound at most this often while it moves, in ms.
 const UI_PREVIEW_MS := 150
 const StartMenu := preload("res://client/login_ui.gd")
+const LanguageList := preload("res://client/language_list.gd")
 
 var sounds: Node  ## client/sound_director.gd, or null (no sound)
 ## While the menu is closed, a key or button event goes to this start menu first, which goes back a
@@ -27,6 +30,7 @@ var _sliders := {}  ## channel -> HSlider
 var _values := {}  ## channel -> Label
 var _mute := CheckBox.new()
 var _fullscreen := CheckBox.new()
+var _languages: LanguageList
 var _seen_labels := {}  ## physical key -> label, from the key presses (UiText.key_name)
 var _cap_labels := {}  ## cap (physical key, or a text key) -> [Label] of the controls tab
 var _close := Button.new()
@@ -223,6 +227,8 @@ func _build_tab(id: String) -> Control:
 			return _build_sound_tab()
 		"display":
 			return _build_display_tab()
+		"language":
+			return _build_language_tab()
 		"controls":
 			return _build_controls_tab()
 	push_error("settings menu: no page for tab %s" % id)
@@ -271,6 +277,19 @@ func _build_display_tab() -> Control:
 	_with_sounds(_fullscreen)
 	page.add_child(_fullscreen)
 	return page
+
+
+func _build_language_tab() -> Control:
+	_languages = LanguageList.new()
+	_languages.sounds = sounds
+	_languages.settings_path = settings_path
+	_languages.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_languages.custom_minimum_size = Vector2(220, 0)
+	return _languages
+
+
+func language_list() -> LanguageList:
+	return _languages
 
 
 ## One line per control: its key caps, then what it does. Nothing here takes the focus.

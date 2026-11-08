@@ -34,6 +34,10 @@ msgstr "Play"
 msgid "menu.settings"
 msgstr "Settings"
 
+#. Title button, title of the Langue screen and of the settings tab (client/language_screen.gd)
+msgid "menu.language"
+msgstr "Language"
+
 msgid "menu.credits"
 msgstr "Credits"
 

@@ -56,10 +56,10 @@ static func closest(wanted: String, langs: Array) -> String:
 	return best
 
 
-## The language to start in, among `langs`: the one forced on the command line (--language), else the
-## player's saved choice, else the system's (the browser's on the web), else BASE.
-static func pick(forced: String, saved: String, system: String, langs: Array) -> String:
-	for wanted in [forced, saved, system]:
+## The language to start in, among `langs`: the player's saved choice, else `launch` (the engine's
+## locale at launch: --language if given, else the system's, the browser's on the web), else BASE.
+static func pick(saved: String, launch: String, langs: Array) -> String:
+	for wanted in [saved, launch]:
 		if wanted != "":
 			var l := closest(wanted, langs)
 			if l != "":
@@ -67,17 +67,42 @@ static func pick(forced: String, saved: String, system: String, langs: Array) ->
 	return BASE
 
 
-## At launch, before the menus are built: loads the languages and sets the locale (see pick). The
-## engine starts in the system's locale unless --language (or the project's locale/test) says otherwise.
-## The engine keeps --language to itself, so it is seen only when it differs from the system's language:
-## --language with the system's own language does not beat a saved choice.
+## At launch, before the menus are built: loads the languages and sets the locale (see pick).
+## The engine starts in the system's locale, or in the one --language gives, and keeps that option to
+## itself (it is not in OS.get_cmdline_args()), so --language counts as the system's language: it
+## gives the language of a player who never chose one, and a choice saved from the language menu
+## (ClientSettings.save_language) beats it. To force a language, choose it in the menu.
 static func start(settings_path := ClientSettings.PATH) -> String:
 	ensure_loaded()
-	var system := TranslationServer.standardize_locale(OS.get_locale())
-	var forced := _launch_locale if _launch_locale != system else ""
-	var l := pick(forced, ClientSettings.load_language(settings_path), system, available())
+	var l := pick(ClientSettings.load_language(settings_path), _launch_locale, available())
 	TranslationServer.set_locale(l)
 	return l
+
+
+## The languages to choose from, in file order: [{locale, name}], `name` being the language's name in
+## itself (meta.language_name of its own file, never translated), else its locale.
+static func languages() -> Array:
+	ensure_loaded()
+	var out := []
+	for l in available():
+		var t: Translation = _loaded.get(l)
+		var name := String(t.get_message("meta.language_name")) if t != null else ""
+		out.append({"locale": l, "name": name if name != "" else l})
+	return out
+
+
+## The language the UI shows now, as a locale of `langs` (fr_FR shows fr), else BASE.
+static func current(langs: Array = available()) -> String:
+	var l := closest(TranslationServer.get_locale(), langs)
+	return l if l != "" else BASE
+
+
+## The player chooses `locale`: the UI shows in it at once (the engine tells every node in the tree,
+## NOTIFICATION_TRANSLATION_CHANGED) and it is the language of the next launches.
+static func choose(locale: String, settings_path := ClientSettings.PATH) -> void:
+	ensure_loaded()
+	TranslationServer.set_locale(locale)
+	ClientSettings.save_language(locale, settings_path)
 
 
 ## Shows the UI in `locale` from now on (tests use it to fix the language).

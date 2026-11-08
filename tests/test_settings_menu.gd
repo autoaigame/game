@@ -31,7 +31,7 @@ func test_toggle_keys() -> void:
 	assert_true(Menu.is_toggle(pad))
 	pad.button_index = JOY_BUTTON_A
 	assert_false(Menu.is_toggle(pad))
-
+## Tabs are data: sound first, then display, language and controls, each with a title and a builder.
 
 ## Tabs are data: sound first, then display and controls, each with a title and a builder.
 func test_tabs_have_an_id_and_a_title() -> void:
@@ -39,7 +39,7 @@ func test_tabs_have_an_id_and_a_title() -> void:
 	for t in Menu.TABS:
 		ids.append(t["id"])
 		assert_true(t["title"] != "", t["id"])
-	assert_eq(ids, ["sound", "display", "controls"])
+	assert_eq(ids, ["sound", "display", "language", "controls"])
 	assert_eq(UiText.t(UiText.TAB_DISPLAY), "Affichage")
 	assert_eq(UiText.t(UiText.TAB_CONTROLS), "Commandes")
 	var menu := _built()
