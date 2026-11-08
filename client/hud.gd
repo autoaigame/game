@@ -24,6 +24,7 @@ var _notice: PanelContainer
 var _notice_icon: TextureRect
 var _notice_label: Label
 var _notice_left := 0.0
+var _notice_shown := []  ## [key, args] of the notice shown, to build it again in a new language
 var _my_pos: Variant = null  ## where I stand (last snapshot), or null before the first
 var _fires: Array = []  ## positions of the fires the server sent
 var _seen_labels := {}  ## physical key -> its label, for every key the player pressed
@@ -119,6 +120,7 @@ func _on_notice(key: String, args: Dictionary) -> void:
 	if text == "":
 		return
 	_notice_label.text = text
+	_notice_shown = [key, args]
 	var item := String(args.get("item", ""))
 	_notice_icon.visible = item != "" and not ItemData.item(item).is_empty()
 	_notice_icon.texture = BagView.icon_of(item) if _notice_icon.visible else null
@@ -126,6 +128,13 @@ func _on_notice(key: String, args: Dictionary) -> void:
 	_notice_label.visible = true
 	_notice.modulate.a = 1.0
 	_notice_left = NOTICE_S
+
+
+## The notice is built in the current language: it is built again in a new one. The other texts are
+## keys that their Label translates by itself.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and not _notice_shown.is_empty():
+		_notice_label.text = UiText.notice(_notice_shown[0], _notice_shown[1])
 
 
 func _on_snapshot(players: Array) -> void:
@@ -262,6 +271,7 @@ func _build() -> void:
 	_notice_icon.visible = false
 	notice_line.add_child(_notice_icon)
 	_notice_label = Label.new()
+	_notice_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED  # built by UiText.notice
 	_notice_label.add_theme_color_override("font_color", UiTheme.TEXT_LIGHT)  # on the title band, outlined
 	_notice_label.add_theme_constant_override("outline_size", 4)
 	_notice_label.add_theme_color_override("font_outline_color", UiTheme.TEXT_DARK)

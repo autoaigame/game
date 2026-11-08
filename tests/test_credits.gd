@@ -6,6 +6,11 @@ const Credits := preload("res://client/credits.gd")
 const CreditsScreen := preload("res://client/credits_screen.gd")
 
 
+## These tests check French words: the UI is shown in French whatever the system's language.
+func _init() -> void:
+	I18n.use("fr")
+
+
 func _assets_text() -> String:
 	return FileAccess.get_file_as_string("res://ASSETS.toml")
 
@@ -33,7 +38,8 @@ func test_every_author_and_licence_of_assets_toml_is_shown() -> void:
 	var seen := 0
 	for m in re.search_all(_assets_text()):
 		if m.get_string(1) == "license":
-			var words: String = UiText.CREDITS_LICENSES.get(m.get_string(2), m.get_string(2))
+			var l := m.get_string(2)
+			var words: String = UiText.t(UiText.CREDITS_LICENSES[l]) if UiText.CREDITS_LICENSES.has(l) else l
 			assert_true(text.contains(words), "licence %s" % m.get_string(2))
 			continue
 		seen += 1
@@ -53,8 +59,8 @@ func test_missing_or_unreadable_file() -> void:
 	assert_eq(Credits.load_from(path), {})
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	var text := _shown_text("res://no_such_assets.toml")
-	assert_true(text.contains(UiText.CREDITS_MISSING), text)
-	assert_false(text.contains(UiText.CREDITS_PEOPLE), text)
+	assert_true(text.contains(UiText.t(UiText.CREDITS_MISSING)), text)
+	assert_false(text.contains(UiText.t(UiText.CREDITS_PEOPLE)), text)
 
 
 ## One table per [[asset]], each with its path, author and licence.

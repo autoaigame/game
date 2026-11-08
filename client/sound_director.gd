@@ -387,22 +387,27 @@ func cycle_forced() -> void:
 
 
 func _debug_text() -> String:
-	var lines := ["Son %s, volume %d %%   [M] muet  [-/+] volume  [F4] forcer" % ["coupé" if _settings["muted"] else "actif",
-			AudioSettings.to_percent(_settings["master"])],
-			"Ambiance : %s (%s)" % [_current, "forcée" if forced != "" else "auto, sols à %d cases" % AmbienceMix.RADIUS_CELLS]]
+	var state := UiText.t(UiText.DEBUG_SOUND_MUTED if _settings["muted"] else UiText.DEBUG_SOUND_ON)
+	var lines := [UiText.t(UiText.DEBUG_SOUND).format({"state": state,
+			"volume": AudioSettings.to_percent(_settings["master"])}),
+			UiText.t(UiText.DEBUG_AMBIENCE_FORCED).format({"current": _current}) if forced != ""
+			else UiText.t(UiText.DEBUG_AMBIENCE_AUTO).format({"current": _current, "radius": AmbienceMix.RADIUS_CELLS})]
 	var counts := AmbienceMix.ground_counts(_cell)
 	for a in _ambiences:
 		var id: String = a["id"]
-		lines.append("%s %s  poids %.2f  score %.2f" % [">" if id == _current else " ", a["name"], _weights.get(id, 0.0),
-				AmbienceMix.score(a, counts)])
+		lines.append(UiText.t(UiText.DEBUG_AMBIENCE_ROW).format({"mark": ">" if id == _current else " ",
+				"name": a["name"], "weight": "%.2f" % _weights.get(id, 0.0),
+				"score": "%.2f" % AmbienceMix.score(a, counts)}))
 		if _weights.get(id, 0.0) <= 0.0:
 			continue
 		var beds: Array = _beds.get(id, [])
 		for i in beds.size():
-			lines.append("      fond %s  à %.1f s" % [a["beds"][i]["sound"], beds[i].position()])
+			lines.append(UiText.t(UiText.DEBUG_BED).format({"sound": a["beds"][i]["sound"],
+					"at": "%.1f" % beds[i].position()}))
 		var timers: Array = _timers.get(id, [])
 		for i in timers.size():
-			lines.append("      ponctuel %s…  dans %.1f s" % [a["events"][i]["sounds"][0], timers[i]])
+			lines.append(UiText.t(UiText.DEBUG_EVENT).format({"sound": a["events"][i]["sounds"][0],
+					"in": "%.1f" % timers[i]}))
 	return "\n".join(lines)
 
 

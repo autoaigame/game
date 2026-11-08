@@ -1,0 +1,376 @@
+# French texts of the client UI. Keys are lowercase with dots; i18n/en.po is the reference.
+msgid ""
+msgstr ""
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#. Name of the language, in itself (the language menu shows it as it is).
+msgid "meta.language_name"
+msgstr "Français"
+
+#. Start menu (client/login_ui.gd, client/title_screen.gd)
+msgid "ui.title"
+msgstr "autoaigame"
+
+msgid "ui.tagline"
+msgstr "un seul monde, qui ne s'arrête jamais"
+
+msgid "ui.name_label"
+msgstr "Ton nom"
+
+msgid "ui.name_placeholder"
+msgstr "ex. Corbeau_42"
+
+#. %d: the longest name allowed
+msgid "ui.name_hint"
+msgstr "Lettres, chiffres, _ et - (%d au plus)"
+
+msgid "menu.play"
+msgstr "Jouer"
+
+msgid "menu.settings"
+msgstr "Paramètres"
+
+#. Title button, title of the Langue screen and of the settings tab (client/language_screen.gd)
+msgid "menu.language"
+msgstr "Langue"
+
+msgid "menu.credits"
+msgstr "Crédits"
+
+msgid "menu.quit"
+msgstr "Quitter"
+
+msgid "menu.back"
+msgstr "Retour"
+
+msgid "menu.enter"
+msgstr "Entrer dans le monde"
+
+#. Connection state
+msgid "status.connecting"
+msgstr "Connexion au serveur…"
+
+msgid "status.ready"
+msgstr "Serveur prêt."
+
+msgid "status.joining"
+msgstr "Entrée dans le monde…"
+
+msgid "status.lost"
+msgstr "Le serveur ne répond pas. Recharge la page pour réessayer."
+
+msgid "status.lost_in_game"
+msgstr "Connexion perdue. Recharge la page pour revenir."
+
+#. Why a name is refused
+msgid "name.empty"
+msgstr "Écris un nom pour entrer."
+
+#. %d: the longest name allowed
+msgid "name.too_long"
+msgid_plural "name.too_long"
+msgstr[0] "%d caractère au plus."
+msgstr[1] "%d caractères au plus."
+
+msgid "name.bad_chars"
+msgstr "Lettres, chiffres, _ et - seulement."
+
+#. %s: the name
+msgid "name.taken"
+msgstr "Le nom %s est déjà en jeu. Choisis-en un autre."
+
+#. Character editor (client/look_editor.gd, client/look_panel.gd)
+msgid "look.title"
+msgstr "Apparence (C pour fermer)"
+
+msgid "look.colour"
+msgstr "Couleur (clic droit : précédente)"
+
+#. An empty slot
+msgid "look.none"
+msgstr "—"
+
+#. HUD (client/hud.gd)
+msgid "hud.hunger"
+msgstr "Faim"
+
+msgid "hud.starving"
+msgstr "Affamé : tu marches plus lentement"
+
+#. Key hints under the hunger bar
+msgid "hud.key_bag"
+msgstr "Sac"
+
+msgid "hud.key_whistle"
+msgstr "Siffler le chien"
+
+#. Server notices (shared/net.gd notice). {count}: how many, {item}: the item's name
+msgid "notice.gathered"
+msgstr "+{count} {item}"
+
+msgid "notice.bush_empty"
+msgstr "Ce buisson n'a plus de baies. Reviens plus tard."
+
+msgid "notice.too_far"
+msgstr "Trop loin."
+
+#. %s: the item eaten
+msgid "notice.ate"
+msgstr "Tu manges : %s"
+
+msgid "notice.tree_empty"
+msgstr "Plus de bâtons sur cet arbre pour l'instant."
+
+msgid "notice.fire_built"
+msgstr "Tu allumes un feu."
+
+#. %d: how many sticks a fire takes
+msgid "notice.need_sticks"
+msgid_plural "notice.need_sticks"
+msgstr[0] "Il te faut %d bâton pour faire un feu."
+msgstr[1] "Il te faut %d bâtons pour faire un feu."
+
+msgid "notice.fire_here"
+msgstr "Il y a déjà un feu ici."
+
+msgid "notice.hunt"
+msgstr "Ton chien part en chasse !"
+
+msgid "notice.no_prey"
+msgstr "Aucun animal à chasser près de toi."
+
+msgid "notice.dog_busy"
+msgstr "Ton chien te rapporte déjà sa prise."
+
+#. %s: the cooked item
+msgid "notice.cooked"
+msgstr "Cuit : %s"
+
+msgid "notice.no_fire"
+msgstr "Il te faut un feu tout près pour cuire."
+
+msgid "notice.bag_full"
+msgstr "Ton sac est plein."
+
+#. Bag window (client/bag_view.gd)
+msgid "bag.title"
+msgstr "Sac"
+
+msgid "bag.empty"
+msgstr "Ton sac est vide."
+
+#. %d: food points
+msgid "bag.food_desc"
+msgstr "Nourrit : +%d"
+
+#. %s: what it becomes
+msgid "bag.cooks_desc"
+msgstr "Sur un feu, devient : %s"
+
+msgid "bag.sticks_desc"
+msgstr "Sert à faire un feu."
+
+msgid "bag.eat"
+msgstr "Manger"
+
+msgid "bag.cook"
+msgstr "Cuire"
+
+msgid "bag.craft"
+msgstr "Fabriquer"
+
+msgid "bag.fire_recipe"
+msgstr "Faire un feu"
+
+#. Settings menu (client/settings_menu.gd)
+msgid "settings.title"
+msgstr "Paramètres"
+
+msgid "settings.tab_sound"
+msgstr "Son"
+
+msgid "settings.tab_display"
+msgstr "Affichage"
+
+msgid "settings.tab_controls"
+msgstr "Commandes"
+
+msgid "settings.mute"
+msgstr "Couper le son (M)"
+
+msgid "settings.fullscreen"
+msgstr "Plein écran"
+
+msgid "settings.close"
+msgstr "Fermer"
+
+msgid "settings.hint"
+msgstr "Échap pour fermer"
+
+#. %d: a volume; %% is the percent sign
+msgid "settings.percent"
+msgstr "%d %%"
+
+#. Sound channels
+msgid "sound.master"
+msgstr "Général"
+
+msgid "sound.music"
+msgstr "Musique"
+
+msgid "sound.ambience"
+msgstr "Ambiance"
+
+msgid "sound.effects"
+msgstr "Effets"
+
+msgid "sound.ui"
+msgstr "Interface"
+
+#. Controls tab: what each key does
+msgid "control.move"
+msgstr "Se déplacer"
+
+msgid "control.sprint"
+msgstr "Courir (maintenir)"
+
+msgid "control.click"
+msgstr "Aller, cueillir, ramasser"
+
+msgid "control.look"
+msgstr "Apparence"
+
+msgid "control.mute"
+msgstr "Couper le son"
+
+msgid "control.volume"
+msgstr "Baisser, monter le volume"
+
+msgid "control.zoom"
+msgstr "Zoomer"
+
+msgid "control.settings"
+msgstr "Paramètres"
+
+#. Key caps that are not one character
+msgid "key.escape"
+msgstr "Échap"
+
+msgid "key.shift"
+msgstr "Maj"
+
+msgid "key.mouse_left"
+msgstr "Clic gauche"
+
+msgid "key.mouse_wheel"
+msgstr "Molette"
+
+msgid "key.pad_start"
+msgstr "Start (manette)"
+
+#. Credits screen (client/credits_screen.gd)
+msgid "credits.community"
+msgstr "Ce jeu est construit par sa communauté : chacun propose ses changements en pull request, et celles qui recueillent assez de votes entrent dans le jeu."
+
+msgid "credits.people"
+msgstr "Contributeurs"
+
+msgid "credits.third_party"
+msgstr "Ressources tierces"
+
+msgid "credits.tools"
+msgstr "Outils de génération"
+
+#. {count}: how many files, {kinds}: what they are
+msgid "credits.files"
+msgid_plural "credits.files"
+msgstr[0] "{count} fichier : {kinds}"
+msgstr[1] "{count} fichiers : {kinds}"
+
+#. %s: the licences; plural on how many
+msgid "credits.license"
+msgid_plural "credits.license"
+msgstr[0] "Licence : %s"
+msgstr[1] "Licences : %s"
+
+#. %s: where the asset comes from
+msgid "credits.source"
+msgstr "Source : %s"
+
+msgid "credits.missing"
+msgstr "La liste des contributeurs (ASSETS.toml) est introuvable ou illisible."
+
+msgid "credits.hint"
+msgstr "Haut et bas pour faire défiler, Échap ou B pour revenir"
+
+#. What an asset is
+msgid "credits.kind.character"
+msgstr "personnage"
+
+msgid "credits.kind.decals"
+msgstr "détails du sol"
+
+msgid "credits.kind.dog"
+msgstr "chien"
+
+msgid "credits.kind.items"
+msgstr "objets du sac"
+
+msgid "credits.kind.music"
+msgstr "musique"
+
+msgid "credits.kind.objects"
+msgstr "décor"
+
+msgid "credits.kind.sounds"
+msgstr "sons"
+
+msgid "credits.kind.tiles"
+msgstr "sols"
+
+msgid "credits.kind.ui"
+msgstr "interface"
+
+#. Licences of ASSETS.toml, in words
+msgid "credits.licence.cc0"
+msgstr "CC0 1.0 (domaine public)"
+
+msgid "credits.licence.elevenlabs"
+msgstr "sons ElevenLabs, dans ce jeu seulement"
+
+msgid "credits.licence.suno"
+msgstr "musique Suno, dans ce jeu seulement"
+
+#. Sound debug overlay (F3, client/sound_director.gd). {state}: on or muted, {volume}: master volume in percent
+msgid "debug.sound"
+msgstr "Son {state}, volume {volume} %   [M] muet  [-/+] volume  [F4] forcer"
+
+msgid "debug.sound_on"
+msgstr "actif"
+
+msgid "debug.sound_muted"
+msgstr "coupé"
+
+#. {current}: the ambience playing
+msgid "debug.ambience_forced"
+msgstr "Ambiance : {current} (forcée)"
+
+#. {radius}: in cells
+msgid "debug.ambience_auto"
+msgstr "Ambiance : {current} (auto, sols à {radius} cases)"
+
+#. {mark}: > on the one playing
+msgid "debug.ambience_row"
+msgstr "{mark} {name}  poids {weight}  score {score}"
+
+#. {at}: seconds
+msgid "debug.bed"
+msgstr "      fond {sound}  à {at} s"
+
+#. {in}: seconds
+msgid "debug.event"
+msgstr "      ponctuel {sound}…  dans {in} s"

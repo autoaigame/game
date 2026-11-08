@@ -4,6 +4,11 @@ extends TestCase
 
 const CreditsScreen := preload("res://client/credits_screen.gd")
 
+
+## These tests check French words: the UI is shown in French whatever the system's language.
+func _init() -> void:
+	I18n.use("fr")
+
 const DATA := {
 	"people": [{"name": "M3t4Data", "files": 3, "kinds": {"objects": 2, "sounds": 1}, "licenses": ["CC0-1.0"]}],
 	"third_party": [{"name": "Quaternius", "files": 1, "kinds": {"character": 1}, "licenses": ["CC0-1.0"],
@@ -24,18 +29,17 @@ func _text(lines: Array) -> String:
 ## made and its licence, each third party with its source, and names each tool once.
 func test_lines_credit_people_third_parties_and_tools() -> void:
 	var text := _text(CreditsScreen.lines(DATA))
-	assert_true(text.begins_with(UiText.CREDITS_COMMUNITY), text)
-	for want in ["M3t4Data", "Quaternius", "kit-page", UiText.CREDITS_KINDS["objects"],
-			UiText.CREDITS_KINDS["character"], UiText.CREDITS_LICENSES["CC0-1.0"], UiText.CREDITS_PEOPLE,
-			UiText.CREDITS_THIRD_PARTY, UiText.CREDITS_TOOLS]:
+	assert_true(text.begins_with(UiText.t(UiText.CREDITS_COMMUNITY)), text)
+	for want in ["M3t4Data", "Quaternius", "kit-page", "décor", "personnage", "CC0 1.0 (domaine public)",
+			"Contributeurs", "Ressources tierces", "Outils de génération"]:
 		assert_true(text.contains(want), want)
 	assert_eq(text.count("PixelLab"), 1)
 	assert_eq(text.count("Blender"), 1)
 
 
 func test_community_sentence_is_in_french() -> void:
-	assert_true(UiText.CREDITS_COMMUNITY.contains("vot"), UiText.CREDITS_COMMUNITY)
-	assert_eq(UiText.CREDITS, "Crédits")
+	assert_true(UiText.t(UiText.CREDITS_COMMUNITY).contains("vot"), UiText.t(UiText.CREDITS_COMMUNITY))
+	assert_eq(UiText.t(UiText.CREDITS), "Crédits")
 
 
 ## An unknown kind or licence shows as it is rather than vanishing.
@@ -54,7 +58,7 @@ func test_screen_reads_assets_toml_when_it_opens() -> void:
 	screen.visible = false
 	assert_eq(screen.body_text(), "")
 	screen.visible = true
-	assert_true(screen.body_text().contains(UiText.CREDITS_PEOPLE), screen.body_text())
+	assert_true(screen.body_text().contains("Contributeurs"), screen.body_text())
 	assert_true(screen.body_text().contains("M3t4Data"), screen.body_text())
 	screen.free()
 

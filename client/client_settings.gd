@@ -86,6 +86,22 @@ static func save_fullscreen(on: bool, path := PATH) -> void:
 	cfg.save(path)
 
 
+## The language the player chose (a locale of i18n/, client/i18n.gd), or "" if none: the system's then.
+static func load_language(path := PATH) -> String:
+	var cfg := ConfigFile.new()
+	if cfg.load(path) != OK:
+		return ""
+	var value: Variant = cfg.get_value("ui", "language", "")
+	return value if typeof(value) == TYPE_STRING else ""
+
+
+static func save_language(locale: String, path := PATH) -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(path)
+	cfg.set_value("ui", "language", locale)
+	cfg.save(path)
+
+
 ## Whether to go fullscreen at launch. A browser allows it only after a click, so never on the web.
 static func fullscreen_at_launch(on_web: bool, path := PATH) -> bool:
 	return not on_web and load_fullscreen(path)
