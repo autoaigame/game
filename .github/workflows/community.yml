@@ -1,5 +1,5 @@
-# Community site: tells it when a PR changes, and sends it a screenshot of the PR's preview after
-# logging in, for the PR's card.
+# Community site: tells it when a PR changes, and sends it a screenshot of the PR's preview once the bot
+# is in the world (it opens the preview with ?name=screenshot-bot), for the PR's card.
 # Runs on pull_request_target so this file always comes from main. It never checks out PR code.
 # The PR's game runs only in the browser of the `shoot` job, which holds no secret. `notify` and `upload`
 # hold the token and never load a PR page. The site re-reads PR facts from GitHub itself and re-encodes
@@ -61,7 +61,7 @@ jobs:
           done
           echo "::notice::No preview of this commit after 20 minutes (deploy-gate refused, build failed, or evicted): no screenshot."
 
-      - name: Screenshot after logging in
+      - name: Screenshot once in the world
         if: steps.wait.outputs.ready == 'true'
         env:
           URL: ${{ steps.wait.outputs.url }}
@@ -72,12 +72,12 @@ jobs:
           sudo useradd --create-home --shell /usr/sbin/nologin shooter
           sudo install -d -o shooter -g shooter -m 755 /tmp/shot
           sudo -u shooter tee /tmp/shot/shoot.mjs > /dev/null <<'EOF'
-          // Screenshot of a PR preview after logging in: node shoot.mjs <https url> <out.png>
+          // Screenshot of a PR preview once in the world: node shoot.mjs <https url> <out.png>
           import { chromium } from 'playwright-core';
           const [url, out] = process.argv.slice(2);
           if (!/^https:\/\/[a-z0-9.-]+\/$/.test(url || '') || !out) { console.error('usage: shoot.mjs https://host/ out.png'); process.exit(2); }
           const fail = (phase, e) => { console.error(`failed: ${phase}: ${e?.message ?? e}`); process.exit(1); };
-          setTimeout(() => fail('total', 'over 150 s'), 150_000).unref();
+          setTimeout(() => fail('total', 'over 210 s'), 210_000).unref();
           const browser = await chromium.launch({
             channel: process.env.CHROME_CHANNEL || undefined,
             // Playwright adds --no-sandbox unless told otherwise. The sandbox must start, or the shot fails.
@@ -92,11 +92,12 @@ jobs:
             if (!/You are adequately sandboxed/.test(status)) fail('sandbox', 'Chrome is not adequately sandboxed');
             await check.close();
             const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-            // The login panel sits in the middle of the screen. Once the server welcomes the player it disappears,
-            // so most of that area changes. Shoot only then: never a screenshot of the login screen.
+            // Fallback for a client without ?name=: the login panel sits in the middle of the screen. Once the
+            // server welcomes the player it disappears, so most of that area changes. Shoot only then: never a
+            // screenshot of the login screen.
             const panel = { x: 500, y: 280, width: 280, height: 160 };
             const helper = await browser.newPage(); // compares images, away from the PR's page
-            const changed = async before => helper.evaluate(async ([a, b]) => {
+            const changed = async (before, clip = panel) => helper.evaluate(async ([a, b]) => {
               const load = src => new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = src; });
               const [ia, ib] = await Promise.all([load(a), load(b)]);
               const c = document.createElement('canvas'); c.width = ia.width; c.height = ia.height;
@@ -109,31 +110,59 @@ jobs:
               }
               return n / (da.length / 4);
             }, ['data:image/png;base64,' + before.toString('base64'),
-                'data:image/png;base64,' + (await page.screenshot({ clip: panel })).toString('base64')]);
-            // The login screen ignores Enter until the client is connected, so Enter is pressed again every 3 s
-            // (ignored while joining). A client that could not connect in time stays on "server not
-            // responding" until the page is reloaded: after 12 s, reload and try again, 3 times at most.
-            let share = 0;
+                'data:image/png;base64,' + (await page.screenshot({ clip })).toString('base64')]);
+            // The page opens with ?name=screenshot-bot: the client joins by itself and sets
+            // window.autoaigameJoined once the server welcomes it (false again if the connection drops),
+            // without going through the start menu.
+            // A PR based on an older main ignores ?name=: then the bot types its name in the login panel, as
+            // before. Enter is ignored until the client is connected, so it is pressed again every 3 s. A
+            // client that could not connect in time stays on "server not responding" until the page is
+            // reloaded: reload and try again, 3 times at most.
+            const joined = () => page.evaluate(() => window.autoaigameJoined === true).catch(() => false);
+            const shotUrl = url + '?name=screenshot-bot';
             for (let attempt = 1; ; attempt++) {
-              if (attempt === 1) await page.goto(url, { waitUntil: 'load', timeout: 60_000 }).catch(e => fail('load', e));
+              if (attempt === 1) await page.goto(shotUrl, { waitUntil: 'load', timeout: 60_000 }).catch(e => fail('load', e));
               else await page.reload({ waitUntil: 'load', timeout: 60_000 }).catch(e => fail('load', e));
               // Godot's loader removes or hides #status once the engine runs.
               await page.waitForFunction(() => { const s = document.getElementById('status'); return !s || s.style.display === 'none' || s.style.visibility === 'hidden'; },
                 null, { timeout: 60_000 }).catch(e => fail('engine', e));
-              await page.waitForTimeout(1500);
+              const auto = await page.waitForFunction(() => window.autoaigameJoined === true, null, { timeout: 15_000 })
+                .then(() => true, () => false);
+              if (auto) break;
               const before = await page.screenshot({ clip: panel });
               await page.keyboard.type('screenshot-bot', { delay: 40 });
               const deadline = Date.now() + 12_000;
               let pressed = 0;
-              while ((share = await changed(before)) < 0.8 && Date.now() < deadline) {
+              let share = 0;
+              while (!(await joined()) && (share = await changed(before)) < 0.8 && Date.now() < deadline) {
                 if (Date.now() - pressed >= 3000) { await page.keyboard.press('Enter'); pressed = Date.now(); }
                 await page.waitForTimeout(500);
               }
-              if (share >= 0.8) break;
-              console.log(`attempt ${attempt}: login panel still shown after 12 s (${share.toFixed(3)} changed)`);
-              if (attempt === 3) fail('join', 'login panel still shown after 3 attempts');
+              if (share >= 0.8 || (await joined())) break;
+              console.log(`attempt ${attempt}: not in the world after 15 s + 12 s (${share.toFixed(3)} of the login panel changed)`);
+              if (attempt === 3) fail('join', 'not in the world after 3 attempts');
             }
-            await page.waitForTimeout(2000);
+            // The world around the player streams in after joining. A client that knows ?name= sets
+            // window.autoaigameWorldReady once the chunks around the player are built: wait for it, 30 s at
+            // most. For an older client, or past those 30 s, wait at least 6 s and until two views in a row,
+            // 2 s apart, differ by less than 2 % (creatures still move), 30 s at most.
+            const screen = { x: 0, y: 0, width: 1280, height: 720 };
+            const ready = await joined() && await page.waitForFunction(() => window.autoaigameWorldReady === true, null, { timeout: 30_000 })
+              .then(() => true, () => false);
+            if (ready) {
+              await page.waitForTimeout(1000);
+            } else {
+              const start = Date.now();
+              let view = await page.screenshot({ clip: screen });
+              let calm = 0;
+              while (Date.now() - start < 30_000 && (calm < 2 || Date.now() - start < 6000)) {
+                await page.waitForTimeout(2000);
+                calm = (await changed(view, screen)) < 0.02 ? calm + 1 : 0;
+                view = await page.screenshot({ clip: screen });
+              }
+            }
+            // A client that dropped its connection meanwhile shows the start menu again: never shoot that.
+            if (await page.evaluate(() => window.autoaigameJoined === false)) fail('join', 'connection lost after joining');
             await page.screenshot({ path: out, type: 'png' });
           } finally {
             await browser.close();
