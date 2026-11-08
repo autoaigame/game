@@ -86,7 +86,7 @@ const SPECIES := {
 static var _ramps := {}  ## colour (0xRRGGBB) -> [ramp (Array of colours), index]
 static var _pieces := {}  ## name -> Image
 static var _shifted := {}  ## [name, steps, flipped, level] -> Image
-static var _skeletons := {}  ## name -> {tips, foot, top}
+static var _skeletons := {}  ## [name, crown] -> {tips, foot, top}
 
 
 func _initialize() -> void:
@@ -332,8 +332,9 @@ static func _pick_points(rng: Rng, tips: Array, n: int, min_d: int) -> Array:
 ## above the roots) nearest its middle whose bark runs down unbroken to the lowest roots, at the
 ## bottom of that bark.
 static func _skeleton(name: String, crown: float) -> Dictionary:
-	if _skeletons.has(name):
-		return _skeletons[name]
+	var key := [name, crown]
+	if _skeletons.has(key):
+		return _skeletons[key]
 	var img := _piece(name, 0, false)
 	var w := img.get_width()
 	var h := img.get_height()
@@ -388,8 +389,8 @@ static func _skeleton(name: String, crown: float) -> Dictionary:
 		if img.get_pixel(x, top).a8 == 255:
 			top_x = x
 			break
-	_skeletons[name] = {"tips": tips, "foot": foot, "top": Vector2i(top_x, top)}
-	return _skeletons[name]
+	_skeletons[key] = {"tips": tips, "foot": foot, "top": Vector2i(top_x, top)}
+	return _skeletons[key]
 
 
 ## A piece, `steps` shades lighter (or darker if negative) along its colours' ramps, mirrored or not.
@@ -420,6 +421,7 @@ static func _piece(name: String, steps: int, flipped: bool, level := -1.0) -> Im
 static func _norm_steps(name: String, level: float) -> int:
 	var img: Image = _pieces[name]
 	var sum := 0.0
+	var steps_sum := 0.0
 	var n := 0
 	for y in img.get_height():
 		for x in img.get_width():
@@ -428,10 +430,12 @@ static func _norm_steps(name: String, level: float) -> int:
 				continue
 			var e: Array = ramps()[c.to_rgba32() >> 8]
 			sum += float(e[1]) / float((e[0] as Array).size() - 1)
+			steps_sum += float((e[0] as Array).size() - 1)
 			n += 1
 	if n == 0:
 		return 0
-	return clampi(roundi((level - sum / n) * 4.0), -2, 2)
+	# a position difference times the mean length of the ramps used is a number of shades
+	return clampi(roundi((level - sum / n) * steps_sum / n), -2, 2)
 
 
 ## A kit colour `steps` shades along its ramp (clamped at the ends of the ramp).
