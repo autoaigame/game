@@ -186,9 +186,36 @@ func test_refused_name_follows_a_language_change() -> void:
 	I18n.use("fr")
 	var start: CanvasLayer = LoginUi.new()
 	start._build()
-	start._show_hint(func(): return UiText.rejection("taken", "Testeur"))
+	start._show_hint(start.Hint.REJECTED, "Testeur", "taken")
 	assert_eq(start._hint.text, "Le nom Testeur est déjà en jeu. Choisis-en un autre.")
 	I18n.use("en")
 	start.notification(Node.NOTIFICATION_TRANSLATION_CHANGED)
 	assert_eq(start._hint.text, "The name Testeur is already in the game. Pick another one.")
+	start.free()
+
+
+class RefusedClient:
+	extends Node
+	var player_name := "Testeur"
+
+
+## The errors put under the name field, by Jouer (as _submit shows it) and by the server's refusal,
+## are said again in the new language, each with what it was about.
+func test_play_errors_follow_a_language_change() -> void:
+	I18n.use("fr")
+	var start: CanvasLayer = LoginUi.new()
+	start._build()
+	start._show_hint(start.Hint.PROBLEM, "a b")
+	assert_eq(start._hint.text, UiText.name_problem("a b"))
+	assert_true(start._hint.text != "" and start._hint.text != UiText.name_hint(), start._hint.text)
+	I18n.use("en")
+	start.notification(Node.NOTIFICATION_TRANSLATION_CHANGED)
+	assert_eq(start._hint.text, UiText.name_problem("a b"))
+	start.client = RefusedClient.new()
+	start._on_rejected("taken")
+	assert_eq(start._hint.text, "The name Testeur is already in the game. Pick another one.")
+	I18n.use("fr")
+	start.notification(Node.NOTIFICATION_TRANSLATION_CHANGED)
+	assert_eq(start._hint.text, "Le nom Testeur est déjà en jeu. Choisis-en un autre.")
+	start.client.free()
 	start.free()

@@ -313,7 +313,7 @@ func test_hud_bag_settings_and_hint_follow_a_language_change() -> void:
 	menu._build()
 	var start: CanvasLayer = load("res://client/login_ui.gd").new()
 	start._build()
-	start._show_hint(func(): return UiText.name_problem(""))
+	start._show_hint(start.Hint.PROBLEM, "")
 	assert_eq(start._hint.text, "Écris un nom pour entrer.")
 	I18n.use("en")
 	for n in [hud, hud.bag(), menu, start]:

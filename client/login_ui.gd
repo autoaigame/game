@@ -43,7 +43,11 @@ var _button := Button.new()
 var _back_button := Button.new()
 var _hint := Label.new()
 var _hint_icon := TextureRect.new()
-var _hint_error := Callable()  ## builds the error under the name field again (in a new language), or none
+## What the error under the name field is about, kept so that it is built again in a new language.
+enum Hint { RULE, PROBLEM, REJECTED }  ## the naming rule, a name the client refuses, a server refusal
+var _hint_kind := Hint.RULE
+var _hint_name := ""  ## the name refused (PROBLEM, REJECTED)
+var _hint_reason := ""  ## the server's reason (REJECTED)
 var _status := Label.new()  ## on the play screen
 var _status_icon := TextureRect.new()
 var _title_status := Label.new()  ## under the title screen's buttons
@@ -479,14 +483,26 @@ func _notification(what: int) -> void:
 		_refresh_hint()
 
 
-## Shows under the field the error that `error` builds (UiText), or the naming rule without one.
-func _show_hint(error := Callable()) -> void:
-	_hint_error = error
+## Shows under the field the error of `kind` about `player_name` (and the server's `reason`), or
+## the naming rule for Hint.RULE.
+func _show_hint(kind := Hint.RULE, player_name := "", reason := "") -> void:
+	_hint_kind = kind
+	_hint_name = player_name
+	_hint_reason = reason
 	_refresh_hint()
 
 
+func _hint_text() -> String:
+	match _hint_kind:
+		Hint.PROBLEM:
+			return UiText.name_problem(_hint_name)
+		Hint.REJECTED:
+			return UiText.rejection(_hint_reason, _hint_name)
+	return ""
+
+
 func _refresh_hint() -> void:
-	var error: String = _hint_error.call() if _hint_error.is_valid() else ""
+	var error := _hint_text()
 	_hint.text = error if error != "" else UiText.name_hint()
 	_hint.theme_type_variation = "ErrorLabel" if error != "" else "HintLabel"
 	_set_icon(_hint_icon, "error" if error != "" else "")
@@ -497,7 +513,7 @@ func _submit() -> void:
 		return
 	var typed := _name_edit.text
 	if UiText.name_problem(typed) != "":
-		_show_hint(func(): return UiText.name_problem(typed))
+		_show_hint(Hint.PROBLEM, typed)
 		_name_edit.grab_focus()
 		return
 	_show_hint()
@@ -513,7 +529,7 @@ func _on_connected() -> void:
 func _on_rejected(reason: String) -> void:
 	_set_state(State.READY)
 	var refused: String = client.player_name
-	_show_hint(func(): return UiText.rejection(reason, refused))
+	_show_hint(Hint.REJECTED, refused, reason)
 	var to := stack_after_rejected(_stack)
 	if to != _stack:
 		_stack = to
