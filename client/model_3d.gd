@@ -6,7 +6,7 @@
 ## whole pixels), so walking never shimmers; only turning and the animation change texels.
 ## Every model shares one scale: metres in the glTF, HEAD_PX for the top of the player body's head.
 ## A subclass builds the model (_build_model) and poses it (_animate); Character3D draws players and
-## Zombie3D the zombie. Display only: positions come from the server (docs/invariants.md, rule 1).
+## Dog3D the cyborg dogs. Display only: positions come from the server (docs/invariants.md, rule 1).
 class_name Model3D
 extends Node2D
 

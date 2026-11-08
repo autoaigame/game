@@ -83,10 +83,8 @@ func on_join(peer_id: int, player_name: String) -> void:
 		_net.rejected.rpc_id(peer_id, problem)
 		return
 	var cell := join_cell(_db.load_player(player_name))
-	_players[peer_id] = _new_player(player_name, cell, _db.load_stats(player_name), _db.load_inventory(player_name),
-			_early_looks.get(peer_id, []), _early_dogs.get(peer_id, DogSkins.DEFAULT))
-	_early_looks.erase(peer_id)
-	_early_dogs.erase(peer_id)
+	_players[peer_id] = _joining_player(peer_id, player_name, cell, _db.load_stats(player_name),
+			_db.load_inventory(player_name))
 	_net.welcome.rpc_id(peer_id, peer_id, cell)
 	_net.marks.rpc_id(peer_id, MARKS.snapshot(_marks))
 	_net.status.rpc_id(peer_id, _status_to_send(_players[peer_id]))
@@ -97,6 +95,16 @@ func on_join(peer_id: int, player_name: String) -> void:
 			_send_look(peer_id, id)
 		_send_look(id, peer_id)
 	print("server: %s joined at %s" % [player_name, cell])
+
+
+## The record of peer `peer_id` joining: wearing the look and with the dog it sent before joining, which
+## are no longer kept apart.
+func _joining_player(peer_id: int, player_name: String, cell: Vector2i, stats: Dictionary, inventory: Dictionary) -> Dictionary:
+	var p := _new_player(player_name, cell, stats, inventory, _early_looks.get(peer_id, []),
+			_early_dogs.get(peer_id, DogSkins.DEFAULT))
+	_early_looks.erase(peer_id)
+	_early_dogs.erase(peer_id)
+	return p
 
 
 ## The client is back from a pause (its browser tab ran no frames, so it dropped updates): sends it

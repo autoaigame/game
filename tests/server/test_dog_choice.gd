@@ -45,8 +45,11 @@ func test_dog_sent_before_joining_is_kept_on_join() -> void:
 	var server := _server()
 	server.on_set_dog(5, "cyborg_b")
 	assert_eq(server._early_dogs.get(5), "cyborg_b")
-	var p: Dictionary = server._new_player("cid", Vector2i(16, 17), {}, {}, [], server._early_dogs.get(5))
+	var p: Dictionary = server._joining_player(5, "cid", Vector2i(16, 17), {}, {})
 	assert_eq(p["dog"]["skin"], "cyborg_b")
+	assert_false(server._early_dogs.has(5), "no longer kept apart")
+	assert_eq(server._joining_player(7, "eve", Vector2i(16, 18), {}, {})["dog"]["skin"], DogSkins.DEFAULT,
+			"nothing sent: the default dog")
 	server.free()
 
 
@@ -68,7 +71,7 @@ func test_unknown_dog_gives_the_default() -> void:
 		assert_eq(server._players[1]["dog"]["skin"], DogSkins.DEFAULT, "junk %s" % [junk])
 	server.on_set_dog(6, "wolf")
 	assert_eq(server._early_dogs.get(6), DogSkins.DEFAULT)
-	assert_eq(server._new_player("dee", Vector2i(16, 17), {}, {}, [], "wolf")["dog"]["skin"], DogSkins.DEFAULT)
+	assert_eq(server._joining_player(6, "dee", Vector2i(16, 17), {}, {})["dog"]["skin"], DogSkins.DEFAULT)
 	server.free()
 
 
@@ -94,6 +97,14 @@ func test_early_dogs_are_bounded_and_dropped_on_disconnect() -> void:
 	server._on_peer_disconnected(100)
 	assert_false(server._early_dogs.has(100), "dropped on disconnect")
 	server.free()
+
+
+## on_join builds the player with _joining_player (which takes the dog sent before joining).
+func test_on_join_takes_the_early_dog() -> void:
+	var src := FileAccess.get_file_as_string(SERVER_SCRIPT)
+	var at := src.find("func on_join(")
+	var body := src.substr(at, src.find("\nfunc ", at + 1) - at)
+	assert_true(body.contains("_players[peer_id] = _joining_player(peer_id,"))
 
 
 ## The RPC exists on both sides with the handler the server implements.

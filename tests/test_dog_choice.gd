@@ -96,6 +96,10 @@ func test_editor_dog_row_names_and_preview() -> void:
 	assert_eq(got.size(), 1, "set_dog shows without emitting")
 	ed._trot_dog(0.1)
 	assert_true((ed._dog_preview as Dog3D).moving, "the preview trots in place")
+	var shown := ed._dog_preview
+	ed._change(CharacterParts.cycle_color(ed.look, "body", 1))
+	ed._refresh()  # what a look change runs once the editor is in the tree
+	assert_true(ed._dog_preview == shown, "a look change keeps the dog preview")
 	ed.free()
 
 

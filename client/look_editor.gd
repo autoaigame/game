@@ -82,6 +82,7 @@ func _ready() -> void:
 	if with_dog:
 		_add_dog_row(rows)
 	_refresh()
+	_refresh_dog()
 
 
 func _add_preview() -> void:
@@ -246,7 +247,6 @@ func _refresh() -> void:
 		_swatches[id].disabled = c.a == 0.0
 	if _preview != null:
 		_preview.set_look(look)
-	_refresh_dog()
 
 
 func _process(delta: float) -> void:
