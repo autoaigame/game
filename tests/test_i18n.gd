@@ -280,3 +280,54 @@ func test_built_texts_follow_a_language_change() -> void:
 	I18n.use("en")
 	assert_eq(screen.back_button().atr(screen.back_button().text), "Back")
 	screen.free()
+
+
+const TRANSLATION_CHANGED := Node.NOTIFICATION_TRANSLATION_CHANGED
+
+
+class NoticeClient:
+	extends Node
+	signal welcomed(cell: Vector2i)
+	signal status_received(status: Dictionary)
+	signal inventory_received(items: Dictionary)
+	signal notice_received(key: String, args: Dictionary)
+	signal snapshot_received(players: Array)
+	signal marks_received(marks: Array)
+	var my_peer_id := 0
+
+
+## The HUD's notice, the bag's item text, the settings' caps and volumes and the name hint are built
+## in code: each is built again in the new language.
+func test_hud_bag_settings_and_hint_follow_a_language_change() -> void:
+	I18n.use("fr")
+	var hud: CanvasLayer = load("res://client/hud.gd").new()
+	hud.client = NoticeClient.new()
+	hud.add_child(hud.client)
+	hud._ready()
+	hud.client.notice_received.emit("too_far", {})
+	assert_eq(hud.notice_label().text, "Trop loin.")
+	hud.bag().set_items({"berries": 2})
+	assert_true(hud.bag().detail_text().text.begins_with("Nourrit"), hud.bag().detail_text().text)
+	var menu: CanvasLayer = load("res://client/settings_menu.gd").new()
+	menu._build()
+	var start: CanvasLayer = load("res://client/login_ui.gd").new()
+	start._build()
+	start._show_hint(func(): return UiText.name_problem(""))
+	assert_eq(start._hint.text, "Écris un nom pour entrer.")
+	I18n.use("en")
+	for n in [hud, hud.bag(), menu, start]:
+		n.notification(TRANSLATION_CHANGED)
+	assert_eq(hud.notice_label().text, "Too far.")
+	assert_true(hud.bag().detail_text().text.begins_with("Feeds"), hud.bag().detail_text().text)
+	var caps := []
+	for l in menu._tab_pages["controls"].find_children("*", "Label", true, false):
+		caps.append(l.text)
+	assert_true("Esc" in caps and "Mouse wheel" in caps and not "Échap" in caps, str(caps))
+	assert_true(menu._values["master"].text.ends_with("%") and not menu._values["master"].text.contains(" "),
+			menu._values["master"].text)
+	assert_eq(start._hint.text, "Type a name to enter.")
+	start._show_hint()
+	assert_eq(start._hint.text, "Letters, digits, _ and - (%d at most)" % Protocol.NAME_MAX_LEN)
+	hud.free()
+	menu.free()
+	start.free()

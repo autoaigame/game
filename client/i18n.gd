@@ -69,6 +69,8 @@ static func pick(forced: String, saved: String, system: String, langs: Array) ->
 
 ## At launch, before the menus are built: loads the languages and sets the locale (see pick). The
 ## engine starts in the system's locale unless --language (or the project's locale/test) says otherwise.
+## The engine keeps --language to itself, so it is seen only when it differs from the system's language:
+## --language with the system's own language does not beat a saved choice.
 static func start(settings_path := ClientSettings.PATH) -> String:
 	ensure_loaded()
 	var system := TranslationServer.standardize_locale(OS.get_locale())

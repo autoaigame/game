@@ -187,8 +187,7 @@ func _on_visibility_changed() -> void:
 func _fill(data: Dictionary) -> void:
 	_data = data
 	for c in _body.get_children():
-		_body.remove_child(c)
-		c.queue_free()
+		c.free()
 	for l in lines(data):
 		_body.add_child(_line(l))
 

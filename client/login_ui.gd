@@ -467,7 +467,7 @@ func _set_icon(rect: TextureRect, key: String) -> void:
 ## The texts built here are built again in the new language; the others are keys that their Label
 ## or Button translates by itself.
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_TRANSLATION_CHANGED and _hint.is_inside_tree():
+	if what == NOTIFICATION_TRANSLATION_CHANGED and _hint.get_parent() != null:
 		_refresh_hint()
 
 
