@@ -131,6 +131,34 @@ func test_palette_and_dark_tones() -> void:
 	assert_true(khaki >= 0 and dark[khaki] != khaki, "the jacket colour has a darker tone")
 
 
+## Each palette index comes back from the render as itself, even a unit off: the red code written by
+## pixel_3d_lit.gdshader (Character3D.red_code) survives the renderer's round trip (_render_red) and the 2D
+## pass reads the same index (Character3D.red_index).
+func test_red_codes_survive_the_render() -> void:
+	for i in Character3D.MAX_COLOURS:
+		var code := Character3D.red_code(i)
+		assert_true(code <= 255, "index %d: code %d fits a byte" % [i, code])
+		var back := _render_red(code)
+		for d in [-1, 0, 1]:
+			assert_eq(Character3D.red_index(back + d), i, "index %d: code %d comes back %d" % [i, code, back])
+	var model := Character3D.new()
+	var m := model.lit_material(Color.WHITE)
+	assert_eq(m.get_shader_parameter("red_base"), Character3D.RED_BASE, "the 3D pass gets the code")
+	assert_eq(m.get_shader_parameter("red_step"), Character3D.RED_STEP)
+	model.free()
+
+
+## The red byte k written by an unshaded spatial shader, as the SubViewport gives it back with the
+## Compatibility renderer: sRGB to linear by a polynomial approximation, then back to sRGB without the
+## linear segment. Read back from the game's own viewport on the desktop (OpenGL 3) and the web
+## (WebGL 2), it gives these 256 values exactly: 0 to 7 come back 0, 8 comes back 2, 18 comes back 14, and
+## 56 and over come back unchanged.
+static func _render_red(k: int) -> int:
+	var c := k / 255.0
+	var l := c * (c * (c * 0.305306011 + 0.682171111) + 0.012522878)
+	return roundi(clampf(1.055 * pow(l, 1.0 / 2.4) - 0.055, 0.0, 1.0) * 255.0)
+
+
 ## Every colour of the body's default outfit is a palette colour.
 func test_body_colours_are_in_the_palette() -> void:
 	var scene: Node = load(Character3D.MODEL).instantiate()
@@ -249,7 +277,7 @@ static func _planted_slip(body: String, v: float) -> Vector2:
 	return Vector2(slips[slips.size() / 2], slips.size())
 
 
-## The feet do not slide: at the server's speed (between the walk and the jog), at each gait's own speed
+## The feet do not slide: at the server's speed (between the walk and the jog), sprinting (Shift), at each gait's own speed
 ## and for every body shape, a foot on the ground stays where it landed on the map.
 func test_planted_feet_stay_on_the_ground() -> void:
 	var c: Dictionary = Character3D.clips()["clips"]
@@ -259,6 +287,7 @@ func test_planted_feet_stay_on_the_ground() -> void:
 	var cases := []
 	for body in CharacterParts.parts_for("body"):
 		cases.append([body, server_v])
+		cases.append([body, server_v * Protocol.SPRINT_FACTOR])
 		if CharacterParts.part(body)["morph"] == CharacterMorph.BASE:
 			for g in Character3D.GAITS:
 				cases.append([body, float(c[g]["ground_speed_m_s"])])

@@ -45,6 +45,9 @@ func _ready() -> void:
 	_net = get_parent().get_node("Net")
 	_net.set_handler(self)
 	look = ClientSettings.load_look()
+	if player_name == "" and OS.has_feature("web"):
+		player_name = name_from_query(str(JavaScriptBridge.eval("location.search")))
+		ClientSettings.session_name = player_name  # for this session only, never saved
 	if server_url == "":
 		server_url = _default_url()
 	get_tree().multiplayer_poll = false  # polled in _process, after checking for a pause
@@ -56,6 +59,8 @@ func _ready() -> void:
 		connection_lost.emit()
 		return
 	multiplayer.multiplayer_peer = peer
+	if OS.has_feature("web"):
+		connection_lost.connect(func(): JavaScriptBridge.eval("window.autoaigameJoined = false; window.autoaigameWorldReady = false"))
 	multiplayer.connected_to_server.connect(_on_connected)
 	multiplayer.server_disconnected.connect(func(): connection_lost.emit())
 	multiplayer.connection_failed.connect(func(): connection_lost.emit())
@@ -147,6 +152,10 @@ func request_move(target: Vector2) -> void:
 	_net.move_to.rpc_id(1, target)
 
 
+func request_sprint(on: bool) -> void:
+	_net.sprint.rpc_id(1, on)
+
+
 func request_stop() -> void:
 	_net.stop.rpc_id(1)
 
@@ -184,7 +193,17 @@ func request_cook(item: String) -> void:
 
 func on_welcome(peer_id: int, cell: Vector2i) -> void:
 	my_peer_id = peer_id
+	if OS.has_feature("web"):
+		# Read by the screenshot robot of the community workflow: the player is in the world.
+		JavaScriptBridge.eval("window.autoaigameJoined = true")
 	welcomed.emit(cell)
+
+
+## Called by the world view once the chunks around the player are built: the screenshot robot of the
+## community workflow waits for this before shooting.
+func tell_page_world_ready() -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.autoaigameWorldReady = true")
 
 
 func on_rejected(reason: String) -> void:
@@ -243,6 +262,17 @@ func set_look(new_look: Array) -> void:
 func on_look(peer_id: int, parts: Array) -> void:
 	if not _stale():
 		look_received.emit(peer_id, parts)
+
+
+## The player name in a page query string such as "?name=screenshot-bot", or "" when there is none or
+## the server would refuse it. On the web, a valid ?name= joins at once, without the start menu.
+static func name_from_query(query: String) -> String:
+	for pair in query.trim_prefix("?").split("&", false):
+		var kv := pair.split("=", true, 1)
+		if kv.size() == 2 and kv[0] == "name":
+			var n := kv[1].uri_decode()
+			return n if Protocol.validate_name(n) == "" else ""
+	return ""
 
 
 func _default_url() -> String:
