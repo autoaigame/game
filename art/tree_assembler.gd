@@ -459,7 +459,7 @@ static func ramps() -> Dictionary:
 	return _ramps
 
 
-## A piece from art/trees/pieces (not imported: .gdignore), alpha made binary. Fir branches, spires
+## A piece from art/trees/pieces (left unimported: importer "skip" in its .import), alpha made binary. Fir branches, spires
 ## and clumps are cropped to what they draw, so their width is their length.
 static func _load(name: String) -> Image:
 	var img := Image.load_from_file(ProjectSettings.globalize_path(PIECES + name + ".png"))
