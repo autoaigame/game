@@ -47,8 +47,9 @@ func test_name_above_the_head() -> void:
 
 ## Draws a player walking in a straight line for walk_s seconds, then standing: the server ticks at
 ## Protocol.TICK_HZ, each snapshot arrives 30 ms late give or take jitter_s (seeded), frames at 60 fps.
-## Returns one entry per frame: [time in s, drawn position in cells].
-static func _draw_walk(jitter_s: float, walk_s: float, total_s: float) -> Array:
+## Returns one entry per frame: [time in s, drawn position in cells]. `speed`: cells/s on the server; the
+## drawn player follows its snapshots as client/world_view.gd does (WalkAnim.snapshot, WalkAnim.advance).
+static func _draw_walk(jitter_s: float, walk_s: float, total_s: float, speed := Protocol.SPEED_CELLS_PER_S) -> Array:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 3
 	var dir := Vector2(1, -1).normalized()
@@ -56,21 +57,19 @@ static func _draw_walk(jitter_s: float, walk_s: float, total_s: float) -> Array:
 	var arrivals := []
 	var t := 0.0
 	while t < total_s:
-		var p := dir * Protocol.SPEED_CELLS_PER_S * minf(t, walk_s)
+		var p := dir * speed * minf(t, walk_s)
 		arrivals.append([t + 0.03 + rng.randf_range(-jitter_s, jitter_s), p])
 		t += tick
 	arrivals.sort_custom(func(a, b): return a[0] < b[0])
-	var server := Vector2.ZERO
-	var shown := Vector2.ZERO
+	var w := WalkAnim.walker(Vector2.ZERO)
 	var frames := []
 	var next := 0
 	for f in int(total_s * 60.0):
 		var now := f / 60.0
 		while next < arrivals.size() and arrivals[next][0] <= now:
-			server = arrivals[next][1]
+			WalkAnim.snapshot(w, arrivals[next][1])
 			next += 1
-		shown = WalkAnim.follow(shown, server, 1.0 / 60.0)
-		frames.append([now, shown])
+		frames.append([now, WalkAnim.advance(w, 1.0 / 60.0)])
 	return frames
 
 
@@ -88,3 +87,20 @@ func test_walking_speed_on_screen_is_even() -> void:
 			var real: Vector2 = Vector2(1, -1).normalized() * Protocol.SPEED_CELLS_PER_S * frames[i][0]
 			var behind: float = (real - frames[i][1]).length()
 			assert_true(behind < 0.6, "jitter %s: %.2f cells behind at %.3f s" % [jitter, behind, frames[i][0]])
+
+
+## A sprinter (Shift held: Protocol.SPRINT_FACTOR times the walk) is drawn as evenly, close behind the
+## server, and never falls so far behind that it jumps.
+func test_sprinting_speed_on_screen_is_even() -> void:
+	var speed := Protocol.SPEED_CELLS_PER_S * Protocol.SPRINT_FACTOR
+	var nominal := speed / 60.0
+	for jitter in [0.0, 0.015, 0.03]:
+		var frames := _draw_walk(jitter, 4.0, 4.0, speed)
+		for i in range(1, frames.size()):
+			if frames[i][0] < 0.5:
+				continue
+			var step: float = (frames[i][1] - frames[i - 1][1]).length() / nominal
+			assert_true(step > 0.6 and step < 1.3, "jitter %s: %.2fx the sprint speed at %.3f s" % [jitter, step, frames[i][0]])
+			var real: Vector2 = Vector2(1, -1).normalized() * speed * frames[i][0]
+			var behind: float = (real - frames[i][1]).length()
+			assert_true(behind < 0.6 * Protocol.SPRINT_FACTOR, "jitter %s: %.2f cells behind at %.3f s" % [jitter, behind, frames[i][0]])

@@ -20,7 +20,7 @@ var _actors := {}  ## peer_id -> Node2D
 ## speed (cells per second it moved between its last two updates)}
 var _creatures := {}
 var _marks := {}  ## mark id -> {node: MarkView, left: seconds}
-var _walk := {}  ## peer_id -> {"server", "shown"}: its last snapshot position and the one drawn, in cells
+var _walk := {}  ## peer_id -> WalkAnim.walker(): its last snapshot, where it is drawn and how fast it goes
 var _looks := {}  ## peer_id -> what it wears (CharacterParts look), from the server
 var _camera := Camera2D.new()
 var _my_pos := Vector2.ZERO  ## my position in the last snapshot, in cells
@@ -28,6 +28,8 @@ var _key_dir := Vector2i.ZERO  ## direction of the held keys at the last frame
 var _gather_at: Variant = null  ## the bush the player walks to, to gather from it
 var _pick_up_id := -1  ## the caught animal (mark id) the player walks to, to pick it up
 var _key_target := Vector2.ZERO  ## last target sent for the held keys
+var _sprint_sent := false  ## whether the server was last told to sprint (Shift held)
+var _sprint_peer := 0  ## the connection (peer id) _sprint_sent was told to: a new one starts walking
 var _zoom_target := CameraZoom.DEFAULT  ## the zoom the camera glides to (mouse wheel)
 var _drift_t := 0.0  ## seconds of slow camera drift behind the start menu
 const DRIFT_CELLS := 2.0  ## radius of the drift around the spawn, in cells
@@ -63,9 +65,9 @@ func _on_snapshot(players: Array) -> void:
 			actor = _make_actor(p["name"], id == client.my_peer_id, _looks.get(id, CharacterParts.default_look()))
 			_actors[id] = actor
 			add_child(actor)
-			_walk[id] = {"server": p["pos"], "shown": p["pos"]}
+			_walk[id] = WalkAnim.walker(p["pos"])
 			actor.position = IsoLayer.cell_to_local(p["pos"])
-		_walk[id]["server"] = p["pos"]  # drawn there smoothly by _animate_actors
+		WalkAnim.snapshot(_walk[id], p["pos"])  # drawn there smoothly by _animate_actors
 		if id == client.my_peer_id:
 			_my_pos = p["pos"]
 	for id in _actors.keys():
@@ -193,7 +195,7 @@ func _animate_actors(dt: float) -> void:
 		var w: Dictionary = _walk[id]
 		var actor: Node2D = _actors[id]
 		var before: Vector2 = w["shown"]
-		w["shown"] = WalkAnim.follow(before, w["server"], dt)
+		WalkAnim.advance(w, dt)
 		var pos := IsoLayer.cell_to_local(w["shown"])
 		actor.position = pos
 		# A footstep each time a foot of the 3D model lands.
@@ -307,6 +309,17 @@ func _errand_if_reached() -> void:
 			_pick_up_id = -1
 
 
+## Tells the server when Shift is pressed or let go (it applies to keys and clicks alike). A new
+## connection starts walking on the server, so it is told again.
+func _send_sprint(on: bool) -> void:
+	if client.my_peer_id != _sprint_peer:
+		_sprint_peer = client.my_peer_id
+		_sprint_sent = false
+	if on != _sprint_sent:
+		client.request_sprint(on)
+		_sprint_sent = on
+
+
 ## Asks the server to gather once the player has walked up to the bush they clicked.
 func _gather_if_reached() -> void:
 	if _gather_at != null and Interact.reached(_my_pos, _gather_at):
@@ -332,6 +345,7 @@ func _process(delta: float) -> void:
 			Input.is_physical_key_pressed(KEY_A), Input.is_physical_key_pressed(KEY_D))
 	if menu != null and menu.is_open():
 		dir = Vector2i.ZERO  # stops me if I was walking
+	_send_sprint(Input.is_physical_key_pressed(KEY_SHIFT) and not (menu != null and menu.is_open()))
 	if dir == Vector2i.ZERO:
 		if _key_dir != Vector2i.ZERO:
 			client.request_stop()
