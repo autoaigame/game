@@ -84,6 +84,7 @@ func _add_views() -> void:
 	var hud: CanvasLayer = load("res://client/hud.gd").new()
 	hud.client = self
 	add_child(hud)
+	settings.windows = hud
 	var ui: CanvasLayer = load("res://client/login_ui.gd").new()
 	ui.client = self
 	ui.sounds = sounds

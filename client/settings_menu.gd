@@ -1,4 +1,5 @@
 ## Settings menu over the world or the start menu, opened and closed with Escape (or a pad's Start).
+## While a HUD window is open (big map, bag), Escape closes that window instead.
 ## The world keeps running (multiplayer): only my keys stop moving me while it is open (world_view.gd).
 ## One tab per entry of TABS: sound, display (fullscreen), language (client/language_list.gd, as on the
 ## title's Langue screen) and controls (read-only key list). Texts in client/ui_text.gd.
@@ -19,6 +20,7 @@ const StartMenu := preload("res://client/login_ui.gd")
 const LanguageList := preload("res://client/language_list.gd")
 
 var sounds: Node  ## client/sound_director.gd, or null (no sound)
+var windows: Node  ## client/hud.gd, or null: Escape first closes its open window (big map, bag)
 ## While the menu is closed, a key or button event goes to this start menu first, which goes back a
 ## screen on Escape (client/login_ui.gd); null when there is none.
 var start_menu: StartMenu
@@ -137,6 +139,8 @@ func _input(event: InputEvent) -> void:
 
 ## Acts on `event`; true when it was used.
 func handle(event: InputEvent) -> bool:
+	if not visible and is_toggle(event) and windows != null and windows.close_window():
+		return true
 	if not visible and start_menu != null and start_menu.use_escape(event):
 		return true
 	if is_toggle(event) or (visible and event.is_action_pressed("ui_cancel")):
@@ -353,7 +357,7 @@ func _on_slider(channel: String, percent: float) -> void:
 		sounds.ui("hover")
 
 
-## Shows `s` without sending it back (M, - and + while the menu is open move the controls too).
+## Shows `s` without sending it back (N, - and + while the menu is open move the controls too).
 func _show_settings(s: Dictionary) -> void:
 	for c in AudioSettings.CHANNELS:
 		_sliders[c].set_value_no_signal(AudioSettings.to_percent(s[c]))

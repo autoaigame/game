@@ -108,6 +108,17 @@ msgstr "Bag"
 msgid "hud.key_whistle"
 msgstr "Whistle the dog"
 
+msgid "hud.key_map"
+msgstr "Map"
+
+#. The big map (client/hud.gd)
+msgid "map.title"
+msgstr "Map"
+
+#. %s: the map key, as printed on the keyboard
+msgid "map.help"
+msgstr "Wheel: zoom    %s or Esc: close"
+
 #. Server notices (shared/net.gd notice). {count}: how many, {item}: the item's name
 msgid "notice.gathered"
 msgstr "+{count} {item}"
@@ -200,7 +211,7 @@ msgid "settings.tab_controls"
 msgstr "Controls"
 
 msgid "settings.mute"
-msgstr "Mute (M)"
+msgstr "Mute (N)"
 
 msgid "settings.fullscreen"
 msgstr "Fullscreen"
@@ -347,7 +358,7 @@ msgstr "Suno music, in this game only"
 
 #. Sound debug overlay (F3, client/sound_director.gd). {state}: on or muted, {volume}: master volume in percent
 msgid "debug.sound"
-msgstr "Sound {state}, volume {volume} %   [M] mute  [-/+] volume  [F4] force"
+msgstr "Sound {state}, volume {volume} %   [N] mute  [-/+] volume  [F4] force"
 
 msgid "debug.sound_on"
 msgstr "on"

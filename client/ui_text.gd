@@ -33,7 +33,11 @@ const NOTICES := {
 const COOK := "bag.cook"
 ## Key hints (physical key, what it does), shown as key caps under the hunger bar.
 ## Physical keys sit next to the movement keys whatever the layout: E and Q on QWERTY, E and A on AZERTY.
-const KEYS := [[KEY_E, "hud.key_bag"], [KEY_Q, "hud.key_whistle"]]
+## The map is on the physical M key: M on QWERTY, ',' on AZERTY.
+const KEYS := [[KEY_E, "hud.key_bag"], [KEY_Q, "hud.key_whistle"], [KEY_M, "hud.key_map"]]
+## The big map (client/hud.gd).
+const MAP_TITLE := "map.title"
+const MAP_HELP := "map.help"  ## %s: the map key
 ## The bag window (client/bag_view.gd).
 const FOOD_DESC := "bag.food_desc"  ## %d: food points
 const COOKS_DESC := "bag.cooks_desc"  ## %s: the cooked item's name
@@ -195,7 +199,7 @@ static func controls() -> Array:
 			{"caps": [KEY_SHIFT], "action": CONTROL_SPRINT}, {"caps": [MOUSE_LEFT], "action": CONTROL_CLICK}]
 	for k in KEYS:
 		rows.append({"caps": [k[0]], "action": k[1]})
-	rows.append_array([{"caps": [KEY_C], "action": CONTROL_LOOK}, {"caps": [KEY_M], "action": CONTROL_MUTE},
+	rows.append_array([{"caps": [KEY_C], "action": CONTROL_LOOK}, {"caps": [KEY_N], "action": CONTROL_MUTE},
 			{"caps": [KEY_MINUS, KEY_EQUAL], "action": CONTROL_VOLUME},
 			{"caps": [MOUSE_WHEEL], "action": CONTROL_ZOOM},
 			{"caps": [KEY_ESCAPE, PAD_START], "action": CONTROL_SETTINGS}])
@@ -227,14 +231,17 @@ static func cap_text(cap: Variant, seen := {}) -> String:
 	return OS.get_keycode_string(label)
 
 
-## Physical keys that AZERTY labels differently from QWERTY (the letters around the movement keys).
-const AZERTY := {KEY_Q: KEY_A, KEY_A: KEY_Q, KEY_W: KEY_Z, KEY_Z: KEY_W}
+## Physical keys that AZERTY labels differently from QWERTY (the letters around the movement keys, and M).
+const AZERTY := {KEY_Q: KEY_A, KEY_A: KEY_Q, KEY_W: KEY_Z, KEY_Z: KEY_W, KEY_M: KEY_COMMA}
+## Key names that Godot spells out, as printed on the key.
+const KEY_SIGNS := {KEY_COMMA: ",", KEY_SEMICOLON: ";", KEY_PERIOD: ".", KEY_COLON: ":"}
 
 
 ## The name printed on the player's keyboard for a physical key. `seen` maps physical keys the
 ## player pressed to their labels: it names those keys, and tells AZERTY apart from QWERTY.
 static func key_name(physical: Key, seen := {}) -> String:
-	return OS.get_keycode_string(key_label(physical, seen))
+	var label := key_label(physical, seen)
+	return KEY_SIGNS.get(label, OS.get_keycode_string(label))
 
 
 ## The key printed on the player's keyboard for a physical key (see key_name).
