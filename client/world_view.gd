@@ -32,6 +32,7 @@ var _sprint_sent := false  ## whether the server was last told to sprint (Shift 
 var _sprint_peer := 0  ## the connection (peer id) _sprint_sent was told to: a new one starts walking
 var _zoom_target := CameraZoom.DEFAULT  ## the zoom the camera glides to (mouse wheel)
 var _drift_t := 0.0  ## seconds of slow camera drift behind the start menu
+var _world_ready_told := false  ## the page was told the world around the player is built
 const DRIFT_CELLS := 2.0  ## radius of the drift around the spawn, in cells
 const DRIFT_PERIOD_S := 60.0
 
@@ -49,6 +50,8 @@ func _ready() -> void:
 	client.creatures_received.connect(_on_creatures)
 	client.marks_received.connect(_on_marks)
 	client.welcomed.connect(func(cell: Vector2i): _my_pos = Vector2(cell))
+	if client.has_signal("connection_lost"):
+		client.connection_lost.connect(func(): _world_ready_told = false)
 	if client.has_signal("look_received"):
 		client.look_received.connect(_on_look)
 	if client.has_signal("whistled"):
@@ -221,6 +224,25 @@ func _stream_chunks() -> void:
 	for built in _builder.run(ChunkBuilder.BUDGET_USEC, _clock):
 		_chunk_nodes[built[0]] = built[1]
 		add_child(built[1])
+	if not _world_ready_told and world_ready(client.my_peer_id != 0, missing_near_chunks(at, _chunk_nodes)):
+		_world_ready_told = true
+		if client.has_method("tell_page_world_ready"):
+			client.tell_page_world_ready()
+
+
+## Whether the world on screen is built: joined, and no chunk missing around the player.
+static func world_ready(joined: bool, missing_near: int) -> bool:
+	return joined and missing_near == 0
+
+
+## How many of the 3 x 3 chunks around `cell` are not in `built` (chunk -> node). They cover the screen
+## at the default zoom (about 14 cells around the player, a chunk is MapData.CHUNK cells wide).
+static func missing_near_chunks(cell: Vector2i, built: Dictionary) -> int:
+	var n := 0
+	for c in ChunkStreamer.wanted_chunks(cell, 1):
+		if not built.has(c):
+			n += 1
+	return n
 
 
 ## Before joining, the camera circles slowly around the spawn behind the menu (display only).
