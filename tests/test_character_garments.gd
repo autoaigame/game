@@ -20,13 +20,48 @@ const RAY_M := 0.035
 const MARGIN_M := 0.004
 const CELL_M := 0.035
 const STEP := 2  ## every other outer vertex
-## [inner, outer]: "body_<region>" for the skin, otherwise a part id.
-const LAYERS := [
-	["body_torso", "top_tshirt"], ["body_arms_upper", "top_tshirt"],
-	["top_tshirt", "jacket_field"], ["body_arms_lower", "jacket_field"],
-	["body_hips", "bottom_jeans"], ["body_legs_upper", "bottom_jeans"], ["body_legs_lower", "bottom_jeans"],
-	["body_feet", "feet_boots"],
-]
+## The look checked first: the default look with every garment slot worn.
+const BASE := [["top_tshirt", 0], ["jacket_field", 0], ["bottom_jeans", 0], ["feet_boots", 0]]
+
+
+## [inner, outer] pairs of a look, from the records: each skinned part over the skin regions it hides
+## ("body_<region>"), and the jacket over the top (and over the skin the top leaves bare).
+static func layers(look: Array) -> Array:
+	var out := []
+	var top := ""
+	for e in look:
+		if CharacterParts.part(e["id"])["slot"] == "top":
+			top = e["id"]
+	for e in look:
+		var p := CharacterParts.part(e["id"])
+		if p["kind"] != "skinned":
+			continue
+		var under: Array = []
+		if p["slot"] == "jacket" and top != "":
+			out.append([top, p["id"]])
+			under = CharacterParts.part(top)["hides"]
+		for r in p["hides"]:
+			if r in CharacterParts.regions() and not r in under and not r.begins_with("hair_"):
+				out.append(["body_" + r, p["id"]])
+	return out
+
+
+## Looks to check: the base look, then each other skinned part in its slot, over the base look.
+static func looks_for(body: String, only := "") -> Array:
+	var out := []
+	var base := Pose.look([[body, 0]] + BASE)
+	if only == "" or only in BASE.map(func(b): return b[0]):
+		out.append(base)
+	for slot in ["top", "jacket", "bottom", "feet"]:
+		for id in CharacterParts.parts_for(slot):
+			if CharacterParts.part(id)["kind"] != "skinned" or id in BASE.map(func(b): return b[0]):
+				continue
+			if only != "" and id != only:
+				continue
+			out.append(base.filter(func(e): return CharacterParts.part(e["id"])["slot"] != slot) + Pose.look([[id, 0]]))
+	return out
+
+
 ## A tie counts when its ray is between these fractions of the layer's median height over the inner one.
 const HEIGHT_BAND := Vector2(0.6, 1.4)
 ## A tie counts when the inner layer there faces the same way as the outer vertex (cosine): folds do not.
@@ -89,8 +124,9 @@ static func measure(look: Array) -> Dictionary:
 	var sk := Pose.skeleton(root)
 	var morph := CharacterMorph.new(sk, root.get_meta("morph"))
 	sk.reset_bone_poses()
-	if _tied.is_empty():
-		for layer in LAYERS:
+	var pairs := layers(look)
+	for layer in pairs:
+		if not _tied.has(layer):
 			var rest := []
 			for name in layer:
 				var mi := _mesh(root, sk, name)
@@ -111,7 +147,7 @@ static func measure(look: Array) -> Dictionary:
 		else:
 			Pose.pose_at(sk, pose[0], pose[1], morph)
 		var now := {}
-		for layer in LAYERS:
+		for layer in pairs:
 			if pose != null and layer[0].begins_with("body_"):
 				continue  # hidden skin: the rest pose only
 			for name in layer:
@@ -131,14 +167,41 @@ static func measure(look: Array) -> Dictionary:
 					through += 1
 			worst[str(layer)] = maxi(worst.get(str(layer), 0), through)
 	root.free()
-	worst["tied"] = tied.values().map(func(d): return d.size())
+	worst["tied"] = pairs.map(func(l): return tied[l].size())
+	worst["layers"] = pairs
 	return worst
 
 
+## Problems of the garments of `look`: a layer that comes through the one over it, or layers too far apart
+## to be tied.
+static func problems(look: Array) -> PackedStringArray:
+	var out := PackedStringArray()
+	var m := measure(look)
+	var body: String = look[0]["id"]
+	for layer in m["layers"]:
+		if m[str(layer)] > 0:
+			out.append("%s: %d vertices of %s come through %s (worst pose)" % [body, m[str(layer)], layer[0], layer[1]])
+	for i in m["layers"].size():
+		if m["tied"][i] <= 20:
+			out.append("%s: %s is not over %s (%d vertices tied)" % [body, m["layers"][i][1], m["layers"][i][0], m["tied"][i]])
+	return out
+
+
 func test_garments_stay_over_what_they_cover_on_every_body() -> void:
+	var n := 0
 	for body in CharacterParts.parts_for("body"):
-		var m := measure(Pose.look([[body, 0], ["top_tshirt", 0], ["jacket_field", 0], ["bottom_jeans", 0], ["feet_boots", 0]]))
-		for layer in LAYERS:
-			assert_eq(m[str(layer)], 0, "%s: %s comes through %s (worst pose)" % [body, layer[0], layer[1]])
-		for n in m["tied"]:
-			assert_true(n > 20, "%s: layers tied %s" % [body, m["tied"]])
+		for look in looks_for(body):
+			var p := problems(look)
+			assert_true(p.is_empty(), "\n".join(p))
+			n += 1
+	assert_true(n >= 6, "looks checked: %d" % n)
+
+
+## The layers of the default look are the ones the outfit really has.
+func test_layers_come_from_the_records() -> void:
+	var l := layers(Pose.look([["body_standard", 0]] + BASE))
+	for want in [["body_torso", "top_tshirt"], ["body_arms_upper", "top_tshirt"], ["top_tshirt", "jacket_field"],
+			["body_arms_lower", "jacket_field"], ["body_hips", "bottom_jeans"], ["body_legs_upper", "bottom_jeans"],
+			["body_legs_lower", "bottom_jeans"], ["body_feet", "feet_boots"]]:
+		assert_true(want in l, "%s in %s" % [want, l])
+	assert_false(["body_arms_upper", "jacket_field"] in l, "the top is under the jacket there")

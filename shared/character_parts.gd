@@ -264,7 +264,7 @@ static func _ensure() -> void:
 	var sdata: Variant = _read(DATA_DIR.path_join("slots.json"))
 	for s in sdata["slots"]:
 		_slots.append({"id": String(s["id"]), "name": String(s["name"]), "required": bool(s.get("required", false)),
-				"default": String(s.get("default", ""))})
+				"default": String(s.get("default", "")), "triangles": int(s.get("triangles", 0))})
 	_regions.assign(sdata.get("regions", []))
 	var mdata: Variant = _read(DATA_DIR.path_join("morphs.json"))
 	if mdata is Dictionary:

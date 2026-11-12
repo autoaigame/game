@@ -9,6 +9,8 @@
 # beard on a beard), 2 the eyes (a fixed ramp). The shader draws ramp[band + shade] of the zone's ramp, so
 # one face works for every skin and hair colour and stays in the palette. Shade -2 is always the darkest
 # colour of the ramp and +2 always the lightest, whatever the light.
+# A part can also be a grid, art/character/faces/<id>.txt: 16 lines of 24 keys of KEYS, "." for none
+# (art/character/new_part.py starts one).
 # Writes assets/character/faces/<id>.png. Plain Python: no library needed.
 import os, struct, sys, zlib
 
@@ -120,12 +122,33 @@ def beards():
     return b
 
 
+def grids(root):
+    """The parts drawn as grids in art/character/faces/<id>.txt."""
+    out = {}
+    d = os.path.join(root, "art/character/faces")
+    for name in sorted(os.listdir(d)) if os.path.isdir(d) else []:
+        if not name.endswith(".txt"):
+            continue
+        with open(os.path.join(d, name)) as f:
+            rows = [l.rstrip("\n") for l in f if l.strip()]
+        assert len(rows) == H and all(len(r) == W for r in rows), "%s: %d lines of %d keys" % (name, H, W)
+        g = Face()
+        for y, row in enumerate(rows):
+            for x, c in enumerate(row):
+                assert c == "." or c in KEYS, "%s line %d: unknown key %r" % (name, y + 1, c)
+                g.dot(x, y, c)
+        out[name[:-4]] = g
+    return out
+
+
 def main():
     out = os.path.join(ROOT, "assets/character/faces")
     os.makedirs(out, exist_ok=True)
-    for name, f in list(faces().items()) + list(beards().items()):
+    g = grids(ROOT)
+    for name, f in list(faces().items()) + list(beards().items()) + list(g.items()):
         f.save(os.path.join(out, name + ".png"))
-    print("faces:", list(faces()), "beards:", list(beards()))
+    print("faces:", list(faces()), "beards:", list(beards()), "grids:", list(g))
 
 
-main()
+if __name__ == "__main__":
+    main()

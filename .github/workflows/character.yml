@@ -1,0 +1,111 @@
+# Character parts: on a PR that touches them, checks each part it adds or changes (make check-part) and
+# draws its sheet, as the game draws it, for voters. The sheets are an artifact of the run, linked from
+# the run's summary. make check (ci.yml) already checks every part on every PR; this job narrows the
+# messages to the PR's parts and adds the pictures.
+# Runs PR code like ci.yml: NO secrets and a read-only token (pull_request event), so it cannot comment.
+name: character
+
+on:
+  pull_request:
+    paths:
+      - "data/character/**"
+      - "assets/character/**"
+      - "art/character/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: character-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: 4.7.2-stable
+
+jobs:
+  parts:
+    name: character parts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: ~/godot
+          key: godot-${{ env.GODOT_VERSION }}
+      - name: Install Godot (SHA512-verified) and a virtual display
+        run: |
+          set -euo pipefail
+          mkdir -p ~/godot && cd ~/godot
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}"
+          for f in "Godot_v${GODOT_VERSION}_linux.x86_64.zip" SHA512-SUMS.txt; do
+            [ -f "$f" ] || curl -fsSLO "$base/$f"
+          done
+          grep -E "Godot_v${GODOT_VERSION}_linux.x86_64.zip$" SHA512-SUMS.txt | sha512sum -c
+          unzip -oq "Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          echo "GODOT=$HOME/godot/Godot_v${GODOT_VERSION}_linux.x86_64" >> "$GITHUB_ENV"
+          # The sheet needs a renderer: OpenGL in software (Mesa llvmpipe) on a virtual display.
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends xvfb xauth libgl1-mesa-dri > /dev/null
+      - name: Parts this PR adds or changes
+        id: parts
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          # Ids from the changed files: records, meshes, face textures and their sources. Ids are
+          # [a-z0-9_] only, anything else is ignored; removed parts have no record left and are skipped.
+          ids=$(git diff --name-only "$BASE" HEAD -- data/character assets/character art/character |
+            sed -nE 's#^(data/character/parts|assets/character/parts|assets/character/faces|art/character/parts|art/character/faces)/([a-z0-9_]+)\.(json|glb|png|py|txt)$#\2#p' |
+            sort -u | while read -r id; do [ -f "data/character/parts/$id.json" ] && echo "$id"; done | head -n 20 | tr '\n' ' ')
+          echo "ids=$ids" >> "$GITHUB_OUTPUT"
+          echo "Parts: ${ids:-none}"
+      - name: Check each part and draw its sheet
+        if: steps.parts.outputs.ids != ''
+        env:
+          IDS: ${{ steps.parts.outputs.ids }}
+        run: |
+          set -uo pipefail
+          make setup GODOT="$GODOT"
+          failed=0
+          {
+            echo "## Character parts"
+            echo
+            echo "| Part | Checks |"
+            echo "|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          for id in $IDS; do
+            echo "::group::$id"
+            xvfb-run -a -s "-screen 0 1280x2048x24" make check-part ID="$id" GODOT="$GODOT" 2>&1 | tee "build/check-$id.log" || true
+            if grep -q "^${id} follows the standard" "build/check-$id.log"; then
+              result="follows the standard"
+            else
+              result="fails: see the log of this step"
+              failed=1
+            fi
+            echo "::endgroup::"
+            echo "| \`$id\` | $result |" >> "$GITHUB_STEP_SUMMARY"
+          done
+          ls build/parts/*_sheet*.png > /dev/null 2>&1 || echo "::warning::no sheet was drawn"
+          exit $failed
+      - name: Keep the sheets
+        id: sheets
+        if: always() && steps.parts.outputs.ids != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: character-sheets
+          path: build/parts/*_sheet*.png
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Link the sheets
+        if: always() && steps.sheets.outputs.artifact-url != ''
+        env:
+          URL: ${{ steps.sheets.outputs.artifact-url }}
+        run: |
+          {
+            echo
+            echo "Sheets (every body shape, from the front, three-quarters, the side and the back, then running; _x3: enlarged 3 times): $URL"
+          } >> "$GITHUB_STEP_SUMMARY"

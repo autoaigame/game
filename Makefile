@@ -1,7 +1,7 @@
 GODOT ?= godot
 RUN := $(GODOT) --headless --path .
 
-.PHONY: setup check test smoke art export-web run-server
+.PHONY: setup check test smoke art export-web run-server part check-part gallery blender
 
 setup: ## import the project (first run, or after adding assets)
 	@$(RUN) --import >/dev/null 2>&1 || $(RUN) --import
@@ -16,6 +16,35 @@ check: test smoke ## everything CI requires
 
 art: ## regenerate assets/*.png from art/gen_art.gd
 	@$(RUN) -s res://art/gen_art.gd
+
+# Blender for the character parts: BLENDER if given, else blender on PATH, else the portable one of
+# make blender (tools/get-blender.sh, in .tools/blender/).
+BLENDER ?= $(or $(shell command -v blender 2>/dev/null),$(shell tools/get-blender.sh --path 2>/dev/null))
+
+blender: ## download the portable Blender the character parts are built with, into .tools/ (SHA-256 checked)
+	@tools/get-blender.sh
+
+
+part: ## build one character part: make part ID=<id> [BLEND=1] (Blender for volumes, Python for faces)
+	@test -n "$(ID)" || { echo "usage: make part ID=<id>"; exit 2; }
+	@if [ -f art/character/faces/$(ID).txt ]; then python3 art/character/faces.py .; \
+	else command -v "$(BLENDER)" > /dev/null || { echo "no Blender at $(BLENDER): run make blender, or pass BLENDER=/path/to/blender"; exit 1; }; \
+	mkdir -p build/parts && touch build/parts/.gdignore && $(BLENDER) -b --python-exit-code 1 --python art/character/parts/$(ID).py $(if $(BLEND),-- --blend) \
+		> build/parts/$(ID).log 2>&1 && grep "^## " build/parts/$(ID).log || { tail -30 build/parts/$(ID).log; exit 1; }; fi
+	@$(RUN) --import >/dev/null 2>&1 || $(RUN) --import
+
+check-part: setup ## check one character part against the standard and draw its sheet: make check-part ID=<id>
+	@test -n "$(ID)" || { echo "usage: make check-part ID=<id>"; exit 2; }
+	@mkdir -p build/parts && touch build/parts/.gdignore
+	@status=0; $(RUN) -s res://tools/check_part.gd -- $(ID) || status=$$?; \
+	$(GODOT) --path . --rendering-driver opengl3 --resolution 1280x720 -s res://tools/part_sheet.gd -- $(ID) build/parts/$(ID)_sheet.png \
+		|| echo "no sheet: rendering needs a display. On Linux without one: xvfb-run make check-part ID=$(ID) (needs xauth), or Xvfb :99 & then DISPLAY=:99 make check-part ID=$(ID)"; \
+	exit $$status
+
+gallery: setup ## every character part of a slot on one sheet: make gallery SLOT=<slot>
+	@test -n "$(SLOT)" || { echo "usage: make gallery SLOT=<slot>"; exit 2; }
+	@mkdir -p build/parts && touch build/parts/.gdignore
+	@$(GODOT) --path . --rendering-driver opengl3 --resolution 1280x720 -s res://tools/part_sheet.gd -- $(SLOT) build/parts/gallery_$(SLOT).png
 
 export-web: setup ## web build into build/web/
 	@mkdir -p build/web
